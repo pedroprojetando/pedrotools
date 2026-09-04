@@ -378,6 +378,95 @@
     font-weight: 700;
     color: var(--text);
   }
+
+  /* Botão da tabela de compensação (IPA) */
+  .ipa-topbar{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom: 10px;
+  }
+  .tabela-btn{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight:600;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor:pointer;
+  }
+  .tabela-btn:active{ background: var(--panel-hover); }
+
+  /* Modal */
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background: rgba(0,0,0,.6);
+    z-index: 50;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .modal-overlay.active{ display:flex; }
+  .modal-box{
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 82vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+    font-weight:700;
+  }
+  .modal-close{
+    background:none;
+    border:none;
+    color: var(--text-dim);
+    font-size: 18px;
+    cursor:pointer;
+    padding: 2px 6px;
+  }
+  .modal-body{
+    overflow:auto;
+    padding: 12px 14px 20px 14px;
+  }
+  .tech-table{
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+  .tech-table th, .tech-table td{
+    border: 1px solid var(--line);
+    padding: 5px 6px;
+    text-align:center;
+  }
+  .tech-table thead th{
+    background: var(--panel);
+    color: var(--accent);
+    position: sticky;
+    top: 0;
+  }
+  .tech-table td.pct-col{
+    background: var(--panel);
+    font-weight:700;
+    color: var(--text);
+    position: sticky;
+    left: 0;
+  }
+  .tech-table .dens-group{
+    background: var(--panel-hover);
+    color: var(--text);
+  }
 </style>
 </head>
 <body>
@@ -547,6 +636,10 @@
     <!-- MEDIÇÃO IPA -->
     <section class="screen" data-screen="ipa">
 
+      <div class="ipa-topbar">
+        <button class="tabela-btn" id="abrirTabelaBtn" title="Ver tabela de compensação">Tabela</button>
+      </div>
+
       <div class="field">
         <label>Densidade da solução de fonte</label>
         <div class="seg" id="densSeg">
@@ -603,6 +696,18 @@
     </section>
 
   </main>
+
+  <!-- MODAL: Tabela de compensação Technotrans -->
+  <div class="modal-overlay" id="tabelaModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>Tabela de correção (Technotrans)</span>
+        <button class="modal-close" id="fecharTabelaBtn">✕</button>
+      </div>
+      <div class="modal-body" id="tabelaModalBody"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -631,6 +736,55 @@
       "4": [-1.3,0.1,1.6,3.0,4.4,5.8,7.2,8.6,10.0,11.4]
     }
   };
+
+  // ---------- Modal: Tabela de compensação Technotrans ----------
+  function montarTabelaHTML(){
+    const densidades = ["1.05","1.10","1.15","1.20"];
+    const dosagens = ["2","3","4"];
+
+    let html = '<table class="tech-table"><thead>';
+    html += '<tr><th rowspan="2">% real IPA</th>';
+    densidades.forEach(d => {
+      html += '<th colspan="3" class="dens-group">Densidade ' + d.replace('.',',') + '</th>';
+    });
+    html += '</tr><tr>';
+    densidades.forEach(() => {
+      dosagens.forEach(dos => { html += '<th>' + dos + '%</th>'; });
+    });
+    html += '</tr></thead><tbody>';
+
+    REAL_PCT.forEach((pct, i) => {
+      html += '<tr><td class="pct-col">' + pct + '%</td>';
+      densidades.forEach(d => {
+        dosagens.forEach(dos => {
+          const leitura = TABLE[d][dos][i];
+          html += '<td>' + leitura.toFixed(1) + '</td>';
+        });
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  const tabelaModalOverlay = document.getElementById('tabelaModalOverlay');
+  const tabelaModalBody = document.getElementById('tabelaModalBody');
+  const abrirTabelaBtn = document.getElementById('abrirTabelaBtn');
+  const fecharTabelaBtn = document.getElementById('fecharTabelaBtn');
+
+  abrirTabelaBtn.addEventListener('click', ()=>{
+    tabelaModalBody.innerHTML = montarTabelaHTML();
+    tabelaModalOverlay.classList.add('active');
+  });
+  fecharTabelaBtn.addEventListener('click', ()=>{
+    tabelaModalOverlay.classList.remove('active');
+  });
+  tabelaModalOverlay.addEventListener('click', (e)=>{
+    if(e.target === tabelaModalOverlay){
+      tabelaModalOverlay.classList.remove('active');
+    }
+  });
 
   // ---------- Navegação ----------
   const screens = document.querySelectorAll('.screen');
