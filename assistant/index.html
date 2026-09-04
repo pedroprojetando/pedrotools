@@ -398,6 +398,7 @@
       <div class="grid">
         <div class="tile" data-goto="insumos">Insumos</div>
         <div class="tile" data-goto="manchas">Manchas</div>
+        <div class="tile" data-goto="offset">Offset</div>
         <div class="tile disabled">Chapas</div>
         <div class="tile disabled">Tintas</div>
         <div class="tile disabled">Blanquetas</div>
@@ -423,8 +424,60 @@
       </div>
     </section>
 
+    <!-- OFFSET -->
+    <section class="screen" data-screen="offset">
+      <div class="grid">
+        <div class="tile" data-goto="problemas">Problemas</div>
+        <div class="tile disabled">Cores</div>
+        <div class="tile disabled">Registro</div>
+      </div>
+    </section>
+
+    <!-- PROBLEMAS (causa x efeito) -->
+    <section class="screen" data-screen="problemas">
+
+      <div class="field">
+        <label>Modo de busca</label>
+        <div class="seg" id="probModoSeg">
+          <button data-val="porProblema">Problema → Causas</button>
+          <button data-val="porCausa">Causa → Problemas</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="probSelectLabel">Selecione o problema</label>
+        <select id="probSelect">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+
+      <div id="probResultados" style="margin-top:18px;"></div>
+
+    </section>
+
     <!-- MANCHAS -->
     <section class="screen" data-screen="manchas">
+
+      <div class="antes-depois">
+        <div class="ad-col">
+          <div class="ad-title">Diâmetro do Rolo</div>
+          <div class="field">
+            <label>mm</label>
+            <input type="number" id="diametroRoloInput" step="0.1" placeholder="Ex: 70" inputmode="decimal">
+          </div>
+        </div>
+        <div class="ad-col">
+          <div class="ad-title">Mancha</div>
+          <div class="field">
+            <label>mm (perímetro)</label>
+            <input type="number" id="manchaPerimInput" step="0.1" placeholder="Ex: 220" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:0; margin-bottom:18px; border-top:none; padding-top:0;">
+        Digite o diâmetro do rolo para calcular o perímetro (mancha), ou digite a mancha para calcular o diâmetro. Fórmula: Mancha = Diâmetro × π. Resultado sempre em mm, arredondado para número inteiro.
+      </div>
 
       <div class="field">
         <label>Distância da borda da pinça até a mancha (mm)</label>
@@ -591,7 +644,9 @@
     molha:    { title: "Molha",              crumb: "Insumos" },
     ipa:      { title: "Medição IPA",        crumb: "Molha" },
     manchas:  { title: "Manchas",            crumb: "Início" },
-    solvente: { title: "Solvente",           crumb: "Insumos" }
+    solvente: { title: "Solvente",           crumb: "Insumos" },
+    offset:   { title: "Offset",             crumb: "Início" },
+    problemas:{ title: "Problemas",          crumb: "Offset" }
   };
 
   let stack = ['home'];
@@ -1186,6 +1241,28 @@
 
   manchaMmInput.addEventListener('input', renderManchas);
 
+  // ---------- Diâmetro do Rolo ↔ Mancha (perímetro) ----------
+  const diametroRoloInput = document.getElementById('diametroRoloInput');
+  const manchaPerimInput = document.getElementById('manchaPerimInput');
+
+  diametroRoloInput.addEventListener('input', ()=>{
+    const d = parseFloat(diametroRoloInput.value);
+    if(isNaN(d)){
+      manchaPerimInput.value = '';
+      return;
+    }
+    manchaPerimInput.value = Math.round(d * Math.PI);
+  });
+
+  manchaPerimInput.addEventListener('input', ()=>{
+    const m = parseFloat(manchaPerimInput.value);
+    if(isNaN(m)){
+      diametroRoloInput.value = '';
+      return;
+    }
+    diametroRoloInput.value = Math.round(m / Math.PI);
+  });
+
   // ---------- SOLVENTE (Antes/Depois) ----------
   const solvAntesPct = document.getElementById('solvAntesPct');
   const solvAntesQtd = document.getElementById('solvAntesQtd');
@@ -1233,6 +1310,258 @@
   [solvAntesPct, solvAntesQtd, solvDepoisPct, solvDepoisQtd].forEach(el=>{
     el.addEventListener('input', calcularSolvente);
   });
+</script>
+<script>
+  const OFFSET_CAUSAS = [
+  'Dureza Alta',
+  'Dureza Baixa',
+  'pH Baixo',
+  'pH Alto',
+  'Rolo Vitrificado',
+  'Calço Incorreto/Molhado',
+  'Mal Aperto da Blanqueta',
+  'Blanquetas Diferentes',
+  'Força Aderência Alta (Blanqueta/Tinta)',
+  'Chapa mal Preparada',
+  'Regulagem dos Rolos',
+  'Regulagem das Pressões dos Cilindros',
+  'Excesso de Água',
+  'Umectação Deficiente (pH)',
+  'Tinta com Aditivos',
+  'Problema com Tinta (Fabricação)',
+  'Suporte contamina a solução',
+  'Tack Alto',
+  'Tixotropia/Alta Rigidez',
+  'Suporte com Pouca Resistência',
+  'Excesso de Pressão entre Cilindros',
+  'Cascas no Tinteiro',
+  'Rolos d\'água Sujos',
+  'Blanqueta Vitrificada',
+  'Excesso de Tinta',
+  'Excesso de Velocidade',
+  'Suporte Pouco Absorvente',
+  'Setting da Tinta é Lento',
+  'Problema com Sistema de Pó',
+  'Pilha de Papel muito Alta',
+  'Caída incorreta/cunhas',
+  'Tinta mal Moída',
+  'Tinta de Alta Concentração (filme muito fino)',
+  'Sequência incorreta',
+  'Tintas Fracas',
+  'Suporte Muito ácido',
+  'Calor excessivo',
+  'Tinta muito fluida',
+  'Tinta muito Secativa',
+  'Desgaste de Engrenagens Distribuidores',
+  'Rolamentos dos Entintadores',
+  'Tinta muito Oxidativa',
+  'Fabricação do Papel/Tipo',
+  'Tack Muito Baixo',
+  'Montagem',
+  'Movimento Axial',
+  'Muita Umidade no Suporte',
+  'Tipo de Blanqueta Inadequado',
+  'Desgaste das Engrenagens dos Cilindros',
+  'Papel com Bordas Onduladas',
+  'Papel Muito Rígido',
+  'Falta de IPA',
+  'Pinças Gastas/Ajuste Batentes',
+  'Dureza Inadequada dos Rolos',
+  'Excesso de IPA',
+  'Nível de Molha muito Baixo',
+  'Acúmulo de Tinta',
+  'Blanqueta Fabricação',
+  'Blanqueta Velha/Suja',
+  'Excesso de Tensão',
+  'Revelador Chapas',
+  'Blanqueta Montada na Direção errada',
+  'Solventes Inadequados',
+  'Design da Impressora',
+  'Papel muito ácido',
+  'Variação da Cor do Papel',
+  'Muita Cera na Tinta',
+  'Excesso de Pó',
+  'Muito Secante nas Primeiras Unidades',
+  'Calor Excessivo do IR',
+  'Chapa Mal Processada',
+  'Umidade Relativa muito Alta',
+  'Tinta Muito Brilhante',
+  'Tinta Muito Transparente',
+  'Densidade Inadequada',
+  'Excesso de Goma na Solução de Molha',
+  'Solução de Molhagem Contaminada',
+  'Limpador de Chapas Seco',
+  'Temperatura Elevada da Rolaria',
+  'Reação ao Escuro (Chapa Positiva) Fogging - Estocada Local Quente',
+  'Molhadores Engordurados',
+  'Chapa Estocada em Local Úmido'
+];
+
+  const OFFSET_PROBLEMAS = [
+  {n:'Acúmulo nas Blanquetas (2)', c:[2,17,18,19,20,23,25,38,47,55]},
+  {n:'Acúmulo nas Blanquetas, Chapa e Rolaria tinta e pó (2)', c:[10,12,13,14,15,17,18,19,20,21,22,23,25]},
+  {n:'Alto Consumo', c:[34,42,74]},
+  {n:'Arrancamento a Seco (Dry Pick) (1) (8)', c:[5,11,17,25,34,42,47]},
+  {n:'Arrancamento de casca de revestimento (coating hickey, coating lump)', c:[42]},
+  {n:'Arrancamento Úmido (Wet Pick)', c:[11,12,42,51]},
+  {n:'Aumento Temperatura dos Rolos', c:[4]},
+  {n:'Baixa Resistência ao Atrito (Rub-Off)', c:[12,13,15,24,42]},
+  {n:'Blocagem (10)', c:[28,29,34]},
+  {n:'Bronzeamento (Mudança de Cor ao Secar) (6)', c:[]},
+  {n:'Chapa Cega', c:[0,2,10,12,67,70,75,76,77,79]},
+  {n:'Chapados Deficientes (7)', c:[5,10,11,12,17,24,27,33,37,42,58]},
+  {n:'Cor Desbotada/Brilho', c:[12,15,34,42,74]},
+  {n:'Cor Fraca', c:[10,12,13]},
+  {n:'Corrosão do Equipamento', c:[1]},
+  {n:'Decalque ou Reprinte (9)', c:[12,13,24,25,26,27,28,29,30]},
+  {n:'Delaminação da Blanqueta', c:[5,11,56,57]},
+  {n:'Depósito de Sais de Cálcio', c:[0]},
+  {n:'Desgaste da Chapa (1)', c:[2,4,5,6,17,31,32,39,53,57,60,61,75,79]},
+  {n:'Dificuldade na Transferência Água/Tinta', c:[4]},
+  {n:'Dilatação da Impessão (Registro)', c:[8]},
+  {n:'Efeito Fantasma na Impressão', c:[10,12,13,15,32,34,43,44,45,73]},
+  {n:'Efeito Fantasma na Secagem (12)', c:[24,41,42,72]},
+  {n:'Eleva Tensão Superficial da Água', c:[2]},
+  {n:'Emulsionamento', c:[1,3,12,15,37,54]},
+  {n:'Entupimento (2)', c:[5,6,10,11,13,14,17,51,80]},
+  {n:'Faixas na Rolaria', c:[0]},
+  {n:'Falha no Emulsionamento', c:[4]},
+  {n:'Ganho de Ponto', c:[3,5,6,7,10,12,20,36,47,70]},
+  {n:'Marcas Longitudinais (1)', c:[2,10,12,13,18,24,32,39,40,53,75]},
+  {n:'Marmorização', c:[10,11,42,58]},
+  {n:'Milking (se agrava com Álcool Isopropílico)', c:[0,1,2,12,15,42,47,53,54]},
+  {n:'Perda de Espessura da Blanqueta', c:[11,57,59]},
+  {n:'Podragem (Absorção muito Rápida do Veículo) (2) (5) (6)', c:[2,12,13,27,32,46,64]},
+  {n:'Ponto Corrido (Duplo) (13)', c:[5,6,12,17,47,48,49,50,51,52]},
+  {n:'Problema de Secagem', c:[1,2,12,35,71]},
+  {n:'Reação com o Revestimento do Papel', c:[2]},
+  {n:'Rebatimento da Tinta', c:[5,11,25,33,38,42,44,47,63]},
+  {n:'Regeição (Trapping) (1) (2) (7)', c:[5,11,33,66,67,68,69]},
+  {n:'Tinta Dorme (4)', c:[18]},
+  {n:'Tinta Seca na Rolaria (11)', c:[36,38]},
+  {n:'Tinta Transpassa o Suporte (2) (5)', c:[24,27,34,37]},
+  {n:'Velatura (3)', c:[2,4,9,10,11,12,13,14,15,16,51,53,70,78,81]},
+  {n:'Vitrificação da Blanqueta', c:[14,62]},
+  {n:'Voagem das Tintas', c:[4,14,24,25,36,37]}
+];
+
+  const OFFSET_NOTAS = {
+  '1': 'Adicionar Verniz ou Branco Transparente',
+  '2': 'Adicionar Amaciante',
+  '3': 'Adicionar Verniz Mordente ou Antivelatura',
+  '4': 'Usar Verniz Macio - NÃO USAR PASTA ANTITAK',
+  '5': 'Use Secante',
+  '6': 'Aplicar Verniz',
+  '7': 'Aplicar Branco Transparente',
+  '8': 'Imprimir Chapado no Lado Tela do Papel',
+  '9': 'Adicione amaciante líquido à base de óleo mineral / mude a sequência / evite usar secante nas 1ª e 2ª cores / use pó de maior granulação / manuseio incorreto',
+  '10': 'Faça pilhas pequenas / areje o papel / use tintas mais concentradas / aumente o pó',
+  '11': 'Lave e entinte novamente / adicione antipele',
+  '12': 'Após acontecer, não há o que fazer / trocar papel / usar pouca tinta / usar tinta menos oxidativa / imprimir lado chapados primeiro / esperar secagem para impressão do outro lado',
+  '13': 'Manter o papel embalado / instalar lâmpadas infravermelhas na entrada. Ambiente ideal: 25°C e 50% de umidade relativa / aumentar a pressão da escova ou o fluxo de ar que sustenta a folha'
+};
+
+  // ---------- PROBLEMAS (Offset: causa x efeito) ----------
+  const probModoSeg = document.getElementById('probModoSeg');
+  const probSelect = document.getElementById('probSelect');
+  const probSelectLabel = document.getElementById('probSelectLabel');
+  const probResultados = document.getElementById('probResultados');
+
+  let probModo = 'porProblema';
+
+  function popularSelectProblemas(){
+    probSelect.innerHTML = '<option value="">Selecione...</option>';
+    if(probModo === 'porProblema'){
+      probSelectLabel.textContent = 'Selecione o problema';
+      const nomes = OFFSET_PROBLEMAS.map(p => p.n).sort((a,b) => a.localeCompare(b, 'pt-BR'));
+      nomes.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value = n;
+        opt.textContent = n;
+        probSelect.appendChild(opt);
+      });
+    } else {
+      probSelectLabel.textContent = 'Selecione a causa';
+      const nomes = OFFSET_CAUSAS.map((n,i) => ({n,i})).sort((a,b) => a.n.localeCompare(b.n, 'pt-BR'));
+      nomes.forEach(({n,i}) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = n;
+        probSelect.appendChild(opt);
+      });
+    }
+    probResultados.innerHTML = '';
+  }
+
+  function extrairNotas(nomeProblema){
+    const nums = [...nomeProblema.matchAll(/\((\d+)\)/g)].map(m => m[1]);
+    return nums.filter(n => OFFSET_NOTAS[n]).map(n => ({ num: n, texto: OFFSET_NOTAS[n] }));
+  }
+
+  function renderProblemas(){
+    probResultados.innerHTML = '';
+    const val = probSelect.value;
+    if(!val) return;
+
+    if(probModo === 'porProblema'){
+      const problema = OFFSET_PROBLEMAS.find(p => p.n === val);
+      if(!problema) return;
+
+      if(problema.c.length === 0){
+        probResultados.innerHTML = '<div class="sem-resultado">Nenhuma causa catalogada para este problema.</div>';
+      } else {
+        problema.c.forEach(ci => {
+          const card = document.createElement('div');
+          card.className = 'causa-card';
+          card.innerHTML = '<div class="causa-texto">' + OFFSET_CAUSAS[ci] + '</div>';
+          probResultados.appendChild(card);
+        });
+      }
+
+      const notas = extrairNotas(problema.n);
+      if(notas.length > 0){
+        const notaBox = document.createElement('div');
+        notaBox.className = 'hint';
+        notaBox.style.marginTop = '18px';
+        notaBox.innerHTML = '<strong>Soluções sugeridas:</strong><br>' +
+          notas.map(nt => '(' + nt.num + ') ' + nt.texto).join('<br><br>');
+        probResultados.appendChild(notaBox);
+      }
+
+    } else {
+      const causaIdx = parseInt(val);
+      const problemasComEssaCausa = OFFSET_PROBLEMAS.filter(p => p.c.includes(causaIdx));
+
+      if(problemasComEssaCausa.length === 0){
+        probResultados.innerHTML = '<div class="sem-resultado">Nenhum problema catalogado para esta causa.</div>';
+        return;
+      }
+
+      problemasComEssaCausa.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'causa-card';
+        const notas = extrairNotas(p.n);
+        card.innerHTML = '<div class="causa-texto">' + p.n + '</div>' +
+          (notas.length > 0 ? '<div class="causa-obs">Solução: ' + notas.map(nt=>nt.texto).join(' · ') + '</div>' : '');
+        probResultados.appendChild(card);
+      });
+    }
+  }
+
+  probModoSeg.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      probModoSeg.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      probModo = btn.dataset.val;
+      popularSelectProblemas();
+    });
+  });
+  probModoSeg.querySelector('button').classList.add('selected');
+
+  probSelect.addEventListener('change', renderProblemas);
+
+  popularSelectProblemas();
+
 </script>
 
 </body>
