@@ -282,6 +282,49 @@
     text-align:center;
     padding-bottom: 6px;
   }
+
+  /* Manchas */
+  select{
+    width:100%;
+    padding: 13px 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 9px;
+    font-size: 15px;
+    appearance: none;
+    -webkit-appearance:none;
+  }
+  select:focus{ outline:none; border-color: var(--accent); }
+
+  .causa-card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 13px 15px;
+    margin-bottom: 10px;
+  }
+  .causa-card .causa-mm{
+    font-size: 12px;
+    color: var(--accent);
+    font-weight:700;
+    margin-bottom: 4px;
+  }
+  .causa-card .causa-texto{
+    font-size: 14.5px;
+    line-height:1.4;
+  }
+  .causa-card .causa-obs{
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .sem-resultado{
+    text-align:center;
+    color: var(--text-dim);
+    font-size: 14px;
+    padding: 24px 10px;
+  }
 </style>
 </head>
 <body>
@@ -301,7 +344,7 @@
     <section class="screen active" data-screen="home">
       <div class="grid">
         <div class="tile" data-goto="insumos">Insumos</div>
-        <div class="tile" data-goto="pedro">Pedro</div>
+        <div class="tile" data-goto="manchas">Manchas</div>
         <div class="tile disabled">Chapas</div>
         <div class="tile disabled">Tintas</div>
         <div class="tile disabled">Blanquetas</div>
@@ -326,18 +369,20 @@
       </div>
     </section>
 
-    <!-- PEDRO (CHAT) -->
-    <section class="screen" data-screen="pedro">
-      <div class="chat-wrap">
-        <div class="chat-tag">Consulta a base de defeitos de impressão do projeto + busca na web</div>
-        <div class="chat-log" id="chatLog">
-          <div class="msg assistant">Oi, sou o Pedro. Me pergunta sobre algum defeito de impressão (marmorização, velatura, arrancamento, secagem, etc.) ou qualquer coisa que precise buscar na internet.</div>
-        </div>
-        <div class="chat-input-row">
-          <textarea id="chatInput" rows="1" placeholder="Escreva sua pergunta..."></textarea>
-          <button class="send-btn" id="sendBtn">➤</button>
-        </div>
+    <!-- MANCHAS -->
+    <section class="screen" data-screen="manchas">
+
+      <div class="field">
+        <label>Distância da borda da pinça até a mancha (mm)</label>
+        <input type="number" id="manchaMmInput" step="0.1" placeholder="Ex: 220" inputmode="decimal">
       </div>
+
+      <div class="hint" style="margin-top:0; border-top:none; padding-top:0;">
+        O app busca, em todas as máquinas da base, as causas catalogadas dentro da faixa de <strong>±5 mm</strong> da medida informada.
+      </div>
+
+      <div id="manchasResultados" style="margin-top:18px;"></div>
+
     </section>
 
     <!-- MEDIÇÃO IPA -->
@@ -439,7 +484,7 @@
     insumos: { title: "Insumos",            crumb: "Início" },
     molha:   { title: "Molha",              crumb: "Insumos" },
     ipa:     { title: "Medição IPA",        crumb: "Molha" },
-    pedro:   { title: "Pedro",              crumb: "Início" }
+    manchas: { title: "Manchas",            crumb: "Início" }
   };
 
   let stack = ['home'];
@@ -556,196 +601,483 @@
     compSub.textContent = "Compensação: " + sinal + compensacao.toFixed(1) + " % · Leitura compensada: " + leituraCompensada.toFixed(1);
   }
 
-  // ---------- PEDRO (chat com base de conhecimento + busca web) ----------
-  const KB_TEXT = `
-BASE DE CONHECIMENTO — DEFEITOS DE IMPRESSÃO OFFSET (parque gráfico)
 
-ACÚMULO NA BLANQUETA (Build-up/Piling): Causas: tack/viscosidade baixa, tinta secativa/concentrada, excesso de cera ou branco opaco, chapa mal revelada, pressões erradas, blanqueta vidrada, papel soltando pó, solução de molha desequilibrada, rolaria desgastada. Soluções: verniz mordente, ajustar secagem, refazer chapas, regular pressões, trocar blanqueta, reduzir tack, refazer solução de molha, manutenção da rolaria.
+  // ---------- MANCHAS (diagnóstico por posição em mm) ----------
+  // Cada registro: [Máquina, Causa/Componente, Posição em mm a partir da borda da pinça/folha, Observação]
+  const MANCHAS_DB = [
+['CD102','Abertura de pinça do contra pressão (6K)',8.8,''],
+['CD102','Abertura de pinça do contra pressão (8K)',11.7,''],
+['CD102','Marcas de engrenagem — Unidade de tinta',12.1,''],
+['CD102','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['CD102','Marcas de engrenagem — Transmissão principal',13.3,''],
+['CD102','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['CD102','Abertura de pinça do contra pressão (10K)',14.6,''],
+['CD102','Marcas de engrenagem — Distribuidor de tinta',16.1,''],
+['CD102','Abertura de pinça do contra pressão (12K)',17.6,''],
+['CD102','Abertura de pinça do contra pressão (14K)',20.5,''],
+['CD102','Abertura de pinça do contra pressão (15K)',22.0,''],
+['CD102','Marcas de engrenagem — Vibrador',28.3,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',54.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',65.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da imagem',74.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da imagem',82.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',92.0,''],
+['CD102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',98.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',102.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da chapa',112.0,''],
+['CD102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',127.0,''],
+['CD102','Faixa de rolagem — 1º rolo de forma (chapa)',188.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da chapa',194.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',198.0,''],
+['CD102','Faixa de rolagem — 3º rolo de forma (chapa)',207.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da chapa',212.0,''],
+['CD102','Faixa de folga E2 (Fim Chapa x Blanqueta)',212.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da imagem',213.0,''],
+['CD102','Faixa de rolagem 1 — PLC - BLC (E2)',213.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',217.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da imagem',217.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',224.0,''],
+['CD102','Faixa de rolagem — 2º rolo de forma (chapa)',226.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da imagem',229.0,''],
+['CD102','Faixa de rolagem 1 — Rolo de molha - Borda frontal da chapa',239.0,''],
+['CD102','Faixa de rolagem — Rolo molhador',245.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',249.0,''],
+['CD102','Faixa de rolagem — 4º rolo de forma (chapa)',251.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 4 - Borda frontal da chapa',255.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',255.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',261.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',261.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',291.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',291.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',299.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',320.0,''],
+['CD102','Faixa de folga A2 (Início Chapa x Blanqueta)',349.0,''],
+['CD102','Faixa de rolagem 2 — PLC - BLC (A2)',350.0,''],
+['CD102','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',388.0,''],
+['CD102','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',519.0,''],
+['CD74','Dampening (normal)',7.2,'Gear streaks CD74'],
+['CD74','Dampening (Vario)',7.5,'Gear streaks CD74'],
+['CD74','Inking unit drive',8.2,'Gear streaks CD74'],
+['CD74','Marca de engrenagem — Engrenagem da unidade de tinta',8.2,''],
+['CD74','Main drive',13.3,'Gear streaks CD74'],
+['CD74','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['CD74','Oscillation',21.2,'Gear streaks CD74'],
+['CD74','Ink duct drive',35.4,'Gear streaks CD74'],
+['CD74','End PLC - BLC',85.0,'gap streak'],
+['CD74','Metering roller - water form',107.0,''],
+['CD74','2. Form roller RE max. image',122.0,'2. revolution from tail'],
+['CD74','2. Form roller RE plate',126.0,'2. revolution from tail'],
+['CD74','4. Form roller RE max. image',160.0,'2. revolution from tail'],
+['CD74','4. Form roller RE plate',164.0,'2. revolution from tail'],
+['CD74','Water form roller RE max. image',186.0,'2. revolution from tail'],
+['CD74','Faixa de rolagem — 2º rolo de forma (chapa)',188.0,''],
+['CD74','Water form roller RE plate',190.0,'2. revolution from tail'],
+['CD74','2. Form roller FE plate',190.0,'1. revolution from gripper'],
+['CD74','2. Form roller FE max. image',197.0,'1. revolution from gripper'],
+['CD74','3. Form roller RE max. image',198.0,'2. revolution from tail'],
+['CD74','3. Form roller RE plate',202.0,'2. revolution from tail'],
+['CD74','Faixa de rolagem — 4º rolo de forma (chapa)',207.0,''],
+['CD74','4. Form roller FE max. image',209.0,'1. revolution from gripper'],
+['CD74','4. Form roller FE plate',216.0,'1. revolution from gripper'],
+['CD74','Faixa de rolagem — Rolo molhador',220.0,''],
+['CD74','Water form roller FE plate',222.0,'1. revolution from gripper'],
+['CD74','Faixa de rolagem — 3º rolo de forma (chapa)',226.0,''],
+['CD74','3. Form roller FE plate',228.0,'1. revolution from gripper'],
+['CD74','Water form roller FE max. image',229.0,'1. revolution from gripper'],
+['CD74','3. Form roller FE max. image',236.0,'1. revolution from gripper'],
+['CD74','1. Form roller RE max. image',236.0,''],
+['CD74','1. Form roller RE plate',240.0,''],
+['CD74','Faixa de rolagem — 1º rolo de forma (chapa)',245.0,''],
+['CD74','1. Form roller FE plate',247.0,'1. revolution from gripper'],
+['CD74','1. Form roller FE max. image',254.0,'1. revolution from gripper'],
+['CD74','End BLC - IMC',256.0,'gap streak'],
+['CD74','2. Form roller RE max. image',310.0,'3. revolution from tail'],
+['CD74','2. Form roller RE plate',314.0,'3. revolution from tail'],
+['CD74','Start PLC - BLC',349.0,'gap streak'],
+['CD74','4. Form roller RE max. image',370.0,'3. revolution from tail'],
+['CD74','4. Form roller RE plate',374.0,'3. revolution from tail'],
+['CD74','2. Form roller FE plate',378.0,'2. revolution from gripper'],
+['CD74','2. Form roller FE max. image',385.0,'2. revolution from gripper'],
+['CD74','Water form roller RE max. image',406.0,'3. revolution from tail'],
+['CD74','Water form roller RE plate',410.0,'3. revolution from tail'],
+['CD74','4. Form roller FE max. image',416.0,'2. revolution from gripper'],
+['CD74','4. Form roller FE plate',423.0,'2. revolution from gripper'],
+['CD74','3. Form roller RE max. image',425.0,'3. revolution from tail'],
+['CD74','3. Form roller RE plate',429.0,'3. revolution from tail'],
+['CD74','Water form roller FE plate',442.0,'2. revolution from gripper'],
+['CD74','Water form roller FE max. image',449.0,'2. revolution from gripper'],
+['CD74','3. Form roller FE plate',454.0,'2. revolution from gripper'],
+['CD74','3. Form roller FE max. image',461.0,'2. revolution from gripper'],
+['CD74','1. Form roller RE max. image',481.0,'3. revolution from tail'],
+['CD74','1. Form roller RE plate',485.0,'3. revolution from tail'],
+['CD74','1. Form roller FE plate',492.0,'2. revolution from gripper'],
+['CD74','2. Form roller RE max. image',498.0,'4. Revolution from tail'],
+['CD74','1. Form roller FE max. image',499.0,'2. revolution from gripper'],
+['CD74','2. Form roller RE plate',502.0,'4. Revolution from tail'],
+['CD74','Start BLC - IMC',517.0,'gap streak'],
+['CD74','2. Form roller FE plate',566.0,'3. revolution from gripper'],
+['CD74','2. Form roller FE max. image',573.0,'3. revolution from gripper'],
+['CD74','4. Form roller RE max. image',574.0,'4. Revolution from tail'],
+['CD74','4. Form roller RE plate',578.0,'4. Revolution from tail'],
+['CD74C','Faixa de dente — Unidade de tinta',8.2,''],
+['CD74C','Faixa de dente — Cilindro principal',13.3,''],
+['CD74C','Faixa de folga E2 (Fim Chapa x Blanqueta)',16.0,''],
+['CD74C','Faixa de canal — Cilindro de pinça – Guz (E2)',50.0,''],
+['CD74C','Desbobinamento 2 — Cilindro 2 - Borda traseira da imagem',56.0,''],
+['CD74C','Desbobinamento 2 — Cilindro 2 - Borda traseira da imagem',74.0,''],
+['CD74C','Desbobinamento 2 — Cilindro 4 - Borda traseira da imagem',86.0,''],
+['CD74C','Desbobinamento 4 — Cilindro 4 - Borda traseira da imagem',113.0,''],
+['CD74C','Desbobinamento 1 — Cilindro molhador - Borda traseira da imagem',119.0,''],
+['CD74C','Desbobinamento 1 — Cilindro 3 - Borda traseira da imagem',133.0,''],
+['CD74C','Desbobinamento 2 — Cilindro 3 - Borda traseira da imagem',145.0,''],
+['CD74C','Desbobinamento 1 — Cilindro 1 - Borda traseira da imagem',169.0,''],
+['CD74C','Desbobinamento 1 — Cilindro 1 - Borda traseira da imagem',191.0,''],
+['CD74C','Desbobinamento 1 — Cilindro 4 - Borda frontal da imagem',203.0,''],
+['CD74C','Desbobinamento 1 — Cilindro molhador - Borda frontal da imagem',214.0,''],
+['CD74C','Desbobinamento 1 — Cilindro 3 - Borda frontal da imagem',216.0,''],
+['CD74C','Desbobinamento 1 — Cilindro 4 - Borda frontal da imagem',222.0,''],
+['CD74C','Desbobinamento 1 — Cilindro 2 - Borda frontal da imagem',235.0,''],
+['CD74C','Desbobinamento 3 — Cilindro 4 - Borda frontal da imagem',238.0,''],
+['CD74C','Desbobinamento 1 — Cilindro 2 - Borda traseira da imagem',241.0,''],
+['CD74C','Desbobinamento 2 — Cilindro 1 - Borda traseira da imagem',245.0,''],
+['CD74C','Faixa de canal — Cilindro de pinça – Drz (E1)',260.0,''],
+['CD74C','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',260.0,''],
+['CD74C','Desbobinamento 3 — Cilindro 4 - Borda traseira da imagem',291.0,''],
+['CD74C','Desbobinamento 3 — Cilindro 4 - Borda traseira da imagem',301.0,''],
+['CD74C','Desbobinamento 3 — Cilindro molhador - Borda traseira da imagem',309.0,''],
+['CD74C','Desbobinamento 2 — Cilindro molhador - Borda traseira da imagem',340.0,''],
+['CD74C','Faixa de folga A2 (Início Chapa x Blanqueta)',349.0,''],
+['CD74C','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',517.0,''],
+['CD74F','Faixa de dente — Unidade de tinta',8.2,''],
+['CD74F','Faixa de dente — Cilindro principal',13.3,''],
+['CD74F','Desbobinamento 2 — Cilindro 2 - Borda traseira da imagem',24.0,''],
+['CD74F','Desbobinamento 2 — Cilindro 2 - Borda traseira da imagem',61.0,''],
+['CD74F','Desbobinamento 2 — Cilindro molhador - Borda traseira da imagem',87.0,''],
+['CD74F','Faixa de folga E2 (Fim Chapa x Blanqueta)',88.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 3 - Borda traseira da imagem',98.0,''],
+['CD74F','Faixa de canal — Cilindro de pinça – Guz (E2)',123.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 3 - Borda traseira da imagem',129.0,''],
+['CD74F','Desbobinamento 2 — Cilindro 2 - Borda traseira da imagem',138.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 4 - Borda traseira da imagem',150.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 1 - Borda traseira da imagem',169.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 1 - Borda traseira da imagem',191.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 2 - Borda frontal da imagem',196.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 3 - Borda frontal da imagem',203.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 4 - Borda frontal da imagem',211.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 2 - Borda frontal da imagem',214.0,''],
+['CD74F','Desbobinamento 1 — Cilindro molhador - Borda frontal da imagem',220.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 4 - Borda frontal da imagem',222.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 2 - Borda frontal da imagem',230.0,''],
+['CD74F','Desbobinamento 1 — Cilindro molhador - Borda frontal da imagem',233.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 3 - Borda frontal da imagem',235.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 2 - Borda frontal da imagem',236.0,''],
+['CD74F','Faixa de canal — Cilindro de saída',236.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 3 - Borda frontal da imagem',239.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 3 - Borda traseira da imagem',240.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 2 - Borda traseira da imagem',249.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 1 - Borda traseira da imagem',249.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 1 - Borda traseira da imagem',258.0,''],
+['CD74F','Desbobinamento 1 — Cilindro 1 - Borda traseira da imagem',260.0,''],
+['CD74F','Faixa de canal — Cilindro de pinça – Drz (E1)',260.0,''],
+['CD74F','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',260.0,''],
+['CD74F','Faixa de folga A2 (Início Chapa x Blanqueta)',349.0,''],
+['CD74F','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',517.0,''],
+['GTO 52','Marca de engrenagem — Engrenagem da unidade de tinta',5.3,''],
+['GTO 52','Marca de engrenagem — Trem de engrenagem / transmissão principal',9.1,''],
+['GTO 52','Faixa de folga E2 (Fim Chapa x Blanqueta)',148.0,''],
+['GTO 52','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',212.0,''],
+['GTO Alcolor','Faixa de rolagem — 2º rolo de forma (chapa)',141.0,''],
+['GTO Alcolor','Faixa de rolagem — 3º rolo de forma (chapa)',148.0,''],
+['GTO Alcolor','Faixa de rolagem — 1º rolo de forma (chapa)',154.0,''],
+['GTO Alcolor','Faixa de rolagem — 4º rolo de forma (chapa)',160.0,''],
+['GTO Alcolor','Faixa de rolagem — Rolo molhador',214.0,''],
+['GTO DDS','Faixa de rolagem — 2º rolo de forma (chapa)',141.0,''],
+['GTO DDS','Faixa de rolagem — 3º rolo de forma (chapa)',148.0,''],
+['GTO DDS','Faixa de rolagem — 1º rolo de forma (chapa)',154.0,''],
+['GTO DDS','Faixa de rolagem — 4º rolo de forma (chapa)',160.0,''],
+['GTO DDS','Faixa de rolagem — Rolo molhador',173.0,''],
+['MO','Marca de engrenagem — Engrenagem da unidade de tinta',7.7,''],
+['MO','Marca de engrenagem — Trem de engrenagem / transmissão principal',9.1,''],
+['MO','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',47.0,''],
+['MO','Faixa de rolagem — 3º rolo de forma (chapa)',160.0,''],
+['MO','Faixa de rolagem — 2º rolo de forma (chapa)',167.0,''],
+['MO','Faixa de rolagem — 4º rolo de forma (chapa)',173.0,''],
+['MO','Faixa de rolagem — 1º rolo de forma (chapa)',179.0,''],
+['MO','Faixa de rolagem — Rolo molhador',214.0,''],
+['MO','Faixa de folga E2 (Fim Chapa x Blanqueta)',231.0,''],
+['MO','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',258.0,''],
+['MO','Mancha de transferência de folha (pinças de saída)',280.0,''],
+['MO','Mancha de transferência de folha (pinças de saída)',295.0,''],
+['MO','Faixa de folga A2 (Início Chapa x Blanqueta)',450.0,''],
+['PM52','Marca de engrenagem — Engrenagem da unidade de tinta',5.9,''],
+['PM52','Marca de engrenagem — Trem de engrenagem / transmissão principal',9.0,''],
+['PM74','Mancha de transferência de folha (pinças de saída)',270.0,''],
+['PM74','Mancha de transferência de folha (pinças de saída)',295.0,''],
+['SM/PM74','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',86.0,''],
+['SM/PM74','Molhador 48mm',151.0,''],
+['SM/PM74','Faixa de rolagem — 3º rolo de forma (chapa)',173.0,''],
+['SM/PM74','Molhador 48mm 3º Chapa',173.0,''],
+['SM/PM74','Faixa de rolagem — 2º rolo de forma (chapa)',188.0,''],
+['SM/PM74','Molhador 48mm 2º Chapa',188.0,''],
+['SM/PM74','Faixa de rolagem — 4º rolo de forma (chapa)',204.0,''],
+['SM/PM74','Molhador 48mm 1º Chapa',204.0,''],
+['SM/PM74','Faixa de rolagem — 1º rolo de forma (chapa)',220.0,''],
+['SM/PM74','Molhador 48mm 4º Chapa',220.0,''],
+['SM/PM74','Faixa de rolagem — Rolo molhador',236.0,''],
+['SM/PM74','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',258.0,''],
+['SM/PM74','Faixa de folga E2 (Fim Chapa x Blanqueta)',272.0,''],
+['SM/PM74','Faixa de folga A2 (Início Chapa x Blanqueta)',450.0,''],
+['SM102','Marcas de engrenagem — Unidade de tinta',12.1,''],
+['SM102','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['SM102','Marcas de engrenagem — Transmissão principal',13.3,''],
+['SM102','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['SM102','Marcas de engrenagem — Distribuidor de tinta',16.1,''],
+['SM102','Marcas de engrenagem — Vibrador',28.3,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',54.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da imagem',65.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',73.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da imagem',82.0,''],
+['SM102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',92.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',98.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',113.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da chapa',122.0,''],
+['SM102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',127.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da chapa',144.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da chapa',166.0,''],
+['SM102','Faixa de folga E2 (Fim Chapa x Blanqueta)',173.0,''],
+['SM102','Faixa de rolagem — 1º rolo de forma (chapa)',188.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',194.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da chapa',198.0,''],
+['SM102','Faixa de rolagem — 3º rolo de forma (chapa)',207.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da imagem',213.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',217.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',224.0,''],
+['SM102','Faixa de rolagem — 2º rolo de forma (chapa)',226.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da imagem',229.0,''],
+['SM102','Faixa de rolagem 1 — PLC - BLC (E2)',232.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da imagem',236.0,''],
+['SM102','Faixa de rolagem — Rolo molhador',245.0,''],
+['SM102','Faixa de rolagem 1 — Rolo de molha - Borda frontal da chapa',249.0,''],
+['SM102','Faixa de rolagem — 4º rolo de forma (chapa)',251.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',255.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 4 - Borda frontal da chapa',255.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',261.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',261.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',299.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',299.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',317.0,''],
+['SM102','Faixa de folga A2 (Início Chapa x Blanqueta)',319.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',320.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',327.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',337.0,''],
+['SM102','Faixa de rolagem 2 — PLC - BLC (A2)',340.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',349.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',363.0,''],
+['SM102','Mancha de transferência de folha (pinças de saída)',370.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',373.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',377.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',383.0,''],
+['SM102','Mancha de transferência de folha (pinças de saída)',385.0,''],
+['SM102','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',416.0,''],
+['SM102','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',549.0,''],
+['SM52','Abertura de pinça do contra pressão (6K)',2.2,''],
+['SM52','Abertura de pinça do contra pressão (8K)',3.0,''],
+['SM52','Abertura de pinça do contra pressão (10K)',3.7,''],
+['SM52','Abertura de pinça do contra pressão (12K)',4.4,''],
+['SM52','Abertura de pinça do contra pressão (14K)',5.2,''],
+['SM52','Abertura de pinça do contra pressão (15K)',5.5,''],
+['SM52','Faixa de folga E2 (Fim Chapa x Blanqueta)',163.0,''],
+['SM52','Faixa de rolagem — 3º rolo de forma (chapa)',170.0,''],
+['SM52','Faixa de rolagem — 2º rolo de forma (chapa)',192.0,''],
+['SM52','Faixa de rolagem — 1º rolo de forma (chapa)',203.0,''],
+['SM52','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',212.0,''],
+['SM52','Faixa de rolagem — Rolo molhador',214.0,''],
+['SM52','Faixa de rolagem — 4º rolo de forma (chapa)',214.0,''],
+['SM52','Mancha de transferência de folha (pinças de saída)',283.0,''],
+['SM72','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['SM72','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['SM72','Faixa de rolagem — 1º rolo de forma (chapa)',188.0,''],
+['SM72','Faixa de rolagem — 3º rolo de forma (chapa)',207.0,''],
+['SM72','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',216.0,''],
+['SM72','Faixa de rolagem — 2º rolo de forma (chapa)',226.0,''],
+['SM72','Faixa de rolagem — Rolo molhador',245.0,''],
+['SM72','Faixa de rolagem — 4º rolo de forma (chapa)',251.0,''],
+['SM72','Faixa de folga A2 (Início Chapa x Blanqueta)',319.0,''],
+['SM74','Abertura de pinça do contra pressão (6K)',3.7,''],
+['SM74','Abertura de pinça do contra pressão (8K)',5.0,''],
+['SM74','Abertura de pinça do contra pressão (10K)',6.2,''],
+['SM74','Abertura de pinça do contra pressão (12K)',7.5,''],
+['SM74','Marcas de engrenagem — Unidade de tinta',7.7,''],
+['SM74','Marca de engrenagem — Engrenagem da unidade de tinta',7.7,''],
+['SM74','Abertura de pinça do contra pressão (14K)',8.7,''],
+['SM74','Marcas de engrenagem — Transmissão principal',9.1,''],
+['SM74','Marca de engrenagem — Trem de engrenagem / transmissão principal',9.1,''],
+['SM74','Abertura de pinça do contra pressão (15K)',9.3,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da imagem',18.0,''],
+['SM74','Marcas de engrenagem — Distribuidor de tinta',18.4,''],
+['SM74','Faixa de rolagem 3 — Rolo de molha - Borda frontal da chapa',18.4,''],
+['SM74','Marcas de engrenagem — Vibrador',28.3,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',37.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda frontal da imagem',40.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',44.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',44.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',52.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',54.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',59.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',65.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',69.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',73.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',73.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',90.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',96.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',113.0,''],
+['SM74','Faixa de rolagem 1 — PLC - IMC (E1)',113.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',127.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',144.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',149.0,''],
+['SM74','Faixa de rolagem 1 — PLC - IMC (E1)',156.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',160.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da imagem',163.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da imagem',169.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',169.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da imagem',178.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',178.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',181.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',181.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',181.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',190.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da imagem',195.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da chapa',198.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',198.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da chapa',204.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',207.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',211.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',217.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',220.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da chapa',225.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',228.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da chapa',229.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 4 - Borda frontal da chapa',232.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',232.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da chapa',235.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',237.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',238.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 4 - Borda traseira da imagem',239.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 4 - Borda traseira da chapa',243.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',245.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',246.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',253.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',254.0,''],
+['SM74','Faixa de rolagem 1 — PLC - BLC (E2)',258.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',264.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da chapa',273.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da chapa',274.0,''],
+['SM74','Faixa de rolagem 2 — Transferência de folha',285.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',327.0,''],
+['SM74','Faixa de rolagem 2 — PLC - IMC (A1)',343.0,''],
+['SORMZ DW1','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['SORMZ DW1','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['SORMZ DW1','Faixa de rolagem — 1º rolo de forma (chapa)',188.0,''],
+['SORMZ DW1','Faixa de rolagem — 3º rolo de forma (chapa)',207.0,''],
+['SORMZ DW1','Faixa de rolagem — 2º rolo de forma (chapa)',226.0,''],
+['SORMZ DW1','Faixa de rolagem — Rolo molhador',245.0,''],
+['SORMZ DW1','Faixa de rolagem — 4º rolo de forma (chapa)',251.0,''],
+['SORMZ DW1','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',266.0,''],
+['SORMZ DW1','Faixa de folga A2 (Início Chapa x Blanqueta)',268.0,''],
+['SORMZ DW2','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['SORMZ DW2','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['SORMZ DW2','Faixa de rolagem — 1º rolo de forma (chapa)',188.0,''],
+['SORMZ DW2','Faixa de rolagem — 3º rolo de forma (chapa)',207.0,''],
+['SORMZ DW2','Faixa de rolagem — 2º rolo de forma (chapa)',226.0,''],
+['SORMZ DW2','Faixa de rolagem — Rolo molhador',245.0,''],
+['SORMZ DW2','Faixa de rolagem — 4º rolo de forma (chapa)',251.0,''],
+['SORMZ DW2','Faixa de folga E2 (Fim Chapa x Blanqueta)',266.0,''],
+['SORMZ DW2','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',268.0,''],
+['SORSZ DW1','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['SORSZ DW1','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['SORSZ DW1','Faixa de folga E2 (Fim Chapa x Blanqueta)',113.0,''],
+['SORSZ DW1','Faixa de rolagem — 1º rolo de forma (chapa)',188.0,''],
+['SORSZ DW1','Faixa de rolagem — 3º rolo de forma (chapa)',207.0,''],
+['SORSZ DW1','Faixa de rolagem — 2º rolo de forma (chapa)',226.0,''],
+['SORSZ DW1','Faixa de rolagem — Rolo molhador',245.0,''],
+['SORSZ DW1','Faixa de rolagem — 4º rolo de forma (chapa)',251.0,''],
+['SORSZ DW1','Faixa de folga A2 (Início Chapa x Blanqueta)',268.0,''],
+['SORSZ DW1','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',459.0,''],
+['SORSZ DW1','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',600.0,''],
+['SORSZ DW2','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['SORSZ DW2','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['SORSZ DW2','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',127.0,''],
+['SORSZ DW2','Faixa de rolagem — 1º rolo de forma (chapa)',188.0,''],
+['SORSZ DW2','Faixa de rolagem — 3º rolo de forma (chapa)',207.0,''],
+['SORSZ DW2','Faixa de rolagem — 2º rolo de forma (chapa)',226.0,''],
+['SORSZ DW2','Faixa de rolagem — Rolo molhador',245.0,''],
+['SORSZ DW2','Faixa de rolagem — 4º rolo de forma (chapa)',251.0,''],
+['SORSZ DW2','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',268.0,''],
+['SORSZ DW2','Faixa de folga E2 (Fim Chapa x Blanqueta)',445.0,''],
+['SORSZ DW2','Faixa de folga A2 (Início Chapa x Blanqueta)',600.0,''],
+['XL105','Marca de engrenagem — Engrenagem da unidade de tinta',8.9,''],
+['XL105','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.0,''],
+['XL105','Faixa de folga E2 (Fim Chapa x Blanqueta)',167.0,''],
+['XL105','Faixa de rolagem — 3º rolo de forma (chapa)',232.0,''],
+['XL105','Faixa de rolagem — 1º rolo de forma (chapa)',251.0,''],
+['XL105','Faixa de rolagem — 2º rolo de forma (chapa)',270.0,''],
+['XL105','Faixa de rolagem — Rolo molhador',289.0,''],
+['XL105','Faixa de rolagem — 4º rolo de forma (chapa)',320.0,''],
+['XL105','Faixa de folga A2 (Início Chapa x Blanqueta)',361.0,''],
+['XL105','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',400.0,''],
+['XL105','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',594.0,''],
+['XL106','Marca de engrenagem — Engrenagem da unidade de tinta',8.9,''],
+['XL106','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.0,''],
+['XL106','Faixa de folga E2 (Fim Chapa x Blanqueta)',167.0,''],
+['XL106','Faixa de rolagem — 3º rolo de forma (chapa)',232.0,''],
+['XL106','Faixa de rolagem — 1º rolo de forma (chapa)',251.0,''],
+['XL106','Faixa de rolagem — 2º rolo de forma (chapa)',270.0,''],
+['XL106','Faixa de rolagem — Rolo molhador',289.0,''],
+['XL106','Faixa de rolagem — 4º rolo de forma (chapa)',320.0,''],
+['XL106','Faixa de folga A2 (Início Chapa x Blanqueta)',361.0,''],
+['XL106','Faixa de folga E1 (Fim Blanqueta x Contra-pressão)',400.0,''],
+['XL106','Faixa de folga A1 (Início Blanqueta x Contra-pressão)',594.0,'']
+];
 
-AMARELAMENTO (formação de imagem): Contato entre folhas na pilha após impressão. Causas: combinação revestimento+tinta, calor/frio na pilha. Soluções: trocar tinta/papel, armazenar longe de calor/frio, dar tempo de secagem antes de virar, ventilar folhas, revestir com verniz de dispersão.
+  const manchaMmInput = document.getElementById('manchaMmInput');
+  const manchasResultados = document.getElementById('manchasResultados');
 
-AMASSADOS / DEPRESSÕES NA BLANQUETA: Deformação por pressão excessiva ou corpo estranho. Solução: mergulhar blanqueta em água 24h e descansar; danos profundos = remendar; prevenção = pressão mínima (0.07-0.10mm), detector de folha dupla, paralelismo dos cilindros.
+  function renderManchas(){
+    const mmStr = manchaMmInput.value;
+    manchasResultados.innerHTML = '';
 
-ARRANCAMENTO (Picking/Pick seco e úmido): Causas: tack excessivo da tinta vs resistência do papel, pressão alta, blanqueta pegajosa, papel com baixa resistência superficial, excesso de solução de molha (arrancamento úmido). Soluções: pasta antitack, reduzir velocidade e pressão, blanqueta quick-release, reduzir alimentação de molha, aumentar IPA, trocar papel.
+    if(mmStr === ''){ return; }
 
-ATRITO / BAIXO RUB-OFF: Tinta seca mas remove com fricção. Causas: secagem incompleta, veículo insuficiente, papel matte áspero, excesso de água/pH errado, pouco IPA, pó anti-decalque abrasivo. Soluções: tinta mais concentrada/secativa, ajustar pH 4.0-4.5, aumentar IPA se baixo, verniz de proteção, secador IR.
+    const mm = parseFloat(mmStr);
+    if(isNaN(mm)){ return; }
 
-BAIXO RELEASE DO PAPEL: Tack alto, má sincronização de rolaria, blanqueta inchada. Solução: reduzir tack, sincronizar cilindros, solventes de limpeza corretos, tinta mais lenta.
+    const min = mm - 5;
+    const max = mm + 5;
 
-BLISTERING (bolhas): Temperatura de secagem alta + papel sensível, vapor preso sob revestimento. Solução: reduzir temperatura do forno/velocidade, reduzir camada de tinta (UCR), sobreposição de cores ≤300%.
+    const candidatos = MANCHAS_DB
+      .filter(r => r[2] >= min && r[2] <= max)
+      .sort((a,b) => Math.abs(a[2]-mm) - Math.abs(b[2]-mm));
 
-BRILHO BAIXO: Verniz incorreto, papel áspero, pouco/muito verniz, papel muito absorvente. Solução: papel liso, verniz lustroso, ajustar quantidade de verniz, revestimento seco sobre seco.
+    if(candidatos.length === 0){
+      manchasResultados.innerHTML = '<div class="sem-resultado">Nenhuma causa catalogada entre ' +
+        min.toFixed(1) + ' mm e ' + max.toFixed(1) + ' mm.</div>';
+      return;
+    }
 
-CAROÇO / HICKEYS: Partículas (tinta seca, fibra, pó) na chapa/blanqueta. Causas: pele de tinta, rolos sujos, pó de corte, papel soltando fibra. Solução: retirar crosta de tinta, limpar rolaria/blanquetas, remover pó de corte, ambiente limpo.
-
-CHAPADOS DEFICIENTES/POBRES: Relação tinta/água alta, calço não uniforme/macio, blanqueta velha, tack alto, superfície de chapa inadequada. Solução: reduzir relação tinta/água, calço equilibrado/duro, trocar blanqueta, reduzir tack, trocar chapa.
-
-CONSUMO ALTO DE TINTA: Densidade inadequada, papel muito absorvente, balanço tinta-água ruim, tinta pouco pigmentada. Solução: menor densidade possível com qualidade, papel menos absorvente, tinta mais concentrada, balanço tinta-água.
-
-CONTAMINAÇÃO DE TINTAS CLARAS: Tintas escuras contaminam claras (amarelo) nas últimas unidades em úmido-sobre-úmido. Solução: trocar tinta, mover cor clara p/ frente, mais molha nas tintas claras, sequência "tela antes da superfície".
-
-CRAQUELAMENTO / CASCA DE LARANJA: Verniz seca rápido demais e racha, ou tensão superficial do verniz maior que a da tinta. Solução: reduzir temperatura do secador, aumentar velocidade, retardador no verniz, agente de molhagem no verniz.
-
-DELAMINAÇÃO DA BLANQUETA: Acúmulo de tinta seca, excesso de pressão, blanqueta/calço inchados, bordas da chapa cortando a blanqueta. Solução: mais água na blanqueta, reduzir calço, trocar calço, remover rebarbas da chapa, selar laterais.
-
-DESGASTE/CORROSÃO DA CHAPA: Aditivos agressivos, pH alto da molha, muito IPA, pouca redução de tinta, oxidação por falta de proteção. Solução: ajustar pH 4.0-4.5, protetores na solução de molha, gomar chapa em paradas.
-
-DUPLAGEM (Doubling): Imagem fantasma fora de registro por tinta residual na blanqueta. Causas: blanqueta/chapa mal tensionada, desgaste mecânico, papel ondulado, variação dimensional por umidade, papel escorrega nas pinças. Solução: tensionar com torquímetro, trocar peças desgastadas, condicionar papel (25°C/50%UR), reduzir molha, aumentar IPA, blanqueta quick-release.
-
-EMULSIONAMENTO: Excesso de solução de molha na tinta (>20%). Causas: muita água, pH baixo (3.0-3.5), muito álcool, tinta fina/baixa qualidade. Solução: reduzir água, ajustar pH 4.0-4.5, IPA ~15%, tinta melhor/mais grossa, lavar rolos.
-
-ENTUPIMENTO / FILLING: Meios-tons sem nitidez, ganho de ponto excessivo. Causas: excesso de tinta na chapa, balanço água/tinta ruim, blanqueta vidrada, chapa mal processada. Solução: menos tinta, balanço água/tinta, limpar/trocar blanqueta, revisar exposição da chapa.
-
-ESPUMA: Circulação forte com entrada de ar (verniz) ou aditivos espumosos (molha). Solução: IPA inibe espuma na molha; ajustar bomba/fluxo do verniz, antiespumante na dosagem certa.
-
-ESTÁTICA: Umidade relativa <40%, folhas grudam. Solução: ionizadores, ambiente 50-55% UR, papel com 45-55% de umidade, barras antiestáticas.
-
-FANTASMA (Ghosting): Elementos da chapa aparecem como sombra. Causas: excesso de água, rolos de forma ruins/gastos, baixa distribuição/pigmentação de tinta, secagem diferencial (frente/verso). Solução: reduzir água, tintas mais pigmentadas, UCR, não usar secantes extras, verniz de dispersão, envernizar frente antes do verso.
-
-GRANULAÇÃO (Graininess): Textura granulada em tons médios. Causas: emulsificação excessiva, blanqueta vidrada/lisa, contaminação, temperatura alta. Solução: lavar unidade, molha 10-15°C abaixo do ambiente, tinta 28-30°C, IPA até 10%, trocar blanqueta.
-
-MANCHAS/RAIAS (Streaks): Cruzadas (chapa/molha/pó), longitudinais (starvation/contaminação), de rolo, de folga, de engrenagem. Solução geral: limpar rolos e blanquetas com produtos certos, ajustar reciprocidade lateral, verificar pressão chapa-blanqueta (0.1-0.13mm), balancear tinta-água.
-
-MARCAS DE FORMATO: Borda do papel marca a blanqueta. Solução: calço sob medida, reduzir pressão e molha antes, substituir blanqueta.
-
-MARMORIZAÇÃO (Mottling): Impressão manchada tipo nuvem. Tipos: backtrap (absorção irregular do papel), interferência de água (excesso de molha), superfície do papel, do impressor (pressão insuficiente/emulsão). Solução: identificar origem (papel x prensa) com luz UV, reduzir molha, tinta menos concentrada em água, aumentar pressão, trocar sequência de cores.
-
-MILKING: Partículas de carbonato de cálcio do papel na blanqueta (áreas de contragrafismo). Causas: pH ácido da molha dissolve CaCO3, papel alcalino. Solução: pH molha 5.0-5.5, reduzir alimentação de molha, trocar IPA por outro tensoativo, água pH~6 dureza 8-10, blanqueta lisa pouco porosa, lavar rolos periodicamente.
-
-PERDA DE ESPESSURA DA BLANQUETA: Tensionamento alto, pressão de nip alta, acúmulo de fibra/tinta. Solução: reduzir tensão/pressão, blanqueta limpa, verificar mecânica.
-
-PERDA DE PONTO: Desgaste da chapa, limpador abrasivo, pH baixo da molha, muito álcool. Solução: chapa adequada, limpador certificado, não usar pó abrasivo, seguir instruções de mistura da molha.
-
-PIRULITO / DELAMINAÇÃO DE CAMADAS (cartão): Força de colagem insuficiente, viscosidade alta, pressão alta, blanqueta pegajosa. Solução: reduzir velocidade e pressão, trocar cartão, reduzir viscosidade da tinta, verificar blanquetas/calços.
-
-PÓ DO PAPEL (dusting/fluffing): Fibras soltas ou facas cegas. Solução: reduzir tack, blanquetas de tração fraca, facas afiadas, lavar blanquetas, trocar papel.
-
-PODRAGEM: Veículo da tinta penetra rápido demais, pigmento não fixa. Causas: papel muito absorvente/ácido, tinta muito concentrada. Solução: verniz de sobreimpressão, tinta reformulada, ajustar pH da molha.
-
-CHAPA CEGA: Parte da imagem não aceita tinta. Causas: molha muito ácida, excesso de goma, sistema de molha contaminado, chapa mal revelada, excesso de pó/pressão. Solução: pH 4.0-4.5, refazer molha, limpar chapa, ajustar pressão chapa-blanqueta.
-
-REBATIMENTO (Strike-through): Tinta atravessa para o lado da frente. Causas: papel fino/poroso, tinta de baixa viscosidade, camada espessa de tinta. Solução: papel com menor porosidade, UCR, viscosidade adequada, evitar emulsificação.
-
-REGISTRO: Cores fora de posição. Causas: erro de operador, grão do papel errado, distorção do papel, defeito na chapa, prensa mal ajustada, blanqueta inchada/com depressão, estática, curl. Solução: registrar com precisão, papel de grão longo, ambientar papel, ajustar garras, reduzir pressão/molha.
-
-RISCOS (Chalking/Carbonating): Pigmento remove mesmo com tinta seca. Causas: absorção rápida do veículo, papel matte, tinta muito líquida. Solução: revestir com verniz, tinta mais viscosa, evitar secador IR excessivo, facas afiadas no corte.
-
-RUGAS: Papel mal condicionado/ondulado, ajustes errados do alimentador, estática. Solução: papel bem climatizado (20-22°C, 50-55%UR), ajustar guias e pinças, reduzir sopro de ar, reduzir pressão de impressão.
-
-SANGRAMENTO DA TINTA: Veículo penetra demais, pigmento sem ligação. Solução: tinta de secagem rápida, secadores, aumentar viscosidade, verniz de sobreimpressão.
-
-SECAGEM (Blocking/Set-off/Decalque): Tinta não seca a tempo, transfere para folha seguinte. Causas: tinta pouco concentrada, excesso de água/aditivo, pH molha <4.7, papel muito absorvente/úmido, pilha alta, pouco pó antidecalque. Solução: tinta mais concentrada, reduzir molha, pH molha ≥4.7, reduzir sobreposição de cor (≤300-320%), mais pó antidecalque, pilhas menores, arejar pilha, secador IR.
-
-SLUR / PONTO CORRIDO: Ponto oval por deslizamento chapa-blanqueta-papel. Causas: pressão excessiva, calço errado, blanqueta solta, papel não seguro pelas pinças. Solução: verificar calço/tensão com torquímetro, reduzir pressão, limpar pinças, blanqueta de baixo tack.
-
-TINTA DORMINDO NO TINTEIRO: Pouca tinta, tinta tixotrópica. Solução: adicionar tinta e mexer, agitador de tinta, verniz macio (não usar pasta antitack).
-
-TINTA TRANSPASSA O PAPEL (Show-through): Opacidade insuficiente do papel. Solução: papel mais opaco, viscosidade adequada, evitar aditivos que reduzam viscosidade, evitar emulsificação.
-
-TONALIDADE INCORRETA: Papel diferente do padrão, tinta fora do tom, rolaria contaminada, molha instável, iluminante errado. Solução: mesmo suporte do padrão, ajustar carga de tinta, limpar rolaria, equilibrar água/tinta, iluminante D50.
-
-TRANSFERÊNCIA DE TINTA/ROLARIA RUIM: Excesso de água, pH alto, rolos vidrados/sujos, tinta muito concentrada/resistente à água. Solução: reduzir água, pH 4.0-4.5, limpar/desvitrificar rolos, ajustar tinta.
-
-TRAPPING DEFICIENTE (rejeição de cor): Tack fora de sequência, secagem lenta, excesso de cera/pó antidecalque, demora entre cores. Solução: tack decrescente entre unidades, imprimir cores subsequentes mais rápido, reduzir secante na 1ª cor, limpar excesso de pó.
-
-TVI / GANHO DE PONTO EXCESSIVO: Causas: pressão excessiva, tack/tinta errados, blanqueta velha/vidrada, molha em excesso, temperatura alta, papel absorvente. Solução: ajustar pressão (0.10-0.13mm), reduzir carga de tinta, molha equilibrada, controle de temperatura (28-30°C tinta), calços corretos.
-
-UV — PROBLEMAS: Rejeição do verniz UV (tensão superficial baixa, tinta não seca) — pré-tratar corona, deixar secar. Cura insuficiente — checar potência/lâmpada do secador. Blocagem — checar cura, pilha baixa. Adesão tinta-verniz — cura adequada, pré-tratamento.
-
-VARIAÇÃO DE COR: Mudança de velocidade, temperatura, reenchimento de tinteiro, tinta estagnada, lotes diferentes de tinta, iluminação inconsistente na avaliação. Solução: mudar velocidade em pequenas etapas, pré-aquecer prensa, agitador de tinta, mesmo lote de tinta, avaliar sob D50.
-
-VELATURA (Scumming): Áreas sem imagem aceitam tinta (névoa). Causas: chapa mal preparada/oxidada, rolaria com dureza errada/vidrada, molha inadequada/pH alto, pouco álcool. Solução: refazer/regravar chapa, regular pressão, limpar/trocar rolos, molha pH 4.0-4.5, ajustar IPA ~10%.
-
-VERNIZ — PROBLEMAS: Furos (pressão insuficiente, cobertor danificado), Squash (pressão excessiva/verniz viscoso), Espirrar (velocidade alta, ajuste errado), Má secagem (viscosidade errada, temperatura do secador baixa), Má adesão (temperatura do secador incorreta) — testar com fita adesiva.
-
-VINCO NA IMPRESSÃO: Papel mal condicionado/ondulado, configuração errada do alimentador. Solução: papel plano bem climatizado, ajustar guias/pinças, reduzir sopro de ar, otimizar avanço lateral.
-
-VITRIFICAÇÃO DA BLANQUETA: Resíduo de coating do papel, aditivos de molha/secagem, rolaria mal sincronizada, solventes inadequados. Solução: manter blanqueta limpa, contatar fornecedor de papel, solventes certificados.
-
-VOAGEM (nebulização de tinta): Excesso de velocidade, tinta muito fluida, rolos desgastados/vidrados, balanço tinta-água ruim. Solução: ajustar impressora p/ menos tinta, tinta mais concentrada, regular rolos, balanço tinta-água.
-
-MEDIÇÃO DE ÁLCOOL ISOPROPÍLICO (IPA) NA SOLUÇÃO DE MOLHA: Tabela de correção Technotrans relaciona densidade do aditivo (1.05 a 1.20), dosagem (2-4%) e leitura do densímetro/alcoômetro com o % real de IPA (4% a 22%). Quanto maior a densidade do aditivo e a dosagem, menor a leitura do densímetro para o mesmo % real de álcool. Compensação de temperatura: se o alcoômetro é calibrado a 10°C e a solução está a 10°C, sem compensação; se calibrado a 20°C medindo solução a 10°C, soma-se aprox. 3% na leitura (proporção adotada: 0,3%/°C de diferença entre calibração do instrumento e temperatura da solução).
-`.trim();
-
-  const chatLog = document.getElementById('chatLog');
-  const chatInput = document.getElementById('chatInput');
-  const sendBtn = document.getElementById('sendBtn');
-
-  let chatHistory = []; // {role, content}
-
-  function addMsg(role, text){
-    const div = document.createElement('div');
-    div.className = 'msg ' + role;
-    div.textContent = text;
-    chatLog.appendChild(div);
-    chatLog.scrollTop = chatLog.scrollHeight;
-    return div;
+    candidatos.forEach(([maq, causa, posMm, obs]) => {
+      const card = document.createElement('div');
+      card.className = 'causa-card';
+      const diff = posMm - mm;
+      const diffTxt = (diff === 0 ? 'exato' : (diff > 0 ? '+' + diff.toFixed(1) + ' mm' : diff.toFixed(1) + ' mm'));
+      card.innerHTML =
+        '<div class="causa-mm">' + maq + ' &nbsp;·&nbsp; ' + posMm.toFixed(1) + ' mm &nbsp;·&nbsp; ' + diffTxt + '</div>' +
+        '<div class="causa-texto">' + causa + '</div>' +
+        (obs ? '<div class="causa-obs">' + obs + '</div>' : '');
+      manchasResultados.appendChild(card);
+    });
   }
 
-  chatInput.addEventListener('input', ()=>{
-    chatInput.style.height = 'auto';
-    chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
-  });
-
-  chatInput.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter' && !e.shiftKey){
-      e.preventDefault();
-      enviarMensagem();
-    }
-  });
-
-  sendBtn.addEventListener('click', enviarMensagem);
-
-  async function enviarMensagem(){
-    const texto = chatInput.value.trim();
-    if(!texto) return;
-
-    addMsg('user', texto);
-    chatHistory.push({ role:'user', content: texto });
-    chatInput.value = '';
-    chatInput.style.height = 'auto';
-    sendBtn.disabled = true;
-
-    const thinkingEl = addMsg('thinking', 'Pedro está pensando...');
-
-    try{
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1000,
-          system: "Você é o Pedro, assistente técnico de um parque gráfico offset. Responda em português, de forma direta e prática, como um técnico experiente. Use a BASE DE CONHECIMENTO abaixo como fonte principal para perguntas sobre defeitos de impressão, causas e soluções. Se a pergunta exigir informação atual ou não coberta pela base, use a busca na web. Se não tiver certeza, diga isso claramente em vez de inventar.\n\n" + KB_TEXT,
-          messages: chatHistory,
-          tools: [ { type: "web_search_20250305", name: "web_search" } ]
-        })
-      });
-
-      const data = await response.json();
-      thinkingEl.remove();
-
-      if(data.error){
-        addMsg('assistant', 'Erro ao consultar: ' + (data.error.message || JSON.stringify(data.error)));
-        sendBtn.disabled = false;
-        return;
-      }
-
-      const textBlocks = (data.content || [])
-        .filter(item => item.type === 'text')
-        .map(item => item.text)
-        .join('\n');
-
-      const respostaFinal = textBlocks || '(sem resposta de texto)';
-      addMsg('assistant', respostaFinal);
-      chatHistory.push({ role:'assistant', content: respostaFinal });
-
-    } catch(err){
-      thinkingEl.remove();
-      addMsg('assistant', 'Não consegui falar com o servidor agora. Isso funciona apenas enquanto este arquivo estiver aberto dentro do Claude. Erro: ' + err.message);
-    }
-
-    sendBtn.disabled = false;
-  }
+  manchaMmInput.addEventListener('input', renderManchas);
 </script>
 
 </body>
