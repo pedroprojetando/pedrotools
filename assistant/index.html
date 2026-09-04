@@ -325,6 +325,59 @@
     font-size: 14px;
     padding: 24px 10px;
   }
+
+  /* Solvente */
+  .antes-depois{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .ad-col{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .ad-title{
+    font-size: 13px;
+    font-weight:700;
+    color: var(--accent);
+    text-align:center;
+    margin-bottom: 12px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .ad-col .field{ margin-bottom: 12px; }
+  .ad-col .field:last-child{ margin-bottom:0; }
+  .ad-col label{ font-size:11px; margin-bottom:5px; }
+  .ad-col input[type="number"]{
+    padding: 10px 10px;
+    font-size: 15px;
+  }
+  .totals-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .totals-box{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    text-align:center;
+  }
+  .totals-label{
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .totals-value{
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
 </style>
 </head>
 <body>
@@ -355,6 +408,7 @@
     <section class="screen" data-screen="insumos">
       <div class="grid">
         <div class="tile" data-goto="molha">Molha</div>
+        <div class="tile" data-goto="solvente">Solvente</div>
         <div class="tile disabled">Verniz</div>
         <div class="tile disabled">Papel</div>
       </div>
@@ -382,6 +436,58 @@
       </div>
 
       <div id="manchasResultados" style="margin-top:18px;"></div>
+
+    </section>
+
+    <!-- SOLVENTE -->
+    <section class="screen" data-screen="solvente">
+
+      <div class="antes-depois">
+        <div class="ad-col">
+          <div class="ad-title">Antes</div>
+          <div class="field">
+            <label>%</label>
+            <input type="number" id="solvAntesPct" step="0.1" placeholder="Ex: 50" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label>Qtd</label>
+            <input type="number" id="solvAntesQtd" step="0.1" placeholder="Ex: 3" inputmode="decimal">
+          </div>
+        </div>
+        <div class="ad-col">
+          <div class="ad-title">Depois</div>
+          <div class="field">
+            <label>%</label>
+            <input type="number" id="solvDepoisPct" step="0.1" placeholder="Ex: 50" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label>Qtd</label>
+            <input type="number" id="solvDepoisQtd" step="0.1" placeholder="Ex: 1" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <div class="totals-row">
+        <div class="totals-box">
+          <div class="totals-label">Total antes</div>
+          <div class="totals-value" id="solvTotalAntes">—</div>
+        </div>
+        <div class="totals-box">
+          <div class="totals-label">Total depois</div>
+          <div class="totals-value" id="solvTotalDepois">—</div>
+        </div>
+      </div>
+
+      <div class="result-box">
+        <div class="result-label" id="solvResultLabel">Variação de consumo</div>
+        <div class="result-value" id="solvResultValue">—</div>
+      </div>
+
+      <div class="hint" style="margin-top:22px;">
+        Fórmula: Total = % × Quantidade, para "antes" e "depois". A variação é calculada como
+        (1 − Total depois / Total antes) × 100. Resultado positivo = redução de consumo;
+        resultado negativo = aumento de consumo.
+      </div>
 
     </section>
 
@@ -480,11 +586,12 @@
   const titleEl = document.getElementById('screenTitle');
 
   const META = {
-    home:    { title: "Assistente Técnico", crumb: "Início" },
-    insumos: { title: "Insumos",            crumb: "Início" },
-    molha:   { title: "Molha",              crumb: "Insumos" },
-    ipa:     { title: "Medição IPA",        crumb: "Molha" },
-    manchas: { title: "Manchas",            crumb: "Início" }
+    home:     { title: "Assistente Técnico", crumb: "Início" },
+    insumos:  { title: "Insumos",            crumb: "Início" },
+    molha:    { title: "Molha",              crumb: "Insumos" },
+    ipa:      { title: "Medição IPA",        crumb: "Molha" },
+    manchas:  { title: "Manchas",            crumb: "Início" },
+    solvente: { title: "Solvente",           crumb: "Insumos" }
   };
 
   let stack = ['home'];
@@ -1078,6 +1185,54 @@
   }
 
   manchaMmInput.addEventListener('input', renderManchas);
+
+  // ---------- SOLVENTE (Antes/Depois) ----------
+  const solvAntesPct = document.getElementById('solvAntesPct');
+  const solvAntesQtd = document.getElementById('solvAntesQtd');
+  const solvDepoisPct = document.getElementById('solvDepoisPct');
+  const solvDepoisQtd = document.getElementById('solvDepoisQtd');
+  const solvTotalAntes = document.getElementById('solvTotalAntes');
+  const solvTotalDepois = document.getElementById('solvTotalDepois');
+  const solvResultLabel = document.getElementById('solvResultLabel');
+  const solvResultValue = document.getElementById('solvResultValue');
+
+  function calcularSolvente(){
+    const ap = parseFloat(solvAntesPct.value);
+    const aq = parseFloat(solvAntesQtd.value);
+    const dp = parseFloat(solvDepoisPct.value);
+    const dq = parseFloat(solvDepoisQtd.value);
+
+    const temAntes = !isNaN(ap) && !isNaN(aq);
+    const temDepois = !isNaN(dp) && !isNaN(dq);
+
+    const totalAntes = temAntes ? ap * aq : null;
+    const totalDepois = temDepois ? dp * dq : null;
+
+    solvTotalAntes.textContent = totalAntes !== null ? totalAntes.toFixed(2) : '—';
+    solvTotalDepois.textContent = totalDepois !== null ? totalDepois.toFixed(2) : '—';
+
+    if(totalAntes === null || totalDepois === null || totalAntes === 0){
+      solvResultLabel.textContent = 'Variação de consumo';
+      solvResultValue.textContent = '—';
+      solvResultValue.style.color = 'var(--accent)';
+      return;
+    }
+
+    const variacao = (1 - (totalDepois / totalAntes)) * 100;
+
+    if(variacao >= 0){
+      solvResultLabel.textContent = 'Redução de consumo';
+      solvResultValue.style.color = 'var(--accent)';
+    } else {
+      solvResultLabel.textContent = 'Aumento de consumo';
+      solvResultValue.style.color = 'var(--danger)';
+    }
+    solvResultValue.textContent = Math.abs(variacao).toFixed(2) + ' %';
+  }
+
+  [solvAntesPct, solvAntesQtd, solvDepoisPct, solvDepoisQtd].forEach(el=>{
+    el.addEventListener('input', calcularSolvente);
+  });
 </script>
 
 </body>
