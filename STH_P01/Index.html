@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Residencial - STH P01</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #0d1117;
+    --bg-elev: #161b22;
+    --bg-elev-2: #1c2330;
+    --border: #2a3140;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --accent-2: #7ee787;
+    --red: #ff6b6b;
+    --blue: #4dabf7;
+    --shadow: 0 8px 24px rgba(0,0,0,0.45);
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background: radial-gradient(circle at 20% 20%, #131a24 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ---------- TELA INICIAL ---------- */
+  #home-screen{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:24px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  #home-screen h1{
+    font-weight:300;
+    letter-spacing:1px;
+    color: var(--text-dim);
+    font-size:1.1rem;
+    text-transform:uppercase;
+  }
+
+  #open-device-btn{
+    padding: 32px 64px;
+    font-size: 1.6rem;
+    font-weight:600;
+    letter-spacing: 1px;
+    color: #fff;
+    background: linear-gradient(135deg, #1f6feb, #388bfd);
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 0 0 rgba(56,139,253,0.4);
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+  }
+
+  #open-device-btn:hover{
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 12px 30px rgba(56,139,253,0.45);
+  }
+
+  #open-device-btn:active{
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* ---------- TELA DO DISPOSITIVO ---------- */
+  #device-screen{
+    display:none;
+    width:100%;
+    max-width: 1100px;
+    padding: 28px 24px 60px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  #device-screen.active{
+    display:block;
+  }
+
+  #home-screen.hidden{
+    display:none;
+  }
+
+  .top-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 24px;
+  }
+
+  .top-bar h2{
+    margin:0;
+    font-weight:500;
+    font-size:1.4rem;
+  }
+
+  .top-bar h2 span{
+    color: var(--text-dim);
+    font-weight:300;
+    font-size: 1rem;
+    margin-left:8px;
+  }
+
+  #back-btn{
+    padding: 10px 20px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    cursor:pointer;
+    font-size: 0.95rem;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  #back-btn:hover{
+    background:#242c3a;
+    border-color: var(--accent);
+  }
+
+  /* Visor fixo */
+  .reading-card{
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    gap: 20px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 20px;
+    margin-bottom: 26px;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+  }
+
+  .reading-item{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-width: 160px;
+  }
+
+  .reading-item .icon{
+    font-size: 2rem;
+    margin-bottom: 6px;
+  }
+
+  .reading-value{
+    font-size: 2.6rem;
+    font-weight:700;
+    line-height:1;
+  }
+
+  .reading-value.temp{ color: var(--red); }
+  .reading-value.hum{ color: var(--blue); }
+
+  .reading-label{
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .reading-divider{
+    width:1px;
+    align-self: stretch;
+    background: var(--border);
+  }
+
+  .last-update{
+    text-align:center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-top: -14px;
+    margin-bottom: 22px;
+  }
+
+  #status-dot{
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background: var(--accent-2);
+    margin-right:6px;
+    box-shadow: 0 0 6px var(--accent-2);
+  }
+
+  /* Filtros */
+  .filters{
+    display:flex;
+    gap: 10px;
+    justify-content:center;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+
+  .filter-btn{
+    padding: 9px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--text-dim);
+    cursor:pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+
+  .filter-btn:hover{
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  .filter-btn.active{
+    background: linear-gradient(135deg, #1f6feb, #388bfd);
+    color:#fff;
+    border-color: transparent;
+    font-weight:600;
+  }
+
+  /* Gráfico */
+  .chart-card{
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    height: 420px;
+    position: relative;
+  }
+
+  #loading-msg{
+    position:absolute;
+    top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    display:none;
+  }
+
+  #error-msg{
+    position:absolute;
+    top:12px; left:50%;
+    transform: translateX(-50%);
+    max-width: 90%;
+    color: var(--red);
+    font-size: 0.85rem;
+    background: rgba(255,107,107,0.12);
+    border: 1px solid rgba(255,107,107,0.4);
+    padding: 10px 16px;
+    border-radius: 8px;
+    display:none;
+    text-align:center;
+    z-index: 5;
+    line-height:1.4;
+  }
+
+  @keyframes fadeIn{
+    from{opacity:0; transform: translateY(10px);}
+    to{opacity:1; transform: translateY(0);}
+  }
+
+  @media (max-width: 600px){
+    #open-device-btn{ padding: 24px 44px; font-size: 1.3rem; }
+    .reading-value{ font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- TELA INICIAL -->
+  <div id="home-screen">
+    <h1>Monitoramento Residencial</h1>
+    <button id="open-device-btn">STH P01</button>
+  </div>
+
+  <!-- TELA DO DISPOSITIVO -->
+  <div id="device-screen">
+    <div class="top-bar">
+      <h2>STH P01 <span>&mdash; Sensor de Temperatura &amp; Umidade</span></h2>
+      <button id="back-btn">← Voltar</button>
+    </div>
+
+    <div class="reading-card">
+      <div class="reading-item">
+        <div class="icon">🌡️</div>
+        <div class="reading-value temp" id="temp-value">--°C</div>
+        <div class="reading-label">Temperatura</div>
+      </div>
+      <div class="reading-divider"></div>
+      <div class="reading-item">
+        <div class="icon">💧</div>
+        <div class="reading-value hum" id="hum-value">--%</div>
+        <div class="reading-label">Umidade</div>
+      </div>
+    </div>
+
+    <div class="last-update">
+      <span id="status-dot"></span>Última leitura: <span id="last-update-time">--</span>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn" data-period="minute">Minuto</button>
+      <button class="filter-btn active" data-period="hour">Hora</button>
+      <button class="filter-btn" data-period="day">Dia</button>
+      <button class="filter-btn" data-period="month">Mês</button>
+      <button class="filter-btn" data-period="year">Ano</button>
+    </div>
+
+    <div class="chart-card">
+      <div id="loading-msg">Carregando dados...</div>
+      <div id="error-msg"></div>
+      <canvas id="history-chart"></canvas>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ================= CONFIG =================
+  const API_URL = "https://script.google.com/macros/s/AKfycbxgBudboQ0_SDxYhAtkzjJu_HiN7fUNF8taddRvYrzpHw1_TB6rixMZuQyZurcOhDo/exec";
+  const REFRESH_INTERVAL_MS = 30000; // 30 segundos
+
+  // ================= ESTADO =================
+  let rawData = [];          // array bruto vindo da planilha
+  let currentPeriod = "hour";
+  let chart = null;
+  let refreshTimer = null;
+
+  // ================= ELEMENTOS =================
+  const homeScreen = document.getElementById("home-screen");
+  const deviceScreen = document.getElementById("device-screen");
+  const openBtn = document.getElementById("open-device-btn");
+  const backBtn = document.getElementById("back-btn");
+  const tempValueEl = document.getElementById("temp-value");
+  const humValueEl = document.getElementById("hum-value");
+  const lastUpdateTimeEl = document.getElementById("last-update-time");
+  const filterButtons = document.querySelectorAll(".filter-btn");
+  const loadingMsg = document.getElementById("loading-msg");
+  const errorMsg = document.getElementById("error-msg");
+  const ctx = document.getElementById("history-chart").getContext("2d");
+
+  // ================= NAVEGAÇÃO =================
+  openBtn.addEventListener("click", () => {
+    homeScreen.classList.add("hidden");
+    deviceScreen.classList.add("active");
+
+    if(typeof Chart === "undefined"){
+      showError("⚠ A biblioteca Chart.js não carregou (falha no CDN). Verifique sua conexão com a internet ou se algum bloqueador de conteúdo/adblocker está impedindo o carregamento de cdnjs.cloudflare.com.");
+      console.error("[STH P01] Chart.js não está definido. O script do CDN não carregou.");
+      return;
+    }
+
+    initChart();
+    fetchData();
+    startAutoRefresh();
+  });
+
+  backBtn.addEventListener("click", () => {
+    deviceScreen.classList.remove("active");
+    homeScreen.classList.remove("hidden");
+    stopAutoRefresh();
+  });
+
+  // ================= FILTROS =================
+  filterButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filterButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentPeriod = btn.dataset.period;
+      renderChart();
+    });
+  });
+
+  // ================= FETCH =================
+  async function fetchData(){
+    showLoading(true);
+    hideError();
+    console.log("[STH P01] Buscando dados em:", API_URL);
+    try {
+      const response = await fetch(API_URL, { cache: "no-store" });
+      console.log("[STH P01] Status HTTP:", response.status, response.statusText);
+
+      if(!response.ok){
+        throw new Error("Erro HTTP " + response.status + " " + response.statusText);
+      }
+
+      // Lê como texto primeiro para conseguir depurar caso não seja JSON válido
+      const rawText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch(parseErr){
+        console.error("[STH P01] Resposta não é JSON válido. Corpo recebido:", rawText.slice(0, 500));
+        throw new Error("A resposta não é um JSON válido (o Apps Script pode estar retornando uma página de login/erro em vez dos dados). Veja o Console (F12) para o corpo da resposta.");
+      }
+
+      console.log("[STH P01] Dados brutos recebidos:", data);
+
+      // Aceita tanto um array puro quanto um objeto { data: [...] } ou { values: [...] }
+      let list = data;
+      if(!Array.isArray(list)){
+        if(Array.isArray(data.data)) list = data.data;
+        else if(Array.isArray(data.values)) list = data.values;
+        else if(Array.isArray(data.rows)) list = data.rows;
+        else throw new Error("O JSON retornado não é um array e não contém 'data'/'values'/'rows'. Formato recebido: " + JSON.stringify(data).slice(0,200));
+      }
+
+      if(list.length === 0){
+        throw new Error("O array retornado está vazio (nenhuma linha na planilha ainda).");
+      }
+
+      // Normaliza chaves (remove acentos, espaços, barras, deixa minúsculo) e valores
+      function normalizeKey(k){
+        return k
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, ""); // remove espaços, barras, underscores etc.
+      }
+
+      const normalized = list.map(item => {
+        const norm = {};
+        Object.keys(item).forEach(k => { norm[normalizeKey(k)] = item[k]; });
+
+        const tsRaw = norm.datahora ?? norm.timestamp ?? norm.data ?? norm.hora ?? norm.time;
+        const tempRaw = norm.temperatura ?? norm.temperature ?? norm.temp;
+        const humRaw = norm.umidade ?? norm.humidade ?? norm.humidity ?? norm.hum;
+
+        return {
+          timestamp: new Date(tsRaw),
+          temperatura: Number(tempRaw),
+          umidade: Number(humRaw)
+        };
+      });
+
+      const invalidCount = normalized.filter(d => isNaN(d.timestamp.getTime()) || isNaN(d.temperatura) || isNaN(d.umidade)).length;
+      if(invalidCount > 0){
+        console.warn("[STH P01]", invalidCount, "linha(s) descartada(s) por timestamp/valor inválido. Verifique os nomes dos campos no JSON (ex.: 'temperatura', 'umidade', 'timestamp').");
+      }
+
+      rawData = normalized
+        .filter(d => !isNaN(d.timestamp.getTime()) && !isNaN(d.temperatura) && !isNaN(d.umidade))
+        .sort((a,b) => a.timestamp - b.timestamp);
+
+      if(rawData.length === 0){
+        throw new Error("Nenhuma linha válida após normalização. Confira no Console os campos do JSON retornado.");
+      }
+
+      console.log("[STH P01] Última leitura processada:", rawData[rawData.length - 1]);
+
+      const sameValueCount = normalized.filter(d => d.temperatura === d.umidade).length;
+      if(sameValueCount > normalized.length * 0.5){
+        console.warn("[STH P01] ATENÇÃO: temperatura e umidade estão idênticas na maioria das linhas. " +
+          "Isso geralmente indica que duas colunas da planilha têm o MESMO nome de cabeçalho (ex.: as duas chamadas 'Temperatura'), " +
+          "fazendo o Apps Script gerar apenas uma chave no JSON. Renomeie a coluna de umidade na planilha para 'Umidade'.");
+      }
+
+      updateReadingCard();
+      renderChart();
+    } catch(err){
+      console.error("[STH P01] Falha ao buscar/processar dados:", err);
+      showError("⚠ " + err.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function showLoading(show){
+    loadingMsg.style.display = show ? "block" : "none";
+  }
+
+  function showError(msg){
+    errorMsg.textContent = msg;
+    errorMsg.style.display = "block";
+  }
+
+  function hideError(){
+    errorMsg.style.display = "none";
+  }
+
+  // ================= VISOR FIXO =================
+  function updateReadingCard(){
+    if(rawData.length === 0) return;
+    const last = rawData[rawData.length - 1];
+    tempValueEl.textContent = last.temperatura.toFixed(1) + "°C";
+    humValueEl.textContent = last.umidade.toFixed(1) + "%";
+    lastUpdateTimeEl.textContent = last.timestamp.toLocaleString("pt-BR");
+  }
+
+  // ================= AGRUPAMENTO POR PERÍODO =================
+  function getBucketKey(date, period){
+    const y = date.getFullYear();
+    const mo = date.getMonth();
+    const d = date.getDate();
+    const h = date.getHours();
+    const mi = date.getMinutes();
+
+    switch(period){
+      case "minute": // agrupa por minuto (últimos dados, granularidade mínima)
+        return new Date(y, mo, d, h, mi).getTime();
+      case "hour": // agrupa por hora
+        return new Date(y, mo, d, h).getTime();
+      case "day": // agrupa por dia
+        return new Date(y, mo, d).getTime();
+      case "month": // agrupa por mês
+        return new Date(y, mo, 1).getTime();
+      case "year": // agrupa por ano
+        return new Date(y, 0, 1).getTime();
+      default:
+        return date.getTime();
+    }
+  }
+
+  function getWindowStart(period, now){
+    const d = new Date(now);
+    switch(period){
+      case "minute": d.setHours(d.getHours() - 1); break;      // última 1h, granularidade por minuto
+      case "hour": d.setDate(d.getDate() - 1); break;           // último dia, granularidade por hora
+      case "day": d.setDate(d.getDate() - 30); break;           // últimos 30 dias, granularidade por dia
+      case "month": d.setFullYear(d.getFullYear() - 1); break;  // último ano, granularidade por mês
+      case "year": d.setFullYear(d.getFullYear() - 10); break;  // últimos 10 anos, granularidade por ano
+      default: break;
+    }
+    return d;
+  }
+
+  function buildAggregatedSeries(period){
+    if(rawData.length === 0) return { labels: [], temps: [], hums: [] };
+
+    const now = rawData[rawData.length - 1].timestamp;
+    const windowStart = getWindowStart(period, now);
+
+    const filtered = rawData.filter(d => d.timestamp >= windowStart);
+    const source = filtered.length > 0 ? filtered : rawData;
+
+    const buckets = new Map();
+
+    source.forEach(d => {
+      const key = getBucketKey(d.timestamp, period);
+      if(!buckets.has(key)){
+        buckets.set(key, { sumTemp: 0, sumHum: 0, count: 0, date: new Date(key) });
+      }
+      const b = buckets.get(key);
+      b.sumTemp += d.temperatura;
+      b.sumHum += d.umidade;
+      b.count += 1;
+    });
+
+    const sortedKeys = Array.from(buckets.keys()).sort((a,b) => a - b);
+
+    const labels = [];
+    const temps = [];
+    const hums = [];
+
+    sortedKeys.forEach(key => {
+      const b = buckets.get(key);
+      labels.push(formatLabel(b.date, period));
+      temps.push(Number((b.sumTemp / b.count).toFixed(2)));
+      hums.push(Number((b.sumHum / b.count).toFixed(2)));
+    });
+
+    return { labels, temps, hums };
+  }
+
+  function formatLabel(date, period){
+    switch(period){
+      case "minute":
+        return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      case "hour":
+        return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) + " " +
+               date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      case "day":
+        return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      case "month":
+        return date.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+      case "year":
+        return date.toLocaleDateString("pt-BR", { year: "numeric" });
+      default:
+        return date.toLocaleString("pt-BR");
+    }
+  }
+
+  // ================= GRÁFICO =================
+  function initChart(){
+    if(chart) return;
+    chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Temperatura (°C)",
+            data: [],
+            borderColor: "#ff6b6b",
+            backgroundColor: "rgba(255,107,107,0.12)",
+            borderWidth: 2,
+            tension: 0.35,
+            pointRadius: 2,
+            yAxisID: "yTemp",
+            fill: true
+          },
+          {
+            label: "Umidade (%)",
+            data: [],
+            borderColor: "#4dabf7",
+            backgroundColor: "rgba(77,171,247,0.12)",
+            borderWidth: 2,
+            tension: 0.35,
+            pointRadius: 2,
+            yAxisID: "yHum",
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: {
+            labels: { color: "#e6edf3" }
+          },
+          tooltip: {
+            backgroundColor: "#1c2330",
+            titleColor: "#e6edf3",
+            bodyColor: "#e6edf3",
+            borderColor: "#2a3140",
+            borderWidth: 1
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: "#8b949e", maxRotation: 0, autoSkip: true },
+            grid: { color: "rgba(255,255,255,0.05)" }
+          },
+          yTemp: {
+            position: "left",
+            ticks: { color: "#ff6b6b" },
+            grid: { color: "rgba(255,255,255,0.05)" },
+            title: { display: true, text: "°C", color: "#ff6b6b" }
+          },
+          yHum: {
+            position: "right",
+            ticks: { color: "#4dabf7" },
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: "%", color: "#4dabf7" }
+          }
+        }
+      }
+    });
+  }
+
+  function renderChart(){
+    if(!chart) return;
+    const { labels, temps, hums } = buildAggregatedSeries(currentPeriod);
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = temps;
+    chart.data.datasets[1].data = hums;
+    chart.update();
+  }
+
+  // ================= AUTO REFRESH =================
+  function startAutoRefresh(){
+    stopAutoRefresh();
+    refreshTimer = setInterval(fetchData, REFRESH_INTERVAL_MS);
+  }
+
+  function stopAutoRefresh(){
+    if(refreshTimer){
+      clearInterval(refreshTimer);
+      refreshTimer = null;
+    }
+  }
+
+})();
+</script>
+</body>
+</html>
