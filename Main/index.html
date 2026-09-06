@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu - Ferramentas</title>
+<style>
+  :root {
+    --bg-dark: #0f1720;
+    --bg-card: #1a2531;
+    --accent: #3ba7ff;
+    --accent-2: #2ecfa5;
+    --text-light: #e8eef4;
+    --text-muted: #8fa1b3;
+    --border: #2a3a4a;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 0%, #16222e 0%, var(--bg-dark) 60%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--text-light);
+    padding: 24px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+  }
+
+  .header {
+    margin-bottom: 32px;
+  }
+
+  .header .icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.3px;
+  }
+
+  .header p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+
+  .menu {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: var(--text-light);
+    text-align: left;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .menu-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 20px rgba(59, 167, 255, 0.15);
+  }
+
+  .menu-btn .emoji {
+    font-size: 28px;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 167, 255, 0.12);
+    border-radius: 10px;
+  }
+
+  .menu-btn.assistant .emoji {
+    background: rgba(46, 207, 165, 0.12);
+  }
+
+  .menu-btn .text {
+    flex: 1;
+  }
+
+  .menu-btn .title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .menu-btn .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .menu-btn .arrow {
+    color: var(--text-muted);
+    font-size: 18px;
+  }
+
+  footer {
+    margin-top: 32px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="icon">🧰</div>
+      <h1>Minhas Ferramentas</h1>
+      <p>Selecione uma ferramenta para acessar</p>
+    </div>
+
+    <div class="menu">
+      <a class="menu-btn sth" href="https://pbraghin.com.br/sth/">
+        <span class="emoji">🌡️</span>
+        <span class="text">
+          <span class="title">STH P01</span>
+          <span class="subtitle">Monitoramento Residencial</span>
+        </span>
+        <span class="arrow">›</span>
+      </a>
+
+      <a class="menu-btn assistant" href="https://pbraghin.com.br/assistant/">
+        <span class="emoji">🖨️</span>
+        <span class="text">
+          <span class="title">Assistant</span>
+          <span class="subtitle">Assistente do Técnico Gráfico</span>
+        </span>
+        <span class="arrow">›</span>
+      </a>
+    </div>
+
+    <footer>pbraghin.com.br</footer>
+  </div>
+</body>
+</html>
