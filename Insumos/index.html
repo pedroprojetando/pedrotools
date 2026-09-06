@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Insumos — Assistente do Técnico Gráfico</title>
+<style>
+  :root{
+    --bg: #232526;
+    --bg-deep: #1a1b1c;
+    --panel: #2d2f31;
+    --panel-hover: #383b3d;
+    --text: #ffffff;
+    --text-dim: #a8adb0;
+    --accent: #e0a13c;
+    --accent-dim: #8a6a2c;
+    --line: #3c3f41;
+    --danger: #d9695f;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0;
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    min-height:100vh;
+  }
+  .app{
+    max-width: 480px;
+    margin: 0 auto;
+    min-height:100vh;
+    background: var(--bg);
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    padding: 22px 20px 16px 20px;
+    border-bottom: 1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .back-btn{
+    background:none;
+    border: 1px solid var(--line);
+    color: var(--text);
+    width:38px; height:38px;
+    border-radius:8px;
+    font-size:18px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  .back-btn:active{ background: var(--panel-hover); }
+  .back-btn.hidden{ visibility:hidden; }
+  .titles{ display:flex; flex-direction:column; line-height:1.25; }
+  .crumb{
+    font-size:12px;
+    color: var(--text-dim);
+    letter-spacing:.02em;
+  }
+  .screen-title{
+    font-size:20px;
+    font-weight:600;
+    color: var(--text);
+  }
+  main{
+    flex:1;
+    padding: 20px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .tile{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 14px;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    text-align:center;
+    cursor:pointer;
+    min-height: 96px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition: background .12s ease, transform .08s ease;
+  }
+  .tile:active{
+    background: var(--panel-hover);
+    transform: scale(.97);
+  }
+  .tile.disabled{
+    color: var(--text-dim);
+    cursor:default;
+    opacity:.55;
+  }
+  .tile.disabled:active{ transform:none; background:var(--panel); }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  /* Calculadora */
+  .field{
+    margin-bottom: 18px;
+  }
+  .field label{
+    display:block;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .seg{
+    display:flex;
+    gap:8px;
+  }
+  .seg button{
+    flex:1;
+    padding: 12px 6px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 9px;
+    font-size: 14px;
+    cursor:pointer;
+  }
+  .seg button.selected{
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  input[type="number"]{
+    width:100%;
+    padding: 13px 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 9px;
+    font-size: 16px;
+  }
+  input[type="number"]:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+  .result-box{
+    margin-top: 26px;
+    padding: 20px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    text-align:center;
+  }
+  .result-label{
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .result-value{
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height:1.1;
+  }
+  .result-sub{
+    margin-top:6px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .warn{
+    color: var(--danger);
+    font-weight:600;
+  }
+  .hint{
+    margin-top: 22px;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height:1.5;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+
+  /* Solvente */
+  .antes-depois{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .ad-col{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .ad-title{
+    font-size: 13px;
+    font-weight:700;
+    color: var(--accent);
+    text-align:center;
+    margin-bottom: 12px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .ad-col .field{ margin-bottom: 12px; }
+  .ad-col .field:last-child{ margin-bottom:0; }
+  .ad-col label{ font-size:11px; margin-bottom:5px; }
+  .ad-col input[type="number"]{
+    padding: 10px 10px;
+    font-size: 15px;
+  }
+  .totals-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .totals-box{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    text-align:center;
+  }
+  .totals-label{
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .totals-value{
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* Botão da tabela de compensação (IPA) */
+  .ipa-topbar{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom: 10px;
+  }
+  .tabela-btn{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight:600;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor:pointer;
+  }
+  .tabela-btn:active{ background: var(--panel-hover); }
+
+  /* Modal */
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background: rgba(0,0,0,.6);
+    z-index: 50;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .modal-overlay.active{ display:flex; }
+  .modal-box{
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 82vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+    font-weight:700;
+  }
+  .modal-close{
+    background:none;
+    border:none;
+    color: var(--text-dim);
+    font-size: 18px;
+    cursor:pointer;
+    padding: 2px 6px;
+  }
+  .modal-body{
+    overflow:auto;
+    padding: 12px 14px 20px 14px;
+  }
+  .tech-table{
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+  .tech-table th, .tech-table td{
+    border: 1px solid var(--line);
+    padding: 5px 6px;
+    text-align:center;
+  }
+  .tech-table thead th{
+    background: var(--panel);
+    color: var(--accent);
+    position: sticky;
+    top: 0;
+  }
+  .tech-table td.pct-col{
+    background: var(--panel);
+    font-weight:700;
+    color: var(--text);
+    position: sticky;
+    left: 0;
+  }
+  .tech-table .dens-group{
+    background: var(--panel-hover);
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <button class="back-btn hidden" id="backBtn" aria-label="Voltar">‹</button>
+    <div class="titles">
+      <span class="crumb" id="crumb">Início</span>
+      <span class="screen-title" id="screenTitle">Insumos</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- INSUMOS (tela raiz nesta versão) -->
+    <section class="screen active" data-screen="insumos">
+      <div class="grid">
+        <div class="tile" data-goto="molha">Molha</div>
+        <div class="tile" data-goto="solvente">Solvente</div>
+        <div class="tile disabled">Verniz</div>
+        <div class="tile disabled">Papel</div>
+      </div>
+    </section>
+
+    <!-- MOLHA -->
+    <section class="screen" data-screen="molha">
+      <div class="grid">
+        <div class="tile" data-goto="ipa">Medição IPA</div>
+        <div class="tile disabled">Aditivo</div>
+        <div class="tile disabled">pH</div>
+      </div>
+    </section>
+
+    <!-- SOLVENTE -->
+    <section class="screen" data-screen="solvente">
+
+      <div class="antes-depois">
+        <div class="ad-col">
+          <div class="ad-title">Antes</div>
+          <div class="field">
+            <label>%</label>
+            <input type="number" id="solvAntesPct" step="0.1" placeholder="Ex: 50" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label>Qtd</label>
+            <input type="number" id="solvAntesQtd" step="0.1" placeholder="Ex: 3" inputmode="decimal">
+          </div>
+        </div>
+        <div class="ad-col">
+          <div class="ad-title">Depois</div>
+          <div class="field">
+            <label>%</label>
+            <input type="number" id="solvDepoisPct" step="0.1" placeholder="Ex: 50" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label>Qtd</label>
+            <input type="number" id="solvDepoisQtd" step="0.1" placeholder="Ex: 1" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <div class="totals-row">
+        <div class="totals-box">
+          <div class="totals-label">Total antes</div>
+          <div class="totals-value" id="solvTotalAntes">—</div>
+        </div>
+        <div class="totals-box">
+          <div class="totals-label">Total depois</div>
+          <div class="totals-value" id="solvTotalDepois">—</div>
+        </div>
+      </div>
+
+      <div class="result-box">
+        <div class="result-label" id="solvResultLabel">Variação de consumo</div>
+        <div class="result-value" id="solvResultValue">—</div>
+      </div>
+
+      <div class="hint" style="margin-top:22px;">
+        Fórmula: Total = % × Quantidade, para "antes" e "depois". A variação é calculada como
+        (1 − Total depois / Total antes) × 100. Resultado positivo = redução de consumo;
+        resultado negativo = aumento de consumo.
+      </div>
+
+    </section>
+
+    <!-- MEDIÇÃO IPA -->
+    <section class="screen" data-screen="ipa">
+
+      <div class="ipa-topbar">
+        <button class="tabela-btn" id="abrirTabelaBtn" title="Ver tabela de compensação">Tabela</button>
+      </div>
+
+      <div class="field">
+        <label>Densidade da solução de fonte</label>
+        <div class="seg" id="densSeg">
+          <button data-val="1.05">1,05</button>
+          <button data-val="1.10">1,10</button>
+          <button data-val="1.15">1,15</button>
+          <button data-val="1.20">1,20</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Dosagem da solução de fonte (%)</label>
+        <div class="seg" id="dosSeg">
+          <button data-val="2">2%</button>
+          <button data-val="3">3%</button>
+          <button data-val="4">4%</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Alcoômetro calibrado a</label>
+        <div class="seg" id="tempAlcSeg">
+          <button data-val="10">10°C</button>
+          <button data-val="20">20°C</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Temperatura da solução de molha</label>
+        <div class="seg" id="tempSolSeg">
+          <button data-val="10">10°C</button>
+          <button data-val="15">15°C</button>
+          <button data-val="20">20°C</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Leitura do densímetro / alcoômetro</label>
+        <input type="number" id="leituraInput" step="0.1" placeholder="Ex: 8.7" inputmode="decimal">
+      </div>
+
+      <div class="result-box">
+        <div class="result-label">Álcool isopropílico (IPA) real na solução</div>
+        <div class="result-value" id="resultValue">—</div>
+        <div class="result-sub" id="resultSub"></div>
+        <div class="result-sub" id="compSub"></div>
+      </div>
+
+      <div class="hint">
+        Selecione a temperatura de calibração do alcoômetro e a temperatura da solução — a leitura é
+        compensada automaticamente. Em seguida escolha a densidade e a dosagem da máquina; o percentual
+        real de IPA é calculado por interpolação da tabela de correção Technotrans.
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: Tabela de compensação Technotrans -->
+  <div class="modal-overlay" id="tabelaModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>Tabela de correção (Technotrans)</span>
+        <button class="modal-close" id="fecharTabelaBtn">✕</button>
+      </div>
+      <div class="modal-body" id="tabelaModalBody"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Tabela de correção (Technotrans) — leitura do densímetro para cada % real de IPA
+  const REAL_PCT = [4,6,8,10,12,14,16,18,20,22];
+
+  const TABLE = {
+    "1.05": {
+      "2": [3.1,5.0,6.8,8.7,10.5,12.4,14.2,16.1,17.9,19.7],
+      "3": [2.8,4.6,6.4,8.2,10.1,11.9,13.7,15.5,17.3,19.1],
+      "4": [2.5,4.3,6.0,7.8,9.6,11.4,13.1,14.9,16.7,18.5]
+    },
+    "1.10": {
+      "2": [2.5,4.3,6.1,7.9,9.7,11.4,13.2,15.0,16.8,18.6],
+      "3": [1.9,3.6,5.3,7.0,8.8,10.5,12.2,13.9,15.6,17.4],
+      "4": [1.2,2.9,4.5,6.2,7.9,9.5,11.2,12.8,14.5,16.1]
+    },
+    "1.15": {
+      "2": [1.9,3.6,5.3,7.1,8.8,10.5,12.2,14.0,15.7,17.4],
+      "3": [0.9,2.6,4.2,5.8,7.5,9.1,10.7,12.3,14.0,15.6],
+      "4": [0.0,1.5,3.0,4.6,6.1,7.6,9.2,10.7,12.3,13.8]
+    },
+    "1.20": {
+      "2": [1.3,2.9,4.6,6.3,7.9,9.6,11.2,12.9,14.6,16.2],
+      "3": [0.0,1.5,3.1,4.6,6.1,7.7,9.2,10.8,12.3,13.8],
+      "4": [-1.3,0.1,1.6,3.0,4.4,5.8,7.2,8.6,10.0,11.4]
+    }
+  };
+
+  // ---------- Modal: Tabela de compensação Technotrans ----------
+  function montarTabelaHTML(){
+    const densidades = ["1.05","1.10","1.15","1.20"];
+    const dosagens = ["2","3","4"];
+
+    let html = '<table class="tech-table"><thead>';
+    html += '<tr><th rowspan="2">% real IPA</th>';
+    densidades.forEach(d => {
+      html += '<th colspan="3" class="dens-group">Densidade ' + d.replace('.',',') + '</th>';
+    });
+    html += '</tr><tr>';
+    densidades.forEach(() => {
+      dosagens.forEach(dos => { html += '<th>' + dos + '%</th>'; });
+    });
+    html += '</tr></thead><tbody>';
+
+    REAL_PCT.forEach((pct, i) => {
+      html += '<tr><td class="pct-col">' + pct + '%</td>';
+      densidades.forEach(d => {
+        dosagens.forEach(dos => {
+          const leitura = TABLE[d][dos][i];
+          html += '<td>' + leitura.toFixed(1) + '</td>';
+        });
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  const tabelaModalOverlay = document.getElementById('tabelaModalOverlay');
+  const tabelaModalBody = document.getElementById('tabelaModalBody');
+  const abrirTabelaBtn = document.getElementById('abrirTabelaBtn');
+  const fecharTabelaBtn = document.getElementById('fecharTabelaBtn');
+
+  abrirTabelaBtn.addEventListener('click', ()=>{
+    tabelaModalBody.innerHTML = montarTabelaHTML();
+    tabelaModalOverlay.classList.add('active');
+  });
+  fecharTabelaBtn.addEventListener('click', ()=>{
+    tabelaModalOverlay.classList.remove('active');
+  });
+  tabelaModalOverlay.addEventListener('click', (e)=>{
+    if(e.target === tabelaModalOverlay){
+      tabelaModalOverlay.classList.remove('active');
+    }
+  });
+
+  // ---------- Navegação ----------
+  const screens = document.querySelectorAll('.screen');
+  const backBtn = document.getElementById('backBtn');
+  const crumbEl = document.getElementById('crumb');
+  const titleEl = document.getElementById('screenTitle');
+
+  const META = {
+    insumos:  { title: "Insumos",      crumb: "Início" },
+    molha:    { title: "Molha",        crumb: "Insumos" },
+    ipa:      { title: "Medição IPA",  crumb: "Molha" },
+    solvente: { title: "Solvente",     crumb: "Insumos" }
+  };
+
+  let stack = ['insumos'];
+
+  function render(){
+    const current = stack[stack.length - 1];
+    screens.forEach(s => s.classList.toggle('active', s.dataset.screen === current));
+    titleEl.textContent = META[current].title;
+    crumbEl.textContent = META[current].crumb;
+    backBtn.classList.toggle('hidden', stack.length === 1);
+  }
+
+  document.querySelectorAll('[data-goto]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      stack.push(el.dataset.goto);
+      render();
+    });
+  });
+
+  backBtn.addEventListener('click', ()=>{
+    if(stack.length > 1){
+      stack.pop();
+      render();
+    }
+  });
+
+  render();
+
+  // ---------- Calculadora de IPA ----------
+  let densidade = null;
+  let dosagem = null;
+  let tempAlc = null;
+  let tempSol = null;
+
+  // Taxa de compensação derivada do ponto informado: alcoômetro 20°C medindo
+  // solução a 10°C exige +3% -> 0,3% por grau de diferença (interpolação linear).
+  const TAXA_COMP_POR_GRAU = 0.3;
+
+  function setupSeg(id, onPick){
+    const wrap = document.getElementById(id);
+    wrap.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        wrap.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        onPick(btn.dataset.val);
+      });
+    });
+  }
+
+  setupSeg('densSeg',   v => { densidade = v; calcular(); });
+  setupSeg('dosSeg',    v => { dosagem = v; calcular(); });
+  setupSeg('tempAlcSeg',v => { tempAlc = parseFloat(v); calcular(); });
+  setupSeg('tempSolSeg',v => { tempSol = parseFloat(v); calcular(); });
+  document.getElementById('leituraInput').addEventListener('input', calcular);
+
+  function interpolar(leitura, curva){
+    // curva: leituras crescentes correspondentes a REAL_PCT
+    if(leitura <= curva[0]){
+      // extrapola usando os 2 primeiros pontos
+      const t = (leitura - curva[0]) / (curva[1] - curva[0]);
+      return { valor: REAL_PCT[0] + t * (REAL_PCT[1]-REAL_PCT[0]), fora: leitura < curva[0] };
+    }
+    if(leitura >= curva[curva.length-1]){
+      const n = curva.length;
+      const t = (leitura - curva[n-2]) / (curva[n-1] - curva[n-2]);
+      return { valor: REAL_PCT[n-2] + t * (REAL_PCT[n-1]-REAL_PCT[n-2]), fora: leitura > curva[n-1] };
+    }
+    for(let i=0; i<curva.length-1; i++){
+      if(leitura >= curva[i] && leitura <= curva[i+1]){
+        const t = (leitura - curva[i]) / (curva[i+1] - curva[i]);
+        const valor = REAL_PCT[i] + t * (REAL_PCT[i+1]-REAL_PCT[i]);
+        return { valor, fora:false };
+      }
+    }
+  }
+
+  function calcular(){
+    const resultValue = document.getElementById('resultValue');
+    const resultSub = document.getElementById('resultSub');
+    const compSub = document.getElementById('compSub');
+    const leituraStr = document.getElementById('leituraInput').value;
+
+    if(!densidade || !dosagem || tempAlc === null || tempSol === null || leituraStr === ""){
+      resultValue.textContent = "—";
+      resultSub.textContent = "";
+      compSub.textContent = "";
+      return;
+    }
+
+    const leituraBruta = parseFloat(leituraStr);
+    if(isNaN(leituraBruta)){
+      resultValue.textContent = "—";
+      resultSub.textContent = "";
+      compSub.textContent = "";
+      return;
+    }
+
+    // Compensação de temperatura do alcoômetro em relação à solução
+    const compensacao = TAXA_COMP_POR_GRAU * (tempAlc - tempSol);
+    const leituraCompensada = leituraBruta + compensacao;
+
+    const curva = TABLE[densidade][dosagem];
+    const { valor, fora } = interpolar(leituraCompensada, curva);
+
+    resultValue.textContent = valor.toFixed(1) + " %";
+
+    if(fora){
+      resultSub.innerHTML = '<span class="warn">Leitura fora da faixa da tabela — valor extrapolado</span>';
+    } else {
+      resultSub.textContent = "Densidade " + densidade.replace('.',',') + " · Dosagem " + dosagem + "%";
+    }
+
+    const sinal = compensacao > 0 ? "+" : "";
+    compSub.textContent = "Compensação: " + sinal + compensacao.toFixed(1) + " % · Leitura compensada: " + leituraCompensada.toFixed(1);
+  }
+
+  // ---------- SOLVENTE (Antes/Depois) ----------
+  const solvAntesPct = document.getElementById('solvAntesPct');
+  const solvAntesQtd = document.getElementById('solvAntesQtd');
+  const solvDepoisPct = document.getElementById('solvDepoisPct');
+  const solvDepoisQtd = document.getElementById('solvDepoisQtd');
+  const solvTotalAntes = document.getElementById('solvTotalAntes');
+  const solvTotalDepois = document.getElementById('solvTotalDepois');
+  const solvResultLabel = document.getElementById('solvResultLabel');
+  const solvResultValue = document.getElementById('solvResultValue');
+
+  function calcularSolvente(){
+    const ap = parseFloat(solvAntesPct.value);
+    const aq = parseFloat(solvAntesQtd.value);
+    const dp = parseFloat(solvDepoisPct.value);
+    const dq = parseFloat(solvDepoisQtd.value);
+
+    const temAntes = !isNaN(ap) && !isNaN(aq);
+    const temDepois = !isNaN(dp) && !isNaN(dq);
+
+    const totalAntes = temAntes ? ap * aq : null;
+    const totalDepois = temDepois ? dp * dq : null;
+
+    solvTotalAntes.textContent = totalAntes !== null ? totalAntes.toFixed(2) : '—';
+    solvTotalDepois.textContent = totalDepois !== null ? totalDepois.toFixed(2) : '—';
+
+    if(totalAntes === null || totalDepois === null || totalAntes === 0){
+      solvResultLabel.textContent = 'Variação de consumo';
+      solvResultValue.textContent = '—';
+      solvResultValue.style.color = 'var(--accent)';
+      return;
+    }
+
+    const variacao = (1 - (totalDepois / totalAntes)) * 100;
+
+    if(variacao >= 0){
+      solvResultLabel.textContent = 'Redução de consumo';
+      solvResultValue.style.color = 'var(--accent)';
+    } else {
+      solvResultLabel.textContent = 'Aumento de consumo';
+      solvResultValue.style.color = 'var(--danger)';
+    }
+    solvResultValue.textContent = Math.abs(variacao).toFixed(2) + ' %';
+  }
+
+  [solvAntesPct, solvAntesQtd, solvDepoisPct, solvDepoisQtd].forEach(el=>{
+    el.addEventListener('input', calcularSolvente);
+  });
+</script>
+
+</body>
+</html>
