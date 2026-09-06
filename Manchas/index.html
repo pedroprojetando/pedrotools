@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manchas — Assistente do Técnico Gráfico</title>
+<style>
+  :root{
+    --bg: #232526;
+    --bg-deep: #1a1b1c;
+    --panel: #2d2f31;
+    --panel-hover: #383b3d;
+    --text: #ffffff;
+    --text-dim: #a8adb0;
+    --accent: #e0a13c;
+    --accent-dim: #8a6a2c;
+    --line: #3c3f41;
+    --danger: #d9695f;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0;
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    min-height:100vh;
+  }
+  .app{
+    max-width: 480px;
+    margin: 0 auto;
+    min-height:100vh;
+    background: var(--bg);
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    padding: 22px 20px 16px 20px;
+    border-bottom: 1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .titles{ display:flex; flex-direction:column; line-height:1.25; }
+  .crumb{
+    font-size:12px;
+    color: var(--text-dim);
+    letter-spacing:.02em;
+  }
+  .screen-title{
+    font-size:20px;
+    font-weight:600;
+    color: var(--text);
+  }
+  main{
+    flex:1;
+    padding: 20px;
+  }
+
+  /* Calculadora */
+  .field{
+    margin-bottom: 18px;
+  }
+  .field label{
+    display:block;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  input[type="number"]{
+    width:100%;
+    padding: 13px 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 9px;
+    font-size: 16px;
+  }
+  input[type="number"]:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+  .hint{
+    margin-top: 22px;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height:1.5;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+
+  /* Diâmetro / Mancha */
+  .antes-depois{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .ad-col{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .ad-title{
+    font-size: 13px;
+    font-weight:700;
+    color: var(--accent);
+    text-align:center;
+    margin-bottom: 12px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .ad-col .field{ margin-bottom: 0; }
+  .ad-col label{ font-size:11px; margin-bottom:5px; }
+  .ad-col input[type="number"]{
+    padding: 10px 10px;
+    font-size: 15px;
+  }
+
+  /* Resultados */
+  .causa-card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 13px 15px;
+    margin-bottom: 10px;
+  }
+  .causa-card .causa-mm{
+    font-size: 12px;
+    color: var(--accent);
+    font-weight:700;
+    margin-bottom: 4px;
+  }
+  .causa-card .causa-texto{
+    font-size: 14.5px;
+    line-height:1.4;
+  }
+  .causa-card .causa-obs{
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .sem-resultado{
+    text-align:center;
+    color: var(--text-dim);
+    font-size: 14px;
+    padding: 24px 10px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="titles">
+      <span class="crumb">Assistente Técnico</span>
+      <span class="screen-title">Manchas</span>
+    </div>
+  </header>
+
+  <main>
+
+    <section>
+
+      <div class="antes-depois">
+        <div class="ad-col">
+          <div class="ad-title">Diâmetro do Rolo</div>
+          <div class="field">
+            <label>mm</label>
+            <input type="number" id="diametroRoloInput" step="0.1" placeholder="Ex: 70" inputmode="decimal">
+          </div>
+        </div>
+        <div class="ad-col">
+          <div class="ad-title">Mancha</div>
+          <div class="field">
+            <label>mm (perímetro)</label>
+            <input type="number" id="manchaPerimInput" step="0.1" placeholder="Ex: 220" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:0; margin-bottom:18px; border-top:none; padding-top:0;">
+        Digite o diâmetro do rolo para calcular o perímetro (mancha), ou digite a mancha para calcular o diâmetro. Fórmula: Mancha = Diâmetro × π. Resultado sempre em mm, arredondado para número inteiro.
+      </div>
+
+      <div class="field">
+        <label>Distância da borda da pinça até a mancha (mm)</label>
+        <input type="number" id="manchaMmInput" step="0.1" placeholder="Ex: 220" inputmode="decimal">
+      </div>
+
+      <div class="hint" style="margin-top:0; border-top:none; padding-top:0;">
+        O app busca, em todas as máquinas da base, as causas catalogadas dentro da faixa de <strong>±5 mm</strong> da medida informada.
+      </div>
+
+      <div id="manchasResultados" style="margin-top:18px;"></div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // ---------- MANCHAS (diagnóstico por posição em mm) ----------
+  // Cada registro: [Máquina, Causa/Componente, Posição em mm a partir da borda da pinça/folha, Observação]
+  const MANCHAS_DB = [
+['CD102','Abertura de pinça do contra pressão (6K)',8.8,''],
+['CD102','Abertura de pinça do contra pressão (8K)',11.7,''],
+['CD102','Marcas de engrenagem — Unidade de tinta',12.1,''],
+['CD102','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['CD102','Marcas de engrenagem — Transmissão principal',13.3,''],
+['CD102','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['CD102','Abertura de pinça do contra pressão (10K)',14.6,''],
+['CD102','Marcas de engrenagem — Distribuidor de tinta',16.1,''],
+['CD102','Abertura de pinça do contra pressão (12K)',17.6,''],
+['CD102','Abertura de pinça do contra pressão (14K)',20.5,''],
+['CD102','Abertura de pinça do contra pressão (15K)',22.0,''],
+['CD102','Marcas de engrenagem — Vibrador',28.3,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',54.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',65.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da imagem',74.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da imagem',82.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',92.0,''],
+['CD102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',98.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',102.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da chapa',112.0,''],
+['CD102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',127.0,''],
+['CD102','Faixa de rolagem — 1º rolo de forma (chapa)',188.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da chapa',194.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',198.0,''],
+['CD102','Faixa de rolagem — 3º rolo de forma (chapa)',207.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da chapa',212.0,''],
+['CD102','Faixa de folga E2 (Fim Chapa x Blanqueta)',212.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da imagem',213.0,''],
+['CD102','Faixa de rolagem 1 — PLC - BLC (E2)',213.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',217.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da imagem',217.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',224.0,''],
+['CD102','Faixa de rolagem — 2º rolo de forma (chapa)',226.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da imagem',229.0,''],
+['CD102','Faixa de rolagem 1 — Rolo de molha - Borda frontal da chapa',239.0,''],
+['CD102','Faixa de rolagem — Rolo molhador',245.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',249.0,''],
+['CD102','Faixa de rolagem — 4º rolo de forma (chapa)',251.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 4 - Borda frontal da chapa',255.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',255.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',261.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',261.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',291.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',291.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',299.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',320.0,''],
+['CD102','Faixa de folga A2 (Início Chapa x Blanqueta)',349.0,''],
+['CD102','Marcas de engrenagem — Unidade de tinta',12.1,''],
+['CD102','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['CD102','Marcas de engrenagem — Transmissão principal',13.3,''],
+['CD102','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['CD102','Marcas de engrenagem — Distribuidor de tinta',16.3,''],
+['CD102','Marcas de engrenagem — Vibrador',28.3,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',50.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da imagem',54.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da imagem',64.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',74.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',82.0,''],
+['CD102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',92.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',98.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da chapa',113.0,''],
+['CD102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',127.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da chapa',194.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',198.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da chapa',213.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da imagem',217.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',224.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',229.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da imagem',232.0,''],
+['CD102','Faixa de rolagem 1 — PLC - BLC (E2)',213.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da imagem',217.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',224.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da imagem',229.0,''],
+['CD102','Faixa de rolagem 1 — Rolo de molha - Borda frontal da chapa',239.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',249.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 4 - Borda frontal da chapa',255.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',255.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',261.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',261.0,''],
+['CD102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',291.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',291.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',299.0,''],
+['CD102','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',327.0,''],
+['CD102','Faixa de folga A2 (Início Chapa x Blanqueta)',349.0,''],
+['SM74','Marcas de engrenagem — Unidade de tinta',7.7,''],
+['SM74','Marca de engrenagem — Engrenagem da unidade de tinta',7.7,''],
+['SM74','Marcas de engrenagem — Transmissão principal',9.1,''],
+['SM74','Marca de engrenagem — Trem de engrenagem / transmissão principal',9.1,''],
+['SM74','Marcas de engrenagem — Distribuidor de tinta',18.4,''],
+['SM74','Marcas de engrenagem — Vibrador',28.3,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',37.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda frontal da imagem',40.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',44.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',52.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',59.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',69.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',73.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',113.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',127.0,''],
+['SM74','Faixa de rolagem 1 — PLC - IMC (E1)',156.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da imagem',163.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da imagem',169.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da imagem',178.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',181.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',181.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da imagem',195.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da chapa',198.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',211.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',217.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da chapa',225.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',228.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 4 - Borda frontal da chapa',232.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 4 - Borda traseira da imagem',239.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',245.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',246.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',254.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',264.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da chapa',273.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',327.0,''],
+['SM74','Faixa de rolagem 2 — PLC - IMC (A1)',343.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da imagem',18.0,''],
+['SM74','Faixa de rolagem 3 — Rolo de molha - Borda frontal da chapa',18.4,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',44.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',54.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',65.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',73.0,''],
+['SM74','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',90.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',96.0,''],
+['SM74','Faixa de rolagem 1 — PLC - IMC (E1)',113.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',144.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',149.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',160.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',169.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',178.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',181.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',190.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',198.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da chapa',204.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',207.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',211.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',220.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',220.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da chapa',229.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',232.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da chapa',235.0,''],
+['SM74','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',237.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',238.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 4 - Borda traseira da chapa',243.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',253.0,''],
+['SM74','Faixa de rolagem 1 — PLC - BLC (E2)',258.0,''],
+['SM74','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da chapa',274.0,''],
+['SM74','Mancha de transferência de folha (pinças de saída)',285.0,''],
+['SM102','Marcas de engrenagem — Unidade de tinta',12.1,''],
+['SM102','Marca de engrenagem — Engrenagem da unidade de tinta',12.1,''],
+['SM102','Marcas de engrenagem — Transmissão principal',13.3,''],
+['SM102','Marca de engrenagem — Trem de engrenagem / transmissão principal',13.3,''],
+['SM102','Marcas de engrenagem — Distribuidor de tinta',16.1,''],
+['SM102','Marcas de engrenagem — Vibrador',28.3,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',54.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da imagem',65.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',73.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da imagem',82.0,''],
+['SM102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',92.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da imagem',98.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',113.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 4 - Borda traseira da chapa',122.0,''],
+['SM102','Faixa de rolagem 1 — Rolo de molha - Borda traseira da chapa',127.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da chapa',144.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',194.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da chapa',198.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 3 - Borda frontal da imagem',213.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da imagem',217.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da imagem',224.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 2 - Borda frontal da imagem',229.0,''],
+['SM102','Faixa de rolagem 1 — PLC - BLC (E2)',232.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 1 - Borda traseira da imagem',236.0,''],
+['SM102','Faixa de rolagem 1 — Rolo de molha - Borda frontal da chapa',249.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',255.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 4 - Borda frontal da chapa',255.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda traseira da chapa',261.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 4 - Borda frontal da chapa',261.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 3 - Borda traseira da chapa',299.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 2 - Borda traseira da chapa',299.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',317.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',320.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',327.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',337.0,''],
+['SM102','Faixa de folga A2 (Início Chapa x Blanqueta)',340.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',349.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',373.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 2 - Borda traseira da chapa',377.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',383.0,''],
+['SM102','Faixa de rolagem 1 — Cilindro 1 - Borda frontal da chapa',166.0,''],
+['SM102','Faixa de rolagem 2 — Cilindro 3 - Borda traseira da chapa',363.0,'']
+];
+
+  const manchaMmInput = document.getElementById('manchaMmInput');
+  const manchasResultados = document.getElementById('manchasResultados');
+
+  function renderManchas(){
+    const mmStr = manchaMmInput.value;
+    manchasResultados.innerHTML = '';
+
+    if(mmStr === ''){ return; }
+
+    const mm = parseFloat(mmStr);
+    if(isNaN(mm)){ return; }
+
+    const min = mm - 5;
+    const max = mm + 5;
+
+    const candidatos = MANCHAS_DB
+      .filter(r => r[2] >= min && r[2] <= max)
+      .sort((a,b) => Math.abs(a[2]-mm) - Math.abs(b[2]-mm));
+
+    if(candidatos.length === 0){
+      manchasResultados.innerHTML = '<div class="sem-resultado">Nenhuma causa catalogada entre ' +
+        min.toFixed(1) + ' mm e ' + max.toFixed(1) + ' mm.</div>';
+      return;
+    }
+
+    candidatos.forEach(([maq, causa, posMm, obs]) => {
+      const card = document.createElement('div');
+      card.className = 'causa-card';
+      const diff = posMm - mm;
+      const diffTxt = (diff === 0 ? 'exato' : (diff > 0 ? '+' + diff.toFixed(1) + ' mm' : diff.toFixed(1) + ' mm'));
+      card.innerHTML =
+        '<div class="causa-mm">' + maq + ' &nbsp;·&nbsp; ' + posMm.toFixed(1) + ' mm &nbsp;·&nbsp; ' + diffTxt + '</div>' +
+        '<div class="causa-texto">' + causa + '</div>' +
+        (obs ? '<div class="causa-obs">' + obs + '</div>' : '');
+      manchasResultados.appendChild(card);
+    });
+  }
+
+  manchaMmInput.addEventListener('input', renderManchas);
+
+  // ---------- Diâmetro do Rolo ↔ Mancha (perímetro) ----------
+  const diametroRoloInput = document.getElementById('diametroRoloInput');
+  const manchaPerimInput = document.getElementById('manchaPerimInput');
+
+  diametroRoloInput.addEventListener('input', ()=>{
+    const d = parseFloat(diametroRoloInput.value);
+    if(isNaN(d)){
+      manchaPerimInput.value = '';
+      return;
+    }
+    manchaPerimInput.value = Math.round(d * Math.PI);
+  });
+
+  manchaPerimInput.addEventListener('input', ()=>{
+    const m = parseFloat(manchaPerimInput.value);
+    if(isNaN(m)){
+      diametroRoloInput.value = '';
+      return;
+    }
+    diametroRoloInput.value = Math.round(m / Math.PI);
+  });
+</script>
+
+</body>
+</html>
