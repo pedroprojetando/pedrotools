@@ -134,7 +134,7 @@
     border-color: var(--accent);
     color: var(--text);
   }
-  input[type="number"]{
+  input[type="number"], input[type="text"]{
     width:100%;
     padding: 13px 14px;
     background: var(--panel);
@@ -143,7 +143,7 @@
     border-radius: 9px;
     font-size: 16px;
   }
-  input[type="number"]:focus{
+  input[type="number"]:focus, input[type="text"]:focus{
     outline: none;
     border-color: var(--accent);
   }
@@ -383,6 +383,7 @@
   .ipa-topbar{
     display:flex;
     justify-content:flex-end;
+    gap: 10px;
     margin-bottom: 10px;
   }
   .tabela-btn{
@@ -467,6 +468,173 @@
     background: var(--panel-hover);
     color: var(--text);
   }
+
+  /* Tinta */
+  .gear-btn{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--accent);
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+    font-size: 18px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  .gear-btn:active{ background: var(--panel-hover); }
+  .folha-wrap{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 18px;
+    text-align:center;
+  }
+  .folha-svg-area{
+    display:flex;
+    justify-content:center;
+    padding: 6px 0 2px 0;
+  }
+  .folha-area-txt{
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+  .folha-area-txt strong{ color: var(--accent); }
+  .row2{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .row2 .field{ margin-bottom:0; }
+  .cobertura-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .cobertura-item label{
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    display:block;
+  }
+  .cobertura-item .pct-wrap{
+    position:relative;
+  }
+  .cobertura-item .pct-wrap span{
+    position:absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: var(--text-dim);
+    pointer-events:none;
+  }
+  .cobertura-item input{
+    padding-right: 30px;
+  }
+  .consumo-table, .custo-table{
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  .consumo-table th, .custo-table th{
+    text-align:left;
+    color: var(--accent);
+    font-size: 11px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .consumo-table td, .custo-table td{
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .consumo-table tr:last-child td, .custo-table tr:last-child td{ border-bottom:none; }
+  .custo-table tfoot td{
+    font-weight:700;
+    color: var(--accent);
+    border-top: 2px solid var(--line);
+    border-bottom:none;
+    padding-top: 12px;
+  }
+  .section-title{
+    font-size: 14px;
+    font-weight:700;
+    color: var(--text);
+    margin: 22px 0 4px 0;
+  }
+  .settings-substrato-row{
+    display:flex;
+    gap: 10px;
+    align-items:flex-end;
+  }
+  .settings-substrato-row .field{ flex:1; margin-bottom:0; }
+  .btn-secondary{
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 9px;
+    padding: 13px 16px;
+    font-size: 14px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-secondary:active{ background: var(--panel-hover); }
+  .btn-block{
+    width:100%;
+    margin-top: 12px;
+  }
+  .ink-config-card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .ink-config-row{
+    display:grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .ink-config-row:last-child{ margin-bottom:0; }
+  .ink-config-row .field{ margin-bottom:0; }
+  .ink-config-row label{ font-size:11px; margin-bottom:5px; }
+  .ink-config-row input{ padding: 10px 10px; font-size:14px; }
+  .auto-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .auto-badge input{ width:auto; }
+  .auto-badge.is-auto{ color: var(--accent); }
+  .swatch{
+    display:inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.35);
+    margin-right: 6px;
+    vertical-align: middle;
+    flex-shrink:0;
+  }
+  .cobertura-item label{ display:flex; align-items:center; }
+  .consumo-table td:first-child, .custo-table td:first-child{
+    display:flex;
+    align-items:center;
+  }
 </style>
 </head>
 <body>
@@ -503,6 +671,7 @@
       <div class="grid">
         <div class="tile" data-goto="molha">Molha</div>
         <div class="tile" data-goto="solvente">Solvente</div>
+        <div class="tile" data-goto="tinta">Tinta</div>
         <div class="tile disabled">Verniz</div>
         <div class="tile disabled">Papel</div>
       </div>
@@ -514,6 +683,13 @@
         <div class="tile" data-goto="ipa">Medição IPA</div>
         <div class="tile disabled">Aditivo</div>
         <div class="tile disabled">pH</div>
+      </div>
+    </section>
+
+    <!-- TINTA -->
+    <section class="screen" data-screen="tinta">
+      <div class="grid">
+        <div class="tile" data-goto="tintaCalc">Cálculo de Consumo</div>
       </div>
     </section>
 
@@ -699,6 +875,80 @@
       </div>
     </section>
 
+    <!-- TINTA - CALCULO DE CONSUMO -->
+    <section class="screen" data-screen="tintaCalc">
+
+      <div class="ipa-topbar">
+        <button class="gear-btn" id="abrirImpressaoTintaBtn" title="Imprimir relatório em PDF">🖨</button>
+        <button class="gear-btn" id="abrirAjustesTintaBtn" title="Ajustes de fatores e custos">⚙</button>
+      </div>
+
+      <div class="field">
+        <label>Cliente</label>
+        <input type="text" id="tintaCliente" placeholder="Nome do cliente">
+      </div>
+
+      <div class="field">
+        <label>OS</label>
+        <input type="text" id="tintaOS" placeholder="Número da OS">
+      </div>
+
+      <div class="field">
+        <label>Trabalho</label>
+        <input type="text" id="tintaTrabalho" placeholder="Descrição do trabalho">
+      </div>
+
+      <div class="section-title">Formato do papel (m)</div>
+      <div class="row2">
+        <div class="field">
+          <label>Largura</label>
+          <input type="number" id="tintaLargura" step="0.001" placeholder="Ex: 0.640" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Comprimento</label>
+          <input type="number" id="tintaComprimento" step="0.001" placeholder="Ex: 0.900" inputmode="decimal">
+        </div>
+      </div>
+
+      <div class="folha-wrap">
+        <div class="folha-svg-area" id="folhaSvgArea"></div>
+        <div class="folha-area-txt">Área da folha: <strong id="folhaAreaTxt">—</strong></div>
+      </div>
+
+      <div class="field">
+        <label>Substrato</label>
+        <select id="tintaSubstrato"></select>
+      </div>
+
+      <div class="field">
+        <label>Tiragem</label>
+        <input type="number" id="tintaTiragem" step="1" placeholder="Ex: 5000" inputmode="numeric">
+      </div>
+
+      <div class="section-title">Cobertura por cor (%)</div>
+      <div class="cobertura-grid" id="tintaCoberturaGrid"></div>
+
+      <div class="section-title">Consumo (kg)</div>
+      <table class="consumo-table" id="tintaConsumoTable">
+        <thead><tr><th>Tinta</th><th>Cobertura</th><th>Peso (kg)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="section-title">Custo</div>
+      <table class="custo-table" id="tintaCustoTable">
+        <thead><tr><th>Tinta</th><th>R$/kg</th><th>Total</th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td colspan="2">Total geral</td><td id="tintaCustoTotal">—</td></tr></tfoot>
+      </table>
+
+      <div class="hint">
+        Peso (kg) = Área da folha (m²) × Tiragem × Fator da tinta. O fator sugerido de cada cor
+        parte da fórmula do Revestido (varia com a cobertura individual) e é multiplicado pelo
+        "Fator do substrato" definido em ⚙ — ajuste ali se necessário.
+      </div>
+
+    </section>
+
   </main>
 
   <!-- MODAL: Tabela de compensação Technotrans -->
@@ -709,6 +959,17 @@
         <button class="modal-close" id="fecharTabelaBtn">✕</button>
       </div>
       <div class="modal-body" id="tabelaModalBody"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: Ajustes de Tinta -->
+  <div class="modal-overlay" id="ajustesTintaOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>Ajustes de Tinta</span>
+        <button class="modal-close" id="fecharAjustesTintaBtn">✕</button>
+      </div>
+      <div class="modal-body" id="ajustesTintaBody"></div>
     </div>
   </div>
 
@@ -804,6 +1065,8 @@
     ipa:         { title: "Medição IPA",         crumb: "Molha" },
     manchas:     { title: "Manchas",             crumb: "Ferramentas" },
     solvente:    { title: "Solvente",            crumb: "Insumos" },
+    tinta:       { title: "Tinta",               crumb: "Insumos" },
+    tintaCalc:   { title: "Cálculo de Consumo",  crumb: "Tinta" },
     offset:      { title: "Offset",              crumb: "Ferramentas" },
     problemas:   { title: "Problemas",           crumb: "Offset" }
   };
@@ -1723,5 +1986,558 @@
 
 </script>
 
+<script>
+  // ================== TINTA: Cálculo de Consumo ==================
+
+  // ---- Fórmula base (lógica do Revestido — mantida como referência) ----
+  // K e Y:  0.2m²->0.0005 · 0.3m²->0.0006 · 0.4m²->0.0007  => base = 0.0003 + 0.001*área
+  // C e M:  0.2m²->0.0004 · 0.3m²->0.0005 · 0.4m²->0.0006  => base = 0.0002 + 0.001*área
+  // Demais tintas (sem dado específico): usam a mesma reta do C/M como estimativa.
+  //
+  // Cada substrato tem um "Fator do substrato" (multiplicador) que é aplicado sobre essa
+  // base para gerar o fator sugerido daquela tinta naquele substrato:
+  //   fator sugerido = base(tinta, área) × fator do substrato
+  // Revestido é a referência (fator do substrato = 1, ou seja, usa a base sem alteração).
+  // Não Revestido e novos substratos criados pelo usuário têm seu próprio fator, que
+  // escala a mesma base — assim cada tinta continua variando com sua própria cobertura,
+  // mas cada substrato pode ficar mais "pesado" ou "leve" em consumo de tinta.
+  function clampFator(v){ return Math.max(0.0001, v); }
+
+  function fatorBaseRevestido(inkKey, a){
+    if(inkKey === 'K' || inkKey === 'Y') return 0.0003 + 0.001*a;
+    if(inkKey === 'C' || inkKey === 'M') return 0.0002 + 0.001*a;
+    return 0.0002 + 0.001*a; // sem dado específico — estimativa a partir da linha C/M
+  }
+
+  function sugerirFator(substrato, inkKey, areaInk){
+    const a = (typeof areaInk === 'number' && !isNaN(areaInk) && areaInk > 0) ? areaInk : 0.25;
+    const base = fatorBaseRevestido(inkKey, a);
+    const mult = TINTA_STATE.substratoFatores[substrato];
+    const multiplicador = (typeof mult === 'number' && !isNaN(mult)) ? mult : 1;
+    return clampFator(base * multiplicador);
+  }
+
+  // ---- Estado ----
+  // Preço/kg inicial: C, M, Y = R$ 80 · K = R$ 70 (editável em Ajustes)
+  // Cor do ícone: apenas uma referência visual para identificar a tinta no relatório
+  const TINTA_INKS_PADRAO = [
+    {key:'K',  nome:'Preto (K)',    preco:70, cor:'#1a1a1a'},
+    {key:'C',  nome:'Ciano (C)',    preco:80, cor:'#00aeef'},
+    {key:'M',  nome:'Magenta (M)',  preco:80, cor:'#ec008c'},
+    {key:'Y',  nome:'Amarelo (Y)',  preco:80, cor:'#ffd400'},
+    {key:'P1', nome:'Pantone 1',    preco:0,  cor:'#e67e22'},
+    {key:'P2', nome:'Pantone 2',    preco:0,  cor:'#2ecc71'},
+    {key:'P3', nome:'Pantone 3',    preco:0,  cor:'#3498db'},
+    {key:'P4', nome:'Pantone 4',    preco:0,  cor:'#9b59b6'}
+  ];
+  const TINTA_PALETA_NOVAS = ['#e74c3c','#16a085','#f39c12','#8e44ad','#27ae60','#2980b9','#d35400','#c0392b'];
+
+  const TINTA_STATE = {
+    substratos: ['Revestido', 'Não Revestido'],
+    inks: TINTA_INKS_PADRAO.map(i => ({...i})),
+    fatores: {},         // fatores[substrato][inkKey] = { auto:bool, valor:number }
+    // Fator do substrato (multiplicador sobre a base do Revestido).
+    // Não Revestido: ~2.33, aproximado a partir do ponto conhecido (0.23m² -> 0.001)
+    // comparado à base da linha C/M nesse mesmo ponto (0.00043) — 0.001/0.00043 ≈ 2.33.
+    substratoFatores: { 'Revestido': 1, 'Não Revestido': 2.33 },
+    substratoAtual: 'Revestido'
+  };
+
+  function garantirFator(sub, inkKey, areaInk){
+    if(!TINTA_STATE.fatores[sub]) TINTA_STATE.fatores[sub] = {};
+    if(!TINTA_STATE.fatores[sub][inkKey]){
+      TINTA_STATE.fatores[sub][inkKey] = { auto:true, valor: sugerirFator(sub, inkKey, areaInk) };
+    }
+    return TINTA_STATE.fatores[sub][inkKey];
+  }
+  TINTA_STATE.substratos.forEach(sub=>{
+    TINTA_STATE.inks.forEach(ink=> garantirFator(sub, ink.key, 0));
+  });
+
+  let TINTA_ULTIMO_RESULTADO = null;
+
+  // ---- Elementos ----
+  const tintaLarguraEl = document.getElementById('tintaLargura');
+  const tintaComprimentoEl = document.getElementById('tintaComprimento');
+  const folhaSvgArea = document.getElementById('folhaSvgArea');
+  const folhaAreaTxt = document.getElementById('folhaAreaTxt');
+  const tintaSubstratoEl = document.getElementById('tintaSubstrato');
+  const tintaTiragemEl = document.getElementById('tintaTiragem');
+  const tintaCoberturaGrid = document.getElementById('tintaCoberturaGrid');
+  const tintaConsumoTableBody = document.querySelector('#tintaConsumoTable tbody');
+  const tintaCustoTableBody = document.querySelector('#tintaCustoTable tbody');
+  const tintaCustoTotal = document.getElementById('tintaCustoTotal');
+
+  // ---- Desenho da folha (SVG) ----
+  function renderFolhaSVG(largura, comprimento){
+    const boxW = 220, boxH = 150;
+    let w, h;
+    if(largura > 0 && comprimento > 0){
+      const scale = Math.min((boxW-24)/largura, (boxH-24)/comprimento);
+      w = largura*scale;
+      h = comprimento*scale;
+    } else {
+      w = 100; h = 66;
+    }
+    const x = (boxW-w)/2, y = (boxH-h)/2;
+    folhaSvgArea.innerHTML =
+      '<svg viewBox="0 0 '+boxW+' '+boxH+'" width="220" height="150" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#fdfdf9" stroke="#3c3f41" stroke-width="2" rx="2"/>' +
+      '</svg>';
+  }
+
+  function calcAreaFolha(){
+    const l = parseFloat(tintaLarguraEl.value);
+    const c = parseFloat(tintaComprimentoEl.value);
+    renderFolhaSVG(isNaN(l)?0:l, isNaN(c)?0:c);
+    if(isNaN(l) || isNaN(c) || l<=0 || c<=0){
+      folhaAreaTxt.textContent = '—';
+      return null;
+    }
+    const area = l*c;
+    folhaAreaTxt.textContent = area.toFixed(4) + ' m²';
+    return area;
+  }
+
+  // ---- Substrato (select principal) ----
+  function popularSubstratoSelect(){
+    const cur = tintaSubstratoEl.value || TINTA_STATE.substratoAtual;
+    tintaSubstratoEl.innerHTML = '';
+    TINTA_STATE.substratos.forEach(s=>{
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      tintaSubstratoEl.appendChild(opt);
+    });
+    tintaSubstratoEl.value = TINTA_STATE.substratos.includes(cur) ? cur : TINTA_STATE.substratos[0];
+    TINTA_STATE.substratoAtual = tintaSubstratoEl.value;
+  }
+
+  // ---- Grid de cobertura por cor ----
+  function renderCoberturaGrid(){
+    const valoresAtuais = {};
+    tintaCoberturaGrid.querySelectorAll('.tinta-cobertura-input').forEach(el=>{
+      valoresAtuais[el.dataset.ink] = el.value;
+    });
+    tintaCoberturaGrid.innerHTML = '';
+    TINTA_STATE.inks.forEach(ink=>{
+      const div = document.createElement('div');
+      div.className = 'cobertura-item';
+      div.innerHTML =
+        '<label><span class="swatch" style="background:'+(ink.cor||'#888')+'"></span>'+ink.nome+'</label>' +
+        '<div class="pct-wrap">' +
+        '<input type="number" step="0.1" min="0" max="100" placeholder="0" inputmode="decimal" data-ink="'+ink.key+'" class="tinta-cobertura-input">' +
+        '<span>%</span></div>';
+      tintaCoberturaGrid.appendChild(div);
+    });
+    tintaCoberturaGrid.querySelectorAll('.tinta-cobertura-input').forEach(el=>{
+      if(valoresAtuais[el.dataset.ink] !== undefined) el.value = valoresAtuais[el.dataset.ink];
+      el.addEventListener('input', calcularTinta);
+    });
+  }
+
+  // ---- Cálculo principal ----
+  function calcularTinta(){
+    const area = calcAreaFolha();
+    const substrato = tintaSubstratoEl.value;
+    const tiragem = parseFloat(tintaTiragemEl.value);
+
+    tintaConsumoTableBody.innerHTML = '';
+    tintaCustoTableBody.innerHTML = '';
+    tintaCustoTotal.textContent = '—';
+
+    if(!area || isNaN(tiragem) || tiragem<=0 || !substrato){
+      tintaConsumoTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);">Preencha formato, tiragem e cobertura</td></tr>';
+      tintaCustoTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);">—</td></tr>';
+      return;
+    }
+
+    let totalGeral = 0;
+    let algumaCobertura = false;
+    const linhas = [];
+
+    TINTA_STATE.inks.forEach(ink=>{
+      const inputEl = tintaCoberturaGrid.querySelector('[data-ink="'+ink.key+'"]');
+      const pct = inputEl ? parseFloat(inputEl.value) : NaN;
+      if(isNaN(pct) || pct<=0) return;
+
+      algumaCobertura = true;
+      const areaInk = area * (pct/100);
+      const fatorInfo = garantirFator(substrato, ink.key, areaInk);
+      if(fatorInfo.auto){
+        fatorInfo.valor = sugerirFator(substrato, ink.key, areaInk);
+      }
+
+      const peso = area * tiragem * fatorInfo.valor;
+      const preco = ink.preco || 0;
+      const custo = peso * preco;
+      totalGeral += custo;
+
+      linhas.push({ nome: ink.nome, cor: ink.cor || '#888', pct, peso, fator: fatorInfo.valor, preco, custo });
+
+      const swatchHtml = '<span class="swatch" style="background:'+(ink.cor||'#888')+'"></span>'+ink.nome;
+
+      const trC = document.createElement('tr');
+      trC.innerHTML = '<td>'+swatchHtml+'</td><td>'+pct.toFixed(1)+'%</td><td>'+peso.toFixed(3)+' kg</td>';
+      tintaConsumoTableBody.appendChild(trC);
+
+      const trD = document.createElement('tr');
+      trD.innerHTML = '<td>'+swatchHtml+'</td><td>R$ '+preco.toFixed(2)+'</td><td>R$ '+custo.toFixed(2)+'</td>';
+      tintaCustoTableBody.appendChild(trD);
+    });
+
+    if(!algumaCobertura){
+      tintaConsumoTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);">Informe a cobertura de ao menos uma cor</td></tr>';
+      tintaCustoTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);">—</td></tr>';
+    } else {
+      tintaCustoTotal.textContent = 'R$ ' + totalGeral.toFixed(2);
+    }
+
+    TINTA_ULTIMO_RESULTADO = { area, substrato, tiragem, linhas, totalGeral };
+  }
+
+  [tintaLarguraEl, tintaComprimentoEl, tintaTiragemEl].forEach(el=>{
+    el.addEventListener('input', calcularTinta);
+  });
+  tintaSubstratoEl.addEventListener('change', ()=>{
+    TINTA_STATE.substratoAtual = tintaSubstratoEl.value;
+    calcularTinta();
+  });
+
+  popularSubstratoSelect();
+  renderCoberturaGrid();
+  calcularTinta();
+
+  // ================== IMPRESSÃO: Relatório em PDF ==================
+  const abrirImpressaoTintaBtn = document.getElementById('abrirImpressaoTintaBtn');
+
+  function escapeHtml(str){
+    return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  function montarRelatorioHTML(){
+    const r = TINTA_ULTIMO_RESULTADO;
+    const cliente = escapeHtml(document.getElementById('tintaCliente').value) || '—';
+    const os = escapeHtml(document.getElementById('tintaOS').value) || '—';
+    const trabalho = escapeHtml(document.getElementById('tintaTrabalho').value) || '—';
+    const largura = tintaLarguraEl.value || '—';
+    const comprimento = tintaComprimentoEl.value || '—';
+    const substrato = escapeHtml(tintaSubstratoEl.value);
+    const tiragem = tintaTiragemEl.value || '—';
+    const dataGeracao = new Date().toLocaleString('pt-BR');
+
+    const linhas = (r && r.linhas.length) ? r.linhas : [];
+    const areaTxt = r && r.area ? r.area.toFixed(4) + ' m²' : '—';
+    const totalTxt = r ? 'R$ ' + r.totalGeral.toFixed(2) : 'R$ 0,00';
+
+    const linhasHtml = linhas.length ? linhas.map(l => `
+        <tr>
+          <td class="cor-cell"><span class="dot" style="background:${l.cor}"></span>${escapeHtml(l.nome)}</td>
+          <td>${l.pct.toFixed(1)}%</td>
+          <td>${l.peso.toFixed(3)} kg</td>
+          <td>${l.fator.toFixed(4)}</td>
+          <td>R$ ${l.preco.toFixed(2)}</td>
+          <td>R$ ${l.custo.toFixed(2)}</td>
+        </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;color:#888;">Nenhuma cor com cobertura informada</td></tr>`;
+
+    return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Relatório de Consumo de Tinta</title>
+<style>
+  @page{ size: A4; margin: 14mm; }
+  *{ box-sizing:border-box; }
+  body{
+    font-family: "Segoe UI", Arial, sans-serif;
+    color:#1a1b1c;
+    margin:0;
+    padding:0;
+    font-size: 12px;
+  }
+  .header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    border-bottom: 2px solid #1a1b1c;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+  .header h1{ font-size:18px; margin:0 0 2px 0; }
+  .header .sub{ font-size:11px; color:#555; }
+  .header .data{ font-size:10px; color:#777; text-align:right; }
+  .info-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px 16px;
+    margin-bottom: 14px;
+  }
+  .info-item{
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .info-item .lbl{ font-size:9px; text-transform:uppercase; letter-spacing:.04em; color:#888; margin-bottom:2px; }
+  .info-item .val{ font-size:12.5px; font-weight:600; }
+  .format-row{
+    display:flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .format-row .info-item{ flex:1; }
+  table{
+    width:100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+  }
+  th, td{
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align:left;
+    font-size: 11px;
+  }
+  th{
+    background:#f2f2f2;
+    text-transform:uppercase;
+    font-size: 9.5px;
+    letter-spacing:.03em;
+    color:#555;
+  }
+  .cor-cell{ display:flex; align-items:center; gap:6px; font-weight:600; }
+  .dot{
+    display:inline-block;
+    width:10px; height:10px;
+    border-radius:50%;
+    border: 1px solid #999;
+    flex-shrink:0;
+  }
+  tfoot td{
+    font-weight:700;
+    font-size:13px;
+    border-top: 2px solid #1a1b1c;
+  }
+  .footer-note{
+    font-size: 9.5px;
+    color:#999;
+    margin-top: 18px;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+  }
+  @media print{
+    body{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1>Relatório de Consumo de Tinta</h1>
+      <div class="sub">Assistente do Técnico Gráfico</div>
+    </div>
+    <div class="data">Gerado em<br>${dataGeracao}</div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-item"><div class="lbl">Cliente</div><div class="val">${cliente}</div></div>
+    <div class="info-item"><div class="lbl">OS</div><div class="val">${os}</div></div>
+    <div class="info-item"><div class="lbl">Trabalho</div><div class="val">${trabalho}</div></div>
+  </div>
+
+  <div class="format-row">
+    <div class="info-item"><div class="lbl">Formato</div><div class="val">${largura} x ${comprimento} m</div></div>
+    <div class="info-item"><div class="lbl">Área da folha</div><div class="val">${areaTxt}</div></div>
+    <div class="info-item"><div class="lbl">Substrato</div><div class="val">${substrato}</div></div>
+    <div class="info-item"><div class="lbl">Tiragem</div><div class="val">${tiragem}</div></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tinta</th>
+        <th>Cobertura</th>
+        <th>Peso</th>
+        <th>Fator</th>
+        <th>R$/kg</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${linhasHtml}
+    </tbody>
+    <tfoot>
+      <tr><td colspan="5">Total geral</td><td>${totalTxt}</td></tr>
+    </tfoot>
+  </table>
+
+  <div class="footer-note">
+    Peso (kg) = Área da folha × Tiragem × Fator da tinta. Fatores sugeridos automaticamente conforme
+    a cobertura de cada cor e o substrato selecionado, podendo ser ajustados manualmente no aplicativo.
+  </div>
+
 </body>
-</html>
+</html>`;
+  }
+
+  abrirImpressaoTintaBtn.addEventListener('click', ()=>{
+    calcularTinta();
+    const html = montarRelatorioHTML();
+    const win = window.open('', '_blank');
+    if(!win){
+      alert('Não foi possível abrir a janela de impressão. Verifique o bloqueador de pop-ups.');
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(()=>{ win.print(); }, 250);
+  });
+
+  // ================== MODAL: Ajustes de Tinta ==================
+  const ajustesTintaOverlay = document.getElementById('ajustesTintaOverlay');
+  const ajustesTintaBody = document.getElementById('ajustesTintaBody');
+  const abrirAjustesTintaBtn = document.getElementById('abrirAjustesTintaBtn');
+  const fecharAjustesTintaBtn = document.getElementById('fecharAjustesTintaBtn');
+
+  let ajustesSubstratoSel = TINTA_STATE.substratoAtual;
+
+  function montarAjustesHTML(){
+    return '' +
+      '<div class="settings-substrato-row">' +
+        '<div class="field"><label>Substrato</label><select id="ajusteSubstratoSelect"></select></div>' +
+        '<button class="btn-secondary" id="ajusteNovoSubstratoBtn">+ Novo</button>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>Fator do substrato <span style="color:var(--text-dim);">(multiplica a base do Revestido)</span></label>' +
+        '<input type="number" step="0.01" id="ajusteSubstratoFatorInput">' +
+      '</div>' +
+      '<div class="section-title">Fatores por tinta</div>' +
+      '<div id="ajusteInksWrap"></div>' +
+      '<button class="btn-secondary btn-block" id="ajusteNovaTintaBtn">+ Criar nova tinta</button>' +
+      '<div class="section-title">Custo por quilo (R$)</div>' +
+      '<div id="ajusteCustoWrap"></div>';
+  }
+
+  function popularAjusteSubstratoSelect(){
+    const sel = document.getElementById('ajusteSubstratoSelect');
+    sel.innerHTML = '';
+    TINTA_STATE.substratos.forEach(s=>{
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    });
+    sel.value = ajustesSubstratoSel;
+    sel.addEventListener('change', ()=>{
+      ajustesSubstratoSel = sel.value;
+      renderAjusteSubstratoFator();
+      renderAjustesInks();
+    });
+  }
+
+  function renderAjusteSubstratoFator(){
+    const input = document.getElementById('ajusteSubstratoFatorInput');
+    const sub = ajustesSubstratoSel;
+    const valorAtual = TINTA_STATE.substratoFatores[sub];
+    input.value = (typeof valorAtual === 'number' ? valorAtual : 1).toFixed(2);
+    input.oninput = ()=>{
+      const v = parseFloat(input.value);
+      if(!isNaN(v)){
+        TINTA_STATE.substratoFatores[sub] = v;
+        // Recalcula as tintas em modo automático deste substrato com o novo fator
+        const fatoresSub = TINTA_STATE.fatores[sub] || {};
+        TINTA_STATE.inks.forEach(ink=>{
+          const info = fatoresSub[ink.key];
+          if(info && info.auto){
+            info.valor = sugerirFator(sub, ink.key, 0);
+          }
+        });
+        renderAjustesInks();
+        calcularTinta();
+      }
+    };
+  }
+
+  function renderAjustesInks(){
+    const wrap = document.getElementById('ajusteInksWrap');
+    wrap.innerHTML = '';
+    const sub = ajustesSubstratoSel;
+
+    TINTA_STATE.inks.forEach(ink=>{
+      const info = garantirFator(sub, ink.key, 0);
+      const card = document.createElement('div');
+      card.className = 'ink-config-card';
+      card.innerHTML =
+        '<div class="ink-config-row">' +
+          '<div class="field"><label>Nome</label><input type="text" value="'+ink.nome+'" data-role="nome" data-ink="'+ink.key+'"></div>' +
+          '<div class="field"><label>Fator</label><input type="number" step="0.0001" value="'+info.valor.toFixed(4)+'" data-role="fator" data-ink="'+ink.key+'" '+(info.auto?'disabled':'')+'></div>' +
+        '</div>' +
+        '<label class="auto-badge '+(info.auto?'is-auto':'')+'">' +
+          '<input type="checkbox" data-role="auto" data-ink="'+ink.key+'" '+(info.auto?'checked':'')+'>' +
+          ' Sugestão automática (base do Revestido × fator do substrato)' +
+        '</label>';
+      wrap.appendChild(card);
+    });
+
+    wrap.querySelectorAll('[data-role="nome"]').forEach(el=>{
+      el.addEventListener('input', ()=>{
+        const ink = TINTA_STATE.inks.find(i=>i.key===el.dataset.ink);
+        if(ink) ink.nome = el.value;
+        renderCoberturaGrid();
+        renderAjustesCusto();
+        calcularTinta();
+      });
+    });
+    wrap.querySelectorAll('[data-role="fator"]').forEach(el=>{
+      el.addEventListener('input', ()=>{
+        const info = TINTA_STATE.fatores[sub][el.dataset.ink];
+        const v = parseFloat(el.value);
+        if(!isNaN(v)) info.valor = v;
+        calcularTinta();
+      });
+    });
+    wrap.querySelectorAll('[data-role="auto"]').forEach(el=>{
+      el.addEventListener('change', ()=>{
+        const info = TINTA_STATE.fatores[sub][el.dataset.ink];
+        info.auto = el.checked;
+        const card = el.closest('.ink-config-card');
+        card.querySelector('.auto-badge').classList.toggle('is-auto', el.checked);
+        const fatorInput = card.querySelector('[data-role="fator"]');
+        fatorInput.disabled = el.checked;
+        if(info.auto){
+          info.valor = sugerirFator(sub, el.dataset.ink, 0);
+          fatorInput.value = info.valor.toFixed(4);
+        }
+        calcularTinta();
+      });
+    });
+  }
+
+  function renderAjustesCusto(){
+    const wrap = document.getElementById('ajusteCustoWrap');
+    wrap.innerHTML = '';
+    TINTA_STATE.inks.forEach(ink=>{
+      const row = document.createElement('div');
+      row.className = 'ink-config-row';
+      row.innerHTML =
+        '<div class="field"><label>'+ink.nome+'</label></div>' +
+        '<div class="field"><label>R$ / kg</label><input type="number" step="0.01" min="0" value="'+(ink.preco||0).toFixed(2)+'" data-role="preco" data-ink="'+ink.key+'"></div>';
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('[data-role="preco"]').forEach(el=>{
+      el.addEventListener('input', ()=>{
+        const ink = TINTA_STATE.inks.find(i=>i.key===el.dataset.ink);
+        const v = parseFloat(el.value);
+        if(ink) ink.preco = isNaN(v) ? 0 : v;
+        calcularTinta();
+      });
+    });
+  }
+
+  abrirAjustesTintaBtn.addEventListener('click', ()=>{
+    ajustesSubstratoSel = tintaSubstratoEl.value || TINTA_STATE.substratoAtual;
+    ajustesTintaBody.innerHTML = montarAjustesHTML();
+    popularAjusteSubstratoSelect();
+    renderAjusteSubstratoFator();
+    renderAjustesInks();
