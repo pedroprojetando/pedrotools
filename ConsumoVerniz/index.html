@@ -1,1 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Consumo de Verniz</title>
+<style>
+  :root{
+    --bg: #1e1f22;
+    --panel: #2b2d31;
+    --field: #333538;
+    --border: #4a4d54;
+    --accent: #6fa8dc;
+    --text: #ffffff;
+    --muted: #a9acb3;
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  #sheet{
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 18px;
+  }
+  h1{
+    font-size: 19px;
+    margin: 0 0 2px 0;
+  }
+  .subtitle{
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .panel h2{
+    font-size: 13px;
+    text-transform: none;
+    color: var(--muted);
+    margin: 0 0 12px 0;
+    font-weight: 600;
+  }
+  .row{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .row.cols-3{ grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 480px){
+    .row, .row.cols-3{ grid-template-columns: 1fr 1fr; }
+  }
+  .field{ margin-bottom: 12px; }
+  .field:last-child{ margin-bottom: 0; }
+  .field label{
+    display:block;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  input[type=text], input[type=number], textarea{
+    width: 100%;
+    background: var(--field);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px;
+    border-radius: 9px;
+    font-size: 15px;
+    font-family: inherit;
+  }
+  input[readonly]{
+    color: var(--accent);
+    font-weight: 700;
+    background: #26282c;
+  }
+  textarea{ resize: vertical; min-height: 50px; }
 
+  .unit-toggle{
+    display: inline-flex;
+    background: var(--field);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    overflow: hidden;
+  }
+  .unit-toggle button{
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .unit-toggle button.active{
+    background: var(--accent);
+    color: #10222f;
+    font-weight: 700;
+  }
+
+  .calc-row{
+    display:flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  button.action{
+    flex: 1;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-primary{ background: var(--accent); color: #10222f; }
+  .btn-secondary{ background: var(--field); color: var(--text); border: 1px solid var(--border) !important; }
+
+  .hint{
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  @media print{
+    body{ background: #fff; color: #000; }
+    #sheet{ max-width: 100%; padding: 6mm; }
+    .panel{ background: #fff; border: 1px solid #999; break-inside: avoid; }
+    .panel h2{ color: #444; }
+    .hint{ color: #555; }
+    input, textarea{ background: #fff; color: #000; border: 1px solid #999; }
+    input[readonly]{ color: #000; font-weight: 700; }
+    .no-print{ display: none !important; }
+    @page{ size: A4; margin: 10mm; }
+  }
+</style>
+</head>
+<body>
+<div id="sheet">
+
+  <h1>Consumo de Verniz</h1>
+  <div class="subtitle">Calculadora de consumo, fator e tiragem</div>
+
+  <div class="panel">
+    <h2>Dados gerais</h2>
+    <div class="row">
+      <div class="field">
+        <label for="data">Data</label>
+        <input type="text" id="data">
+      </div>
+      <div class="field">
+        <label for="cliente">Cliente</label>
+        <input type="text" id="cliente" placeholder="Nome do cliente">
+      </div>
+      <div class="field">
+        <label for="maquina">Máquina</label>
+        <input type="text" id="maquina" placeholder="Ex: CX104-6+L">
+      </div>
+      <div class="field">
+        <label for="anilox">Anilox</label>
+        <input type="text" id="anilox" placeholder="Ex: TriHelical 80L/cm 12cm³">
+      </div>
+      <div class="field">
+        <label for="substrato">Substrato</label>
+        <input type="text" id="substrato" placeholder="Ex: Verso cartão">
+      </div>
+      <div class="field">
+        <label for="verniz">Verniz</label>
+        <input type="text" id="verniz" placeholder="Ex: Hidrofix Perolizado">
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Formato da folha</h2>
+    <div class="field">
+      <label>Unidade de medida</label>
+      <div class="unit-toggle no-print">
+        <button type="button" id="unitCm" onclick="setUnit('cm')">cm</button>
+        <button type="button" id="unitM" onclick="setUnit('m')">m</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label id="labelLargura" for="largura">Largura (cm)</label>
+        <input type="number" id="largura" step="0.01" oninput="atualizarArea()">
+      </div>
+      <div class="field">
+        <label id="labelComprimento" for="comprimento">Comprimento (cm)</label>
+        <input type="number" id="comprimento" step="0.01" oninput="atualizarArea()">
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label for="area">Área (m²)</label>
+      <input type="text" id="area" readonly value="0.0000">
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Consumo</h2>
+    <div class="row cols-3">
+      <div class="field">
+        <label for="tiragem">Tiragem (folhas)</label>
+        <input type="number" id="tiragem" step="1" placeholder="Ex: 9000">
+      </div>
+      <div class="field">
+        <label for="fator">Fator (g/m²)</label>
+        <input type="number" id="fator" step="0.01" placeholder="Ex: 4.23">
+      </div>
+      <div class="field">
+        <label for="consumo">Consumo (Kg)</label>
+        <input type="number" id="consumo" step="0.01" placeholder="Ex: 15">
+      </div>
+    </div>
+    <div class="calc-row no-print">
+      <button class="action btn-primary" onclick="calcular()">Calcular</button>
+      <button class="action btn-secondary" onclick="limparCalculo()">Limpar consumo</button>
+    </div>
+    <div class="hint">Preencha dois dos três campos (tiragem, fator ou consumo) e clique em Calcular para obter o terceiro. Fórmula: Consumo (Kg) = Área (m²) × Tiragem × Fator (g/m²) ÷ 1000.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Observação</h2>
+    <div class="field">
+      <textarea id="observacao" placeholder="Observações sobre o trabalho..."></textarea>
+    </div>
+  </div>
+
+  <div class="calc-row no-print">
+    <button class="action btn-secondary" onclick="window.print()">Salvar PDF</button>
+  </div>
+
+</div>
+
+<script>
+  let unit = 'cm';
+
+  function setUnit(u){
+    unit = u;
+    document.getElementById('unitCm').classList.toggle('active', u === 'cm');
+    document.getElementById('unitM').classList.toggle('active', u === 'm');
+    document.getElementById('labelLargura').textContent = 'Largura (' + u + ')';
+    document.getElementById('labelComprimento').textContent = 'Comprimento (' + u + ')';
+    atualizarArea();
+  }
+
+  function getAreaM2(){
+    const l = parseFloat(document.getElementById('largura').value);
+    const c = parseFloat(document.getElementById('comprimento').value);
+    if(isNaN(l) || isNaN(c)) return 0;
+    const fator = (unit === 'cm') ? 0.01 : 1;
+    return (l * fator) * (c * fator);
+  }
+
+  function atualizarArea(){
+    const area = getAreaM2();
+    document.getElementById('area').value = area.toFixed(4);
+  }
+
+  function calcular(){
+    const area = getAreaM2();
+    if(area <= 0){
+      alert('Informe a largura e o comprimento da folha.');
+      return;
+    }
+
+    const tiragemEl = document.getElementById('tiragem');
+    const fatorEl = document.getElementById('fator');
+    const consumoEl = document.getElementById('consumo');
+
+    const tiragem = tiragemEl.value === '' ? null : parseFloat(tiragemEl.value);
+    const fator = fatorEl.value === '' ? null : parseFloat(fatorEl.value);
+    const consumo = consumoEl.value === '' ? null : parseFloat(consumoEl.value);
+
+    const faltando = [tiragem, fator, consumo].filter(v => v === null).length;
+
+    if(faltando >= 2){
+      alert('Preencha pelo menos dois dos três campos: tiragem, fator ou consumo.');
+      return;
+    }
+
+    if(faltando === 0){
+      // todos preenchidos: verificar consistência e recalcular o consumo
+      const consumoCalc = (area * tiragem * fator) / 1000;
+      const diff = Math.abs(consumoCalc - consumo);
+      if(diff > 0.05 * Math.max(consumoCalc, 0.0001)){
+        alert('Atenção: os valores informados são inconsistentes.\nConsumo calculado a partir de área × tiragem × fator: ' + consumoCalc.toFixed(3) + ' Kg\nConsumo informado: ' + consumo.toFixed(3) + ' Kg');
+      }
+      return;
+    }
+
+    // exatamente um campo faltando: calcular
+    if(consumo === null){
+      const novoConsumo = (area * tiragem * fator) / 1000;
+      consumoEl.value = novoConsumo.toFixed(3);
+    } else if(fator === null){
+      const novoFator = (consumo * 1000) / (area * tiragem);
+      fatorEl.value = novoFator.toFixed(3);
+    } else if(tiragem === null){
+      const novaTiragem = (consumo * 1000) / (area * fator);
+      tiragemEl.value = Math.round(novaTiragem);
+    }
+  }
+
+  function limparCalculo(){
+    document.getElementById('tiragem').value = '';
+    document.getElementById('fator').value = '';
+    document.getElementById('consumo').value = '';
+  }
+
+  function preencherData(){
+    const hoje = new Date();
+    const dd = String(hoje.getDate()).padStart(2,'0');
+    const mm = String(hoje.getMonth()+1).padStart(2,'0');
+    const yyyy = hoje.getFullYear();
+    document.getElementById('data').value = dd + '.' + mm + '.' + yyyy;
+  }
+
+  preencherData();
+  setUnit('cm');
+</script>
+</body>
+</html>
