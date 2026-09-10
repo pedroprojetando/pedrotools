@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consumo de Tinta</title>
+<style>
+  :root{
+    --bg:#121214;
+    --panel:#1b1b1e;
+    --panel-2:#212124;
+    --line:#2c2c30;
+    --text:#eceded;
+    --muted:#98989f;
+    --accent:#22b8d8;
+    --accent-dim:#173a42;
+    --good:#3ecf8e;
+    --warn:#e2a33d;
+    --k:#e7e7ea;
+    --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:14px 14px 90px;
+    position:relative;
+  }
+  /* header */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:6px 2px 16px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:16px;
+  }
+  .topbar .title{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  .topbar h1{
+    font-size:17px;
+    font-weight:600;
+    letter-spacing:.2px;
+    margin:0;
+  }
+  .topbar .sub{
+    font-family:'IBM Plex Mono',ui-monospace,monospace;
+    font-size:10.5px;
+    color:var(--muted);
+  }
+  .gear-btn{
+    width:34px;height:34px;
+    border-radius:50%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+  .gear-btn:active{background:var(--accent-dim);}
+  .gear-btn svg{width:17px;height:17px;}
+
+  /* section */
+  .section{margin-bottom:18px;}
+  .section-head{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .reg-mark{
+    width:11px;height:11px;
+    position:relative;
+    flex:0 0 auto;
+    opacity:.8;
+  }
+  .reg-mark::before,.reg-mark::after{
+    content:'';
+    position:absolute;
+    background:var(--accent);
+  }
+  .reg-mark::before{width:100%;height:1px;top:50%;left:0;}
+  .reg-mark::after{width:1px;height:100%;left:50%;top:0;}
+  .section-head h2{
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.4px;
+    margin:0;
+    color:var(--muted);
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+  }
+
+  /* fields */
+  .field{margin-bottom:12px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-bottom:5px;
+  }
+  .field input[type=text],
+  .field input[type=number]{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:9px 10px;
+    border-radius:var(--radius);
+    font-size:14.5px;
+    font-family:inherit;
+  }
+  .field input:focus{outline:none;border-color:var(--accent);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+  .seg{
+    display:flex;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .seg button{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--muted);
+    font-size:12.5px;
+    font-family:inherit;
+    padding:8px 4px;
+    cursor:pointer;
+  }
+  .seg button.active{
+    background:var(--accent-dim);
+    color:var(--accent);
+    font-weight:600;
+  }
+
+  /* paper preview */
+  .paper-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    padding:12px 0 4px;
+  }
+  .paper-dims{
+    font-family:'IBM Plex Mono',ui-monospace,monospace;
+    font-size:11px;
+    color:var(--muted);
+  }
+  .paper-area{
+    font-family:'IBM Plex Mono',ui-monospace,monospace;
+    font-size:11px;
+    color:var(--accent);
+  }
+
+  /* ink rows */
+  .ink-row{
+    display:grid;
+    grid-template-columns:22px 1fr 76px;
+    align-items:center;
+    gap:10px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .ink-row:last-child{border-bottom:none;}
+  .ink-dot{
+    width:16px;height:16px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.25);
+  }
+  .ink-name{font-size:13.5px;}
+  .ink-pct{
+    display:flex;align-items:center;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+  }
+  .ink-pct input{
+    width:100%;
+    background:transparent;
+    border:none;
+    color:var(--text);
+    padding:7px 4px 7px 8px;
+    font-size:13.5px;
+    font-family:'IBM Plex Mono',ui-monospace,monospace;
+    text-align:right;
+  }
+  .ink-pct input:focus{outline:none;}
+  .ink-pct span{
+    color:var(--muted);
+    font-size:12px;
+    padding-right:8px;
+  }
+
+  /* results */
+  table.results{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.5px;
+  }
+  table.results th{
+    text-align:right;
+    font-size:10px;
+    text-transform:none;
+    color:var(--muted);
+    font-weight:500;
+    padding:0 4px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  table.results th:first-child, table.results td:first-child{text-align:left;}
+  table.results td{
+    padding:7px 4px;
+    border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono',ui-monospace,monospace;
+    text-align:right;
+  }
+  table.results td:first-child{font-family:inherit;display:flex;align-items:center;gap:6px;}
+  table.results tr.total td{
+    border-bottom:none;
+    border-top:1px solid var(--line);
+    padding-top:10px;
+    font-weight:600;
+    color:var(--accent);
+  }
+  .mini-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;border:1px solid rgba(255,255,255,.25);}
+  .empty-note{
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    padding:10px 0 2px;
+  }
+
+  /* action buttons */
+  .actions{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .btn{
+    flex:1;
+    padding:12px 10px;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    color:var(--text);
+    font-size:13.5px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:7px;
+  }
+  .btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#06232a;
+  }
+  .btn svg{width:15px;height:15px;}
+
+  /* modal */
+  .modal-backdrop{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px 10px 0 0;
+    width:100%;
+    max-width:480px;
+    max-height:88vh;
+    overflow-y:auto;
+    padding:16px 16px 24px;
+  }
+  .modal-head{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:14px;
+    position:sticky;top:0;background:var(--panel);
+  }
+  .modal-head h3{font-size:15px;margin:0;}
+  .close-btn{
+    width:28px;height:28px;border-radius:50%;
+    background:var(--panel-2);border:1px solid var(--line);
+    color:var(--muted);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;font-size:16px;line-height:1;
+  }
+  .toggle-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    margin-bottom:12px;
+  }
+  .toggle-row .lbl{font-size:13px;}
+  .toggle-row .desc{font-size:11px;color:var(--muted);margin-top:2px;}
+  .switch{
+    position:relative;width:40px;height:22px;flex:0 0 auto;
+  }
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{
+    position:absolute;inset:0;
+    background:var(--line);
+    border-radius:22px;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .slider::before{
+    content:'';
+    position:absolute;
+    width:16px;height:16px;
+    left:3px;top:3px;
+    background:#fff;
+    border-radius:50%;
+    transition:.15s;
+  }
+  .switch input:checked + .slider{background:var(--accent);}
+  .switch input:checked + .slider::before{transform:translateX(18px);}
+
+  .cfg-group{margin-bottom:18px;}
+  .cfg-group-title{
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:.4px;
+    margin-bottom:8px;
+  }
+  .cfg-ink{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:10px;
+    margin-bottom:8px;
+  }
+  .cfg-ink-head{
+    display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  }
+  .cfg-ink-head input[type=color]{
+    width:26px;height:26px;border:none;background:none;padding:0;border-radius:50%;overflow:hidden;cursor:pointer;
+  }
+  .cfg-ink-head input[type=text]{
+    flex:1;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:6px 8px;
+    border-radius:var(--radius);
+    font-size:13px;
+    font-family:inherit;
+  }
+  .cfg-ink-grid{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;
+  }
+  .cfg-ink-grid .f{display:flex;flex-direction:column;gap:3px;}
+  .cfg-ink-grid label{font-size:9.5px;color:var(--muted);}
+  .cfg-ink-grid input{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:6px 6px;
+    border-radius:var(--radius);
+    font-size:12px;
+    font-family:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  .cfg-ink-grid input:disabled{color:var(--muted);opacity:.7;}
+  .save-btn{
+    width:100%;
+    padding:13px;
+    border-radius:var(--radius);
+    border:none;
+    background:var(--accent);
+    color:#06232a;
+    font-weight:700;
+    font-size:14px;
+    font-family:inherit;
+    cursor:pointer;
+    margin-top:6px;
+  }
+
+  /* print */
+  @media print{
+    body{background:#fff;color:#111;}
+    .topbar, .actions, .modal-backdrop, .gear-btn{display:none !important;}
+    .app{max-width:100%;padding:0;}
+    .panel{border:1px solid #ccc;background:#fff;}
+    .section-head h2{color:#555;}
+    .field label{color:#555;}
+    table.results td, table.results th{color:#111;}
+  }
+  #print-report{display:none;}
+  @media print{
+    #screen-content{display:none;}
+    #print-report{display:block;}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="screen-content">
+
+  <div class="topbar">
+    <div class="title">
+      <h1>Consumo de Tinta</h1>
+      <span class="sub">offset</span>
+    </div>
+    <button class="gear-btn" id="openSettings" aria-label="Configurações">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 4.3l.06.06A1.65 1.65 0 0 0 8.92 4.7H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+    </button>
+  </div>
+
+  <!-- Dados do job -->
+  <div class="section">
+    <div class="section-head"><span class="reg-mark"></span><h2>DADOS DO JOB</h2></div>
+    <div class="panel">
+      <div class="field"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome do cliente"></div>
+      <div class="row2">
+        <div class="field"><label>OS</label><input type="text" id="os" placeholder="Nº da OS"></div>
+        <div class="field"><label>Tiragem (folhas)</label><input type="number" id="tiragem" value="10000" min="0"></div>
+      </div>
+      <div class="field"><label>Serviço</label><input type="text" id="servico" placeholder="Descrição do serviço"></div>
+    </div>
+  </div>
+
+  <!-- Papel -->
+  <div class="section">
+    <div class="section-head"><span class="reg-mark"></span><h2>PAPEL</h2></div>
+    <div class="panel">
+      <div class="field">
+        <label>Unidade de medida</label>
+        <div class="seg" id="unidadeSeg">
+          <button data-v="m" class="active">metros</button>
+          <button data-v="cm">centímetros</button>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label id="labLargura">Largura (m)</label><input type="number" id="largura" value="1.04" step="0.01" min="0"></div>
+        <div class="field"><label id="labComprimento">Comprimento (m)</label><input type="number" id="comprimento" value="0.72" step="0.01" min="0"></div>
+      </div>
+      <div class="field">
+        <label>Revestimento</label>
+        <div class="seg" id="revSeg">
+          <button data-v="revestido">Revestido</button>
+          <button data-v="nao_revestido" class="active">Não Revestido</button>
+        </div>
+      </div>
+      <div class="paper-wrap">
+        <svg id="paperSvg" width="220" height="160" viewBox="0 0 220 160"></svg>
+        <div class="paper-dims" id="paperDims">1.04 m × 0.72 m</div>
+        <div class="paper-area" id="paperArea">Área: 0.7488 m²</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cobertura -->
+  <div class="section">
+    <div class="section-head"><span class="reg-mark"></span><h2>COBERTURA DE COR (%)</h2></div>
+    <div class="panel" id="inkRows"></div>
+  </div>
+
+  <!-- Resultado -->
+  <div class="section">
+    <div class="section-head"><span class="reg-mark"></span><h2>RESULTADO</h2></div>
+    <div class="panel">
+      <table class="results" id="resultsTable">
+        <thead>
+          <tr><th>Cor</th><th>Área cob.</th><th>Fator</th><th>Consumo</th><th>Custo</th></tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+      <div class="empty-note" id="emptyNote">Informe a cobertura de ao menos uma cor.</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="openSettings2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 4.3l.06.06A1.65 1.65 0 0 0 8.92 4.7H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+      Config.
+    </button>
+    <button class="btn primary" id="genPdf">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h9l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V9Z"/><path d="M14 2v6h6"/></svg>
+      Gerar PDF
+    </button>
+  </div>
+
+</div>
+
+<!-- Modal de configurações -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Configurações</h3>
+      <button class="close-btn" id="closeSettings">✕</button>
+    </div>
+
+    <div class="toggle-row">
+      <div>
+        <div class="lbl">Sugestão automática de fator</div>
+        <div class="desc">Calcula o fator conforme a área do formato</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="autoSuggest" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="cfg-group">
+      <div class="cfg-group-title">TINTAS</div>
+      <div id="cfgInks"></div>
+    </div>
+
+    <p style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:-4px;">
+      Fatores sugeridos com base na planilha de referência: Revestido tem fator dependente da área
+      (K/Y = 0,0003 + 0,001×área; C/M = 0,0002 + 0,001×área). Para P1–P4 revestido, sem dados na
+      planilha, aplica-se o mesmo padrão de C/M. Não Revestido (offset) tem apenas um ponto de
+      referência na planilha (0,23 m² → 0,0011), usado como valor fixo sugerido para todas as cores.
+      Desative a sugestão automática para digitar valores próprios.
+    </p>
+
+    <button class="save-btn" id="saveSettings">Salvar e fechar</button>
+  </div>
+</div>
+
+<!-- Relatório para impressão -->
+<div id="print-report"></div>
+
+<script>
+(function(){
+  // ---------- estado ----------
+  const inkDefaults = [
+    {key:'K',  nome:'Preto',      cor:'#e7e7ea', preco:70},
+    {key:'C',  nome:'Ciano',      cor:'#00AEEF', preco:80},
+    {key:'M',  nome:'Magenta',    cor:'#EC008C', preco:80},
+    {key:'Y',  nome:'Amarelo',    cor:'#FFD400', preco:80},
+    {key:'P1', nome:'Pantone 1',  cor:'#7C3AED', preco:80},
+    {key:'P2', nome:'Pantone 2',  cor:'#F97316', preco:80},
+    {key:'P3', nome:'Pantone 3',  cor:'#10B981', preco:80},
+    {key:'P4', nome:'Pantone 4',  cor:'#EF4444', preco:80},
+  ];
+
+  const state = {
+    cliente:'', os:'', servico:'',
+    unidade:'m',
+    largura:1.04, comprimento:0.72,
+    revestimento:'nao_revestido',
+    tiragem:10000,
+    autoSuggest:true,
+    inks: inkDefaults.map(i => ({...i, cobertura:0, fatorRevestido:null, fatorNaoRevestido:null}))
+  };
+
+  // ---------- fator sugerido ----------
+  // Fator em função da ÁREA COBERTA pela tinta (área do formato x cobertura% daquela cor),
+  // que é o eixo real da tabela de referência — não a área total da folha.
+  function fatorSugerido(key, substrato, areaCobertaM2){
+    if (substrato === 'revestido'){
+      // 3 pontos por par de cor na planilha (0,2/0,3/0,4 m²) -> regressão linear exata
+      if (key === 'K' || key === 'Y') return 0.0003 + 0.001*areaCobertaM2;
+      if (key === 'C' || key === 'M') return 0.0002 + 0.001*areaCobertaM2;
+      return 0.0002 + 0.001*areaCobertaM2; // P1-P4: sem dado de referência, segue padrão C/M
+    }
+    // Não revestido/offset: a planilha só tem 1 ponto (0,23 m² -> 0,0011), igual para K/C/M/Y.
+    // Sem um 2º ponto não dá pra estimar inclinação própria do offset, então tomamos emprestada
+    // a inclinação observada no revestido (0,001 por m², constante nas 4 cores) e ancoramos a
+    // reta no único ponto conhecido: 0,0011 = intercepto + 0,001*0,23 -> intercepto = 0,00087.
+    return 0.00087 + 0.001*areaCobertaM2;
+  }
+
+  function areaFolhaM2(){
+    let l = parseFloat(document.getElementById('largura').value) || 0;
+    let c = parseFloat(document.getElementById('comprimento').value) || 0;
+    if (state.unidade === 'cm'){ l/=100; c/=100; }
+    return l*c;
+  }
+
+  // ---------- render: linhas de cobertura ----------
+  const inkRowsEl = document.getElementById('inkRows');
+  function renderInkRows(){
+    inkRowsEl.innerHTML = state.inks.map(ink => `
+      <div class="ink-row">
+        <div class="ink-dot" style="background:${ink.cor}"></div>
+        <div class="ink-name">${ink.nome}</div>
+        <div class="ink-pct">
+          <input type="number" min="0" max="100" step="1" value="${ink.cobertura || ''}" data-key="${ink.key}" class="cov-input" placeholder="0">
+          <span>%</span>
+        </div>
+      </div>
+    `).join('');
+    inkRowsEl.querySelectorAll('.cov-input').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const k = e.target.dataset.key;
+        const ink = state.inks.find(i=>i.key===k);
+        ink.cobertura = parseFloat(e.target.value) || 0;
+        calcular();
+      });
+    });
+  }
+
+  // ---------- SVG do papel ----------
+  function renderPaper(){
+    let l = parseFloat(document.getElementById('largura').value) || 0;
+    let c = parseFloat(document.getElementById('comprimento').value) || 0;
+    document.getElementById('labLargura').textContent = 'Largura (' + state.unidade + ')';
+    document.getElementById('labComprimento').textContent = 'Comprimento (' + state.unidade + ')';
+
+    let lM = l, cM = c;
+    if (state.unidade === 'cm'){ lM/=100; cM/=100; }
+
+    const svg = document.getElementById('paperSvg');
+    const maxW = 200, maxH = 130;
+    let w = lM, h = cM;
+    let scale = 1;
+    if (w>0 && h>0){
+      scale = Math.min(maxW/w, maxH/h);
+    }
+    const dw = Math.max(w*scale, 4);
+    const dh = Math.max(h*scale, 4);
+    const x = (220-dw)/2;
+    const y = (160-dh)/2;
+    svg.innerHTML = `
+      <rect x="${x}" y="${y}" width="${dw}" height="${dh}" fill="#f4f2ee" stroke="#3a3a3e" stroke-width="1"/>
+      <line x1="${x-6}" y1="${y+dh/2}" x2="${x}" y2="${y+dh/2}" stroke="#4a4a4e" stroke-width="1"/>
+      <line x1="${x+dw}" y1="${y+dh/2}" x2="${x+dw+6}" y2="${y+dh/2}" stroke="#4a4a4e" stroke-width="1"/>
+      <line x1="${x+dw/2}" y1="${y-6}" x2="${x+dw/2}" y2="${y}" stroke="#4a4a4e" stroke-width="1"/>
+      <line x1="${x+dw/2}" y1="${y+dh}" x2="${x+dw/2}" y2="${y+dh+6}" stroke="#4a4a4e" stroke-width="1"/>
+    `;
+    document.getElementById('paperDims').textContent = `${l || 0} ${state.unidade} × ${c || 0} ${state.unidade}`;
+    document.getElementById('paperArea').textContent = 'Área: ' + areaFolhaM2().toFixed(4) + ' m²';
+  }
+
+  // ---------- calculo ----------
+  function fmtKg(v){ return v.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}); }
+  function fmtR$(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+  function fmtFator(v){ return v.toLocaleString('pt-BR',{minimumFractionDigits:4,maximumFractionDigits:4}); }
+
+  let lastResults = [];
+
+  function calcular(){
+    const area = areaFolhaM2();
+    const tiragem = parseFloat(document.getElementById('tiragem').value) || 0;
+    const substrato = state.revestimento;
+
+    const linhas = [];
+    let totalKg = 0, totalR$ = 0;
+
+    state.inks.forEach(ink=>{
+      if (!ink.cobertura || ink.cobertura<=0) return;
+      const areaEfetiva = area * (ink.cobertura/100);
+      let fator;
+      if (state.autoSuggest){
+        fator = fatorSugerido(ink.key, substrato, areaEfetiva);
+      } else {
+        fator = substrato==='revestido' ? (ink.fatorRevestido ?? fatorSugerido(ink.key,'revestido',areaEfetiva))
+                                         : (ink.fatorNaoRevestido ?? fatorSugerido(ink.key,'nao_revestido',areaEfetiva));
+      }
+      const consumoKg = tiragem * areaEfetiva * fator;
+      const custo = consumoKg * ink.preco;
+      totalKg += consumoKg;
+      totalR$ += custo;
+      linhas.push({...ink, fator, areaEfetiva, consumoKg, custo});
+    });
+
+    lastResults = linhas;
+
+    const body = document.getElementById('resultsBody');
+    const emptyNote = document.getElementById('emptyNote');
+    if (linhas.length===0){
+      body.innerHTML='';
+      emptyNote.style.display='block';
+      document.getElementById('resultsTable').style.display='none';
+      return;
+    }
+    emptyNote.style.display='none';
+    document.getElementById('resultsTable').style.display='table';
+
+    body.innerHTML = linhas.map(l => `
+      <tr>
+        <td><span class="mini-dot" style="background:${l.cor}"></span>${l.nome}</td>
+        <td>${l.areaEfetiva.toFixed(4)} m²</td>
+        <td>${fmtFator(l.fator)}</td>
+        <td>${fmtKg(l.consumoKg)} kg</td>
+        <td>${fmtR$(l.custo)}</td>
+      </tr>
+    `).join('') + `
+      <tr class="total">
+        <td>Total</td>
+        <td></td>
+        <td></td>
+        <td>${fmtKg(totalKg)} kg</td>
+        <td>${fmtR$(totalR$)}</td>
+      </tr>
+    `;
+  }
+
+  // ---------- listeners tela principal ----------
+  ['cliente','os','servico'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', e=>{ state[id]=e.target.value; });
+  });
+  document.getElementById('tiragem').addEventListener('input', calcular);
+  document.getElementById('largura').addEventListener('input', ()=>{ renderPaper(); calcular(); });
+  document.getElementById('comprimento').addEventListener('input', ()=>{ renderPaper(); calcular(); });
+
+  document.getElementById('unidadeSeg').addEventListener('click', e=>{
+    const btn = e.target.closest('button'); if(!btn) return;
+    const novaUnidade = btn.dataset.v;
+    if (novaUnidade === state.unidade) return;
+    const lEl = document.getElementById('largura'), cEl = document.getElementById('comprimento');
+    let l = parseFloat(lEl.value)||0, c = parseFloat(cEl.value)||0;
+    if (novaUnidade==='cm'){ l*=100; c*=100; } else { l/=100; c/=100; }
+    lEl.value = Math.round(l*10000)/10000;
+    cEl.value = Math.round(c*10000)/10000;
+    state.unidade = novaUnidade;
+    [...e.currentTarget.children].forEach(b=>b.classList.toggle('active', b===btn));
+    renderPaper(); calcular();
+  });
+
+  document.getElementById('revSeg').addEventListener('click', e=>{
+    const btn = e.target.closest('button'); if(!btn) return;
+    state.revestimento = btn.dataset.v;
+    [...e.currentTarget.children].forEach(b=>b.classList.toggle('active', b===btn));
+    calcular();
+    renderCfgInks();
+  });
+
+  // ---------- modal ----------
+  const backdrop = document.getElementById('modalBackdrop');
+  function openModal(){ renderCfgInks(); backdrop.classList.add('open'); }
+  function closeModal(){ backdrop.classList.remove('open'); }
+  document.getElementById('openSettings').addEventListener('click', openModal);
+  document.getElementById('openSettings2').addEventListener('click', openModal);
+  document.getElementById('closeSettings').addEventListener('click', closeModal);
+  backdrop.addEventListener('click', e=>{ if (e.target===backdrop) closeModal(); });
+
+  document.getElementById('autoSuggest').addEventListener('change', e=>{
+    state.autoSuggest = e.target.checked;
+    renderCfgInks();
+    calcular();
+  });
+
+  const cfgInksEl = document.getElementById('cfgInks');
+  function renderCfgInks(){
+    const area = areaFolhaM2();
+    cfgInksEl.innerHTML = state.inks.map(ink=>{
+      const temCobertura = ink.cobertura && ink.cobertura > 0;
+      const areaCoberta = area * ((ink.cobertura||0)/100);
+      const sugRev = fatorSugerido(ink.key,'revestido',areaCoberta);
+      const sugNao = fatorSugerido(ink.key,'nao_revestido',areaCoberta);
+      const fRev = ink.fatorRevestido ?? sugRev;
+      const fNao = ink.fatorNaoRevestido ?? sugNao;
+      const disabled = state.autoSuggest ? 'disabled' : '';
+      const areaNote = temCobertura
+        ? `Sugestão para ${areaCoberta.toFixed(4)} m² cobertos (cobertura atual: ${ink.cobertura}%)`
+        : `Defina a cobertura desta cor na tela principal para uma sugestão precisa — mostrando valor base (0% cobertura)`;
+      return `
+      <div class="cfg-ink" data-key="${ink.key}">
+        <div class="cfg-ink-head">
+          <input type="color" value="${ink.cor}" class="cfg-color">
+          <input type="text" value="${ink.nome}" class="cfg-nome">
+        </div>
+        <div class="cfg-ink-grid">
+          <div class="f"><label>R$ / kg</label><input type="number" step="0.01" min="0" value="${ink.preco}" class="cfg-preco"></div>
+          <div class="f"><label>Fator revestido</label><input type="number" step="0.0001" value="${fRev.toFixed(4)}" class="cfg-fator-rev" ${disabled}></div>
+          <div class="f"><label>Fator não revestido</label><input type="number" step="0.0001" value="${fNao.toFixed(4)}" class="cfg-fator-nao" ${disabled}></div>
+        </div>
+        <div style="font-size:10px;color:${temCobertura?'var(--muted)':'var(--warn)'};margin-top:6px;">${areaNote}</div>
+      </div>`;
+    }).join('');
+
+    cfgInksEl.querySelectorAll('.cfg-ink').forEach(card=>{
+      const key = card.dataset.key;
+      const ink = state.inks.find(i=>i.key===key);
+      card.querySelector('.cfg-color').addEventListener('input', e=>{ ink.cor=e.target.value; });
+      card.querySelector('.cfg-nome').addEventListener('input', e=>{ ink.nome=e.target.value; });
+      card.querySelector('.cfg-preco').addEventListener('input', e=>{ ink.preco=parseFloat(e.target.value)||0; });
+      card.querySelector('.cfg-fator-rev').addEventListener('input', e=>{ ink.fatorRevestido=parseFloat(e.target.value)||0; });
+      card.querySelector('.cfg-fator-nao').addEventListener('input', e=>{ ink.fatorNaoRevestido=parseFloat(e.target.value)||0; });
+    });
+  }
+
+  document.getElementById('saveSettings').addEventListener('click', ()=>{
+    renderInkRows();
+    calcular();
+    closeModal();
+  });
+
+  // ---------- PDF ----------
+  document.getElementById('genPdf').addEventListener('click', ()=>{
+    calcular();
+    const area = areaFolhaM2();
+    const tiragem = parseFloat(document.getElementById('tiragem').value)||0;
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const substratoLabel = state.revestimento==='revestido' ? 'Revestido' : 'Não Revestido';
+
+    let linhasHtml = lastResults.map(l => `
+      <tr>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${l.cor};border:1px solid #999;vertical-align:middle;margin-right:6px;"></span>${l.nome}
+        </td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">${l.cobertura}%</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">${l.areaEfetiva.toFixed(4)} m²</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">${fmtFator(l.fator)}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">${fmtKg(l.consumoKg)} kg</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">R$ ${l.preco.toFixed(2)}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right;">${fmtR$(l.custo)}</td>
+      </tr>
+    `).join('');
+
+    const totalKg = lastResults.reduce((s,l)=>s+l.consumoKg,0);
+    const totalR$ = lastResults.reduce((s,l)=>s+l.custo,0);
+
+    document.getElementById('print-report').innerHTML = `
+      <div style="font-family:Arial,Helvetica,sans-serif;color:#111;max-width:190mm;margin:0 auto;padding:6mm;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:14px;">
+          <div style="font-size:18px;font-weight:700;">Relatório de Consumo de Tinta</div>
+          <div style="font-size:11px;color:#555;">${hoje}</div>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px;">
+          <tr>
+            <td style="padding:3px 0;color:#555;width:22%;">Cliente</td><td style="padding:3px 0;font-weight:600;">${state.cliente||'—'}</td>
+            <td style="padding:3px 0;color:#555;width:12%;">OS</td><td style="padding:3px 0;font-weight:600;">${state.os||'—'}</td>
+          </tr>
+          <tr>
+            <td style="padding:3px 0;color:#555;">Serviço</td><td colspan="3" style="padding:3px 0;font-weight:600;">${state.servico||'—'}</td>
+          </tr>
+          <tr>
+            <td style="padding:3px 0;color:#555;">Formato</td><td style="padding:3px 0;font-weight:600;">${document.getElementById('largura').value} × ${document.getElementById('comprimento').value} ${state.unidade}</td>
+            <td style="padding:3px 0;color:#555;">Área</td><td style="padding:3px 0;font-weight:600;">${area.toFixed(4)} m²</td>
+          </tr>
+          <tr>
+            <td style="padding:3px 0;color:#555;">Papel</td><td style="padding:3px 0;font-weight:600;">${substratoLabel}</td>
+            <td style="padding:3px 0;color:#555;">Tiragem</td><td style="padding:3px 0;font-weight:600;">${tiragem.toLocaleString('pt-BR')} folhas</td>
+          </tr>
+        </table>
+
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:6px 8px;border-bottom:2px solid #111;font-size:11px;">Cor</th>
+              <th style="text-align:right;padding:6px 8px;border-bottom:2px solid #111;font-size:11px;">Cobertura</th>
+              <th style="text-align:right;padding:6px 8px;border-bottom:2px solid #111;font-size:11px;">Área cob.</th>
+              <th style="text-align:right;padding:6px 8px;border-bottom:2px solid #111;font-size:11px;">Fator</th>
+              <th style="text-align:right;padding:6px 8px;border-bottom:2px solid #111;font-size:11px;">Consumo</th>
+              <th style="text-align:right;padding:6px 8px;border-bottom:2px solid #111;font-size:11px;">R$/kg</th>
+              <th style="text-align:right;padding:6px 8px;border-bottom:2px solid #111;font-size:11px;">Custo</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${linhasHtml || '<tr><td colspan="7" style="padding:10px;color:#777;">Nenhuma cor com cobertura informada.</td></tr>'}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td style="padding:8px;font-weight:700;border-top:2px solid #111;">Total</td>
+              <td style="border-top:2px solid #111;"></td>
+              <td style="border-top:2px solid #111;"></td>
+              <td style="border-top:2px solid #111;"></td>
+              <td style="padding:8px;font-weight:700;text-align:right;border-top:2px solid #111;">${fmtKg(totalKg)} kg</td>
+              <td style="border-top:2px solid #111;"></td>
+              <td style="padding:8px;font-weight:700;text-align:right;border-top:2px solid #111;">${fmtR$(totalR$)}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div style="margin-top:20px;font-size:10px;color:#888;">Gerado automaticamente pela Calculadora de Consumo de Tinta.</div>
+      </div>
+    `;
+    window.print();
+  });
+
+  // ---------- init ----------
+  renderInkRows();
+  renderPaper();
+  calcular();
+})();
+</script>
+</body>
+</html>
