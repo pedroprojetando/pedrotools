@@ -104,6 +104,109 @@
     font-weight: 700;
   }
 
+  .switch-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .switch-row .switch-label{
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .switch{
+    position: relative;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+  .switch input{
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .switch-track{
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--field);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    transition: background 0.15s ease;
+  }
+  .switch-track::before{
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background: var(--muted);
+    border-radius: 50%;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .switch input:checked + .switch-track{
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .switch input:checked + .switch-track::before{
+    transform: translateX(20px);
+    background: #10222f;
+  }
+
+  .reserva-block{
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .reserva-block.show{ display: block; }
+  .reserva-note{
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .reserva-row{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 10px;
+  }
+  .reserva-row .field{ margin-bottom: 0; }
+  .reserva-row .field label{
+    font-size: 11px;
+  }
+  .reserva-row-remove{
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--field);
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .reserva-row-remove:active{ background: #472324; color: #ff9d9d; }
+  .add-reserva-btn{
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--accent);
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+  .add-reserva-btn:active{ background: var(--field); }
+
   .calc-row{
     display:flex;
     gap: 10px;
@@ -182,6 +285,7 @@
     <div class="field">
       <label>Unidade de medida</label>
       <div class="unit-toggle no-print">
+        <button type="button" id="unitMm" onclick="setUnit('mm')">mm</button>
         <button type="button" id="unitCm" onclick="setUnit('cm')">cm</button>
         <button type="button" id="unitM" onclick="setUnit('m')">m</button>
       </div>
@@ -196,10 +300,25 @@
         <input type="number" id="comprimento" step="0.01" oninput="atualizarArea()">
       </div>
     </div>
+    <div class="switch-row">
+      <span class="switch-label">Reserva</span>
+      <label class="switch no-print">
+        <input type="checkbox" id="reservaToggle" onchange="toggleReserva()">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+
+    <div class="reserva-block" id="reservaBlock">
+      <div id="reservaList"></div>
+      <button type="button" class="add-reserva-btn no-print" onclick="adicionarReserva()">+ Adicionar reserva</button>
+      <div class="reserva-note">Cada linha é uma reserva (área sem aplicação de verniz). A soma de todas é descontada da área total.</div>
+    </div>
+
     <div class="field" style="margin-top:12px;">
       <label for="area">Área (m²)</label>
       <input type="text" id="area" readonly value="0.0000">
     </div>
+    <div class="reserva-note" id="areaDetail" style="display:none;"></div>
   </div>
 
   <div class="panel">
@@ -243,6 +362,7 @@
 
   function setUnit(u){
     unit = u;
+    document.getElementById('unitMm').classList.toggle('active', u === 'mm');
     document.getElementById('unitCm').classList.toggle('active', u === 'cm');
     document.getElementById('unitM').classList.toggle('active', u === 'm');
     document.getElementById('labelLargura').textContent = 'Largura (' + u + ')';
@@ -250,17 +370,93 @@
     atualizarArea();
   }
 
-  function getAreaM2(){
+  let reservaEnabled = false;
+  let reservaCounter = 0;
+
+  function criarLinhaReserva(qtd, largura, comprimento){
+    reservaCounter++;
+    const id = reservaCounter;
+    const row = document.createElement('div');
+    row.className = 'reserva-row';
+    row.id = 'reservaRow' + id;
+    row.innerHTML =
+      '<div class="field"><label>Quantidade</label>' +
+      '<input type="number" step="1" class="reserva-qtd" placeholder="Ex: 2" value="' + (qtd || '') + '" oninput="atualizarArea()"></div>' +
+      '<div class="field"><label>Largura (cm)</label>' +
+      '<input type="number" step="0.01" class="reserva-largura" placeholder="Ex: 10" value="' + (largura || '') + '" oninput="atualizarArea()"></div>' +
+      '<div class="field"><label>Comprimento (cm)</label>' +
+      '<input type="number" step="0.01" class="reserva-comprimento" placeholder="Ex: 8" value="' + (comprimento || '') + '" oninput="atualizarArea()"></div>' +
+      '<button type="button" class="reserva-row-remove no-print" onclick="removerReserva(' + id + ')" aria-label="Remover reserva">&times;</button>';
+    document.getElementById('reservaList').appendChild(row);
+  }
+
+  function adicionarReserva(){
+    criarLinhaReserva();
+    atualizarArea();
+  }
+
+  function removerReserva(id){
+    const row = document.getElementById('reservaRow' + id);
+    if(row) row.remove();
+    if(document.getElementById('reservaList').children.length === 0){
+      criarLinhaReserva();
+    }
+    atualizarArea();
+  }
+
+  function toggleReserva(){
+    reservaEnabled = document.getElementById('reservaToggle').checked;
+    document.getElementById('reservaBlock').classList.toggle('show', reservaEnabled);
+    if(reservaEnabled && document.getElementById('reservaList').children.length === 0){
+      criarLinhaReserva();
+    }
+    atualizarArea();
+  }
+
+  function getAreaBrutaM2(){
     const l = parseFloat(document.getElementById('largura').value);
     const c = parseFloat(document.getElementById('comprimento').value);
     if(isNaN(l) || isNaN(c)) return 0;
-    const fator = (unit === 'cm') ? 0.01 : 1;
+    const fatores = { mm: 0.001, cm: 0.01, m: 1 };
+    const fator = fatores[unit];
     return (l * fator) * (c * fator);
   }
 
+  function getAreaReservaM2(){
+    if(!reservaEnabled) return 0;
+    let total = 0;
+    const rows = document.querySelectorAll('#reservaList .reserva-row');
+    rows.forEach(row => {
+      const qtd = parseFloat(row.querySelector('.reserva-qtd').value);
+      const l = parseFloat(row.querySelector('.reserva-largura').value);
+      const c = parseFloat(row.querySelector('.reserva-comprimento').value);
+      if(!isNaN(qtd) && !isNaN(l) && !isNaN(c)){
+        total += qtd * (l / 100) * (c / 100);
+      }
+    });
+    return total;
+  }
+
+  function getAreaM2(){
+    const bruta = getAreaBrutaM2();
+    const reserva = getAreaReservaM2();
+    const liquida = bruta - reserva;
+    return liquida > 0 ? liquida : 0;
+  }
+
   function atualizarArea(){
+    const bruta = getAreaBrutaM2();
+    const reserva = getAreaReservaM2();
     const area = getAreaM2();
     document.getElementById('area').value = area.toFixed(4);
+
+    const detailEl = document.getElementById('areaDetail');
+    if(reservaEnabled && reserva > 0){
+      detailEl.style.display = 'block';
+      detailEl.textContent = 'Área bruta: ' + bruta.toFixed(4) + ' m² · Reserva: ' + reserva.toFixed(4) + ' m² · Área líquida: ' + area.toFixed(4) + ' m²';
+    } else {
+      detailEl.style.display = 'none';
+    }
   }
 
   function calcular(){
