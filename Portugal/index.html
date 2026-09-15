@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Contagem Regressiva</title>
+<style>
+  :root{
+    --bg: #1c1c1e;
+    --card: #2c2c2e;
+    --border: #3a3a3c;
+    --text: #ffffff;
+    --text-dim: #a9a9ad;
+    --accent: #4f9dff;
+  }
+  *{ box-sizing:border-box; }
+  html, body{
+    margin:0; padding:0;
+    width:100%; height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow:hidden;
+  }
+  .wrap{
+    min-height:100vh;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding: 5vw 4vw;
+  }
+  h1{
+    font-size: clamp(20px, 5.5vw, 40px);
+    font-weight: 700;
+    margin: 0 0 5vh;
+    letter-spacing: .02em;
+    color: var(--text);
+  }
+  .counter{
+    display:flex;
+    gap: 3vw;
+    justify-content:center;
+    align-items:stretch;
+    width:100%;
+    max-width: 1100px;
+  }
+  .unit{
+    flex:1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 3vh 1vw;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-width:0;
+  }
+  .unit .num{
+    font-size: clamp(38px, 13vw, 130px);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .unit .lbl{
+    margin-top: 1.2vh;
+    font-size: clamp(11px, 2.4vw, 18px);
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight:600;
+  }
+  .footer{
+    margin-top: 6vh;
+    font-size: clamp(18px, 4.2vw, 32px);
+    font-weight: 700;
+    color: var(--text);
+  }
+  .done{
+    font-size: clamp(24px, 6vw, 48px);
+    font-weight: 800;
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Contagem Regressiva</h1>
+    <div class="counter" id="counter">
+      <div class="unit">
+        <div class="num" id="val-dias">--</div>
+        <div class="lbl">Dias</div>
+      </div>
+      <div class="unit">
+        <div class="num" id="val-horas">--</div>
+        <div class="lbl">Horas</div>
+      </div>
+      <div class="unit">
+        <div class="num" id="val-min">--</div>
+        <div class="lbl">Minutos</div>
+      </div>
+      <div class="unit">
+        <div class="num" id="val-seg">--</div>
+        <div class="lbl">Segundos</div>
+      </div>
+    </div>
+    <div class="footer" id="footer">Família Buscapé a caminho!</div>
+  </div>
+
+<script>
+  // 9 de outubro de 2026, 21:20 (horário local do dispositivo)
+  const alvo = new Date(2026, 9, 9, 21, 20, 0);
+
+  const elDias = document.getElementById('val-dias');
+  const elHoras = document.getElementById('val-horas');
+  const elMin = document.getElementById('val-min');
+  const elSeg = document.getElementById('val-seg');
+  const elCounter = document.getElementById('counter');
+  const elFooter = document.getElementById('footer');
+
+  function atualizar(){
+    const agora = new Date();
+    let diff = alvo.getTime() - agora.getTime();
+
+    if (diff <= 0){
+      elCounter.innerHTML = '<div class="done">Chegou a hora! 🎉</div>';
+      elFooter.textContent = 'Família Buscapé chegou!';
+      return;
+    }
+
+    const dias = Math.floor(diff / (1000*60*60*24));
+    diff -= dias * (1000*60*60*24);
+    const horas = Math.floor(diff / (1000*60*60));
+    diff -= horas * (1000*60*60);
+    const minutos = Math.floor(diff / (1000*60));
+    diff -= minutos * (1000*60);
+    const segundos = Math.floor(diff / 1000);
+
+    elDias.textContent = dias;
+    elHoras.textContent = String(horas).padStart(2,'0');
+    elMin.textContent = String(minutos).padStart(2,'0');
+    elSeg.textContent = String(segundos).padStart(2,'0');
+  }
+
+  atualizar();
+  setInterval(atualizar, 1000);
+</script>
+</body>
+</html>
