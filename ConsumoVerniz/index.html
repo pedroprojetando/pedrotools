@@ -35,6 +35,110 @@
     color: var(--muted);
     margin-bottom: 16px;
   }
+  .load-data-btn{
+    display: block;
+    width: 100%;
+    background: var(--field);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 16px;
+  }
+  .load-data-btn:active{ background: #2f4a5c; }
+
+  .modal-overlay{
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 50;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.show{ display: flex; }
+  .modal-box{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 760px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+  }
+  @media (min-width: 560px){
+    .modal-overlay{ align-items: center; }
+    .modal-box{ border-radius: 16px; max-height: 80vh; }
+  }
+  .modal-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .modal-header h3{
+    margin: 0;
+    font-size: 16px;
+  }
+  .modal-close{
+    background: var(--field);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .modal-body{
+    overflow-y: auto;
+    padding: 8px 16px 16px 16px;
+  }
+  .anilox-category{
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 16px 0 8px 0;
+  }
+  .anilox-category:first-child{ margin-top: 6px; }
+  .anilox-item{
+    width: 100%;
+    text-align: left;
+    background: var(--field);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .anilox-item:active{ background: var(--tile-hover, #40434a); }
+  .anilox-item-name{
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .anilox-item-detail{
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .anilox-item-wet{
+    font-weight: 700;
+    color: #b7e6a5;
+    font-size: 14px;
+    white-space: nowrap;
+  }
   .panel{
     background: var(--panel);
     border: 1px solid var(--border);
@@ -250,6 +354,8 @@
   <h1>Consumo de Verniz</h1>
   <div class="subtitle">Calculadora de consumo, fator e tiragem</div>
 
+  <button type="button" class="load-data-btn no-print" onclick="abrirModalAnilox()">Carregar Dados</button>
+
   <div class="panel">
     <h2>Dados gerais</h2>
     <div class="row">
@@ -357,8 +463,89 @@
 
 </div>
 
+<div class="modal-overlay no-print" id="anilloxModal" onclick="if(event.target===this) fecharModalAnilox()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Carregar Dados — Anilox</h3>
+      <button type="button" class="modal-close" onclick="fecharModalAnilox()">&times;</button>
+    </div>
+    <div class="modal-body" id="anilloxList"></div>
+  </div>
+</div>
+
 <script>
   let unit = 'cm';
+
+  // ---------- Dados de anilox (tabela GTT / Hexagonal / Haschure-Tri-helical / Positive Screen) ----------
+  const anilloxData = [
+    { categoria: 'GTT Structure', itens: [
+      { nome: 'S',   bcm: null, lineatura: null, wet: 2.15 },
+      { nome: 'M',   bcm: null, lineatura: null, wet: 2.50 },
+      { nome: 'L',   bcm: null, lineatura: null, wet: 3.25 },
+      { nome: 'XL',  bcm: null, lineatura: null, wet: 4.30 },
+      { nome: 'XXL', bcm: null, lineatura: null, wet: 5.00 }
+    ]},
+    { categoria: 'Hexagonal', itens: [
+      { nome: '7 cm³/m²',  bcm: 4.5,  lineatura: 160, wet: 1.80 },
+      { nome: '10 cm³/m²', bcm: 6.4,  lineatura: 120, wet: 2.50 },
+      { nome: '13 cm³/m²', bcm: 8.4,  lineatura: 100, wet: 3.25 },
+      { nome: '16 cm³/m²', bcm: 10.3, lineatura: 80,  wet: 4.00 },
+      { nome: '20 cm³/m²', bcm: 12.9, lineatura: 60,  wet: 5.00 }
+    ]},
+    { categoria: 'Haschure / Tri-helical', itens: [
+      { nome: '7 cm³/m²',  bcm: 4.5,  lineatura: 160, wet: 2.30 },
+      { nome: '10 cm³/m²', bcm: 6.4,  lineatura: 120, wet: 3.30 },
+      { nome: '13 cm³/m²', bcm: 8.4,  lineatura: 100, wet: 4.30 },
+      { nome: '16 cm³/m²', bcm: 10.3, lineatura: 80,  wet: 5.00 },
+      { nome: '20 cm³/m²', bcm: 12.9, lineatura: 60,  wet: 6.50 }
+    ]},
+    { categoria: 'Positive Screen', itens: [
+      { nome: '7 cm³/m²',  bcm: 4.5,  lineatura: 160, wet: 2.70 },
+      { nome: '10 cm³/m²', bcm: 6.4,  lineatura: 120, wet: 3.70 },
+      { nome: '13 cm³/m²', bcm: 8.4,  lineatura: 100, wet: 5.00 },
+      { nome: '16 cm³/m²', bcm: 10.3, lineatura: 80,  wet: 6.00 },
+      { nome: '20 cm³/m²', bcm: 12.9, lineatura: 60,  wet: 7.50 }
+    ]}
+  ];
+
+  function montarListaAnilox(){
+    const container = document.getElementById('anilloxList');
+    let html = '';
+    anilloxData.forEach((grupo, ci) => {
+      html += '<div class="anilox-category">' + grupo.categoria + '</div>';
+      grupo.itens.forEach((item, ii) => {
+        const detalhe = (item.bcm !== null)
+          ? item.bcm.toString().replace('.', ',') + ' BCM · ' + item.lineatura + ' L/cm'
+          : 'Wet transfer';
+        html += '<button type="button" class="anilox-item" onclick="selecionarAnilox(' + ci + ',' + ii + ')">' +
+          '<span><span class="anilox-item-name">' + item.nome + '</span>' +
+          '<div class="anilox-item-detail">' + detalhe + '</div></span>' +
+          '<span class="anilox-item-wet">' + item.wet.toFixed(2).replace('.', ',') + ' g/m²</span>' +
+          '</button>';
+      });
+    });
+    container.innerHTML = html;
+  }
+
+  function abrirModalAnilox(){
+    montarListaAnilox();
+    document.getElementById('anilloxModal').classList.add('show');
+  }
+
+  function fecharModalAnilox(){
+    document.getElementById('anilloxModal').classList.remove('show');
+  }
+
+  function selecionarAnilox(ci, ii){
+    const grupo = anilloxData[ci];
+    const item = grupo.itens[ii];
+    const detalhe = (item.bcm !== null)
+      ? ' (' + item.bcm.toString().replace('.', ',') + ' BCM, ' + item.lineatura + ' L/cm)'
+      : '';
+    document.getElementById('anilox').value = grupo.categoria + ' ' + item.nome + detalhe;
+    document.getElementById('fator').value = item.wet.toFixed(2);
+    fecharModalAnilox();
+  }
 
   function setUnit(u){
     unit = u;
