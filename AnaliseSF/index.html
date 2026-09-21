@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Esta&#231;&#227;o de An&#225;lise &#183; Assistente do T&#233;cnico Gr&#225;fico</title>
+<style>
+  :root{
+    --bg: #232526;
+    --bg-deep: #1a1b1c;
+    --panel: #2d2f31;
+    --panel-hover: #383b3d;
+    --text: #ffffff;
+    --text-dim: #a8adb0;
+    --accent: #e0a13c;
+    --accent-dim: #8a6a2c;
+    --line: #3c3f41;
+    --danger: #d9695f;
+    --ok: #6fbf73;
+    --warn2: #e0c23c;
+    --warn3: #e08a3c;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0;
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    height:100%;
+  }
+  .app{
+    max-width: 480px;
+    margin: 0 auto;
+    min-height:100vh;
+    background: var(--bg);
+    display:flex;
+    flex-direction:column;
+    padding-top: env(safe-area-inset-top,0px);
+    padding-bottom: env(safe-area-inset-bottom,0px);
+  }
+  header{
+    padding: 22px 20px 16px 20px;
+    border-bottom: 1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .back-btn{
+    background:none;
+    border: 1px solid var(--line);
+    color: var(--text);
+    width:38px; height:38px;
+    border-radius:8px;
+    font-size:18px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  .back-btn:active{ background: var(--panel-hover); }
+  .back-btn.hidden{ visibility:hidden; }
+  .titles{ display:flex; flex-direction:column; line-height:1.25; }
+  .crumb{ font-size:12px; color: var(--text-dim); letter-spacing:.02em; }
+  .screen-title{ font-size:20px; font-weight:600; color: var(--text); }
+  main{ flex:1; padding: 20px; }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .tile{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 14px;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    text-align:center;
+    cursor:pointer;
+    min-height: 96px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition: background .12s ease, transform .08s ease;
+  }
+  .tile .tile-icon{ font-size: 24px; }
+  .tile:active{ background: var(--panel-hover); transform: scale(.97); }
+  .section-title{ font-size: 14px; font-weight:700; color: var(--text); margin: 26px 0 10px 0; }
+
+  .field{ margin-bottom: 18px; }
+  .field label{ display:block; font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
+  .seg{ display:flex; gap:8px; }
+  .seg button{
+    flex:1; padding: 12px 6px; background: var(--panel); border: 1px solid var(--line);
+    color: var(--text); border-radius: 9px; font-size: 14px; cursor:pointer;
+  }
+  .seg button.selected{ background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
+  input[type="number"], input[type="text"], input[type="date"], textarea, select{
+    width:100%; padding: 13px 14px; background: var(--panel); border: 1px solid var(--line);
+    color: var(--text); border-radius: 9px; font-size: 16px; font-family:inherit;
+    appearance:none; -webkit-appearance:none;
+  }
+  input:focus, textarea:focus, select:focus{ outline: none; border-color: var(--accent); }
+  .row2{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row2 .field{ margin-bottom:0; }
+
+  .result-box{
+    margin-top: 10px; padding: 20px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; text-align:center;
+  }
+  .result-label{ font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+  .result-value{ font-size: 36px; font-weight: 700; color: var(--accent); line-height:1.1; }
+  .result-value small{ font-size:13px; color:var(--text-dim); font-weight:500; }
+  .result-sub{ margin-top:6px; font-size: 12px; color: var(--text-dim); }
+  .warn{ color: var(--danger); font-weight:600; }
+  input.editado{ border-color: var(--danger) !important; color: var(--danger); }
+  .hint{
+    margin-top: 22px; font-size: 12px; color: var(--text-dim); line-height:1.5;
+    border-top: 1px solid var(--line); padding-top: 14px;
+  }
+
+  .badge{
+    display:inline-block; margin-top: 12px; padding: 7px 16px; border-radius: 999px;
+    font-size: 13px; font-weight:700; letter-spacing:.02em;
+  }
+  .badge.soft{ background: rgba(111,191,115,.15); color: var(--ok); border:1px solid var(--ok); }
+  .badge.medium{ background: rgba(224,194,60,.15); color: var(--warn2); border:1px solid var(--warn2); }
+  .badge.hard{ background: rgba(224,138,60,.15); color: var(--warn3); border:1px solid var(--warn3); }
+  .badge.veryhard{ background: rgba(217,105,95,.15); color: var(--danger); border:1px solid var(--danger); }
+  .mini-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .mini-box{ background: var(--bg-deep); border: 1px solid var(--line); border-radius: 9px; padding: 12px; text-align:center; }
+  .mini-label{ font-size: 11px; color: var(--text-dim); margin-bottom:4px; }
+  .mini-value{ font-size: 17px; font-weight:700; color: var(--text); }
+  .divider{ display:flex; align-items:center; gap:10px; margin: 22px 0 18px 0; color: var(--text-dim); font-size: 12px; }
+  .divider::before, .divider::after{ content:""; flex:1; height:1px; background: var(--line); }
+
+  .tech-table{ border-collapse: collapse; width: 100%; font-size: 11.5px; white-space:nowrap; }
+  .tech-table th, .tech-table td{ border: 1px solid var(--line); padding: 5px 6px; text-align:center; }
+  .tech-table thead th{ background: var(--panel); color: var(--accent); position:sticky; top:0; }
+  .tech-table td.pct-col{ background: var(--panel); font-weight:700; color: var(--text); position:sticky; left:0; }
+  .tech-table .dens-group{ background: var(--panel-hover); color: var(--text); }
+  .tech-table td.rowlabel{ background: var(--panel); font-weight:700; text-align:left; padding-left:8px; }
+  .tech-table tr.active-row td{ background: rgba(224,161,60,.14); }
+
+  .ipa-topbar{ display:flex; justify-content:flex-end; gap: 10px; margin-bottom: 10px; }
+  .tabela-btn{
+    background: var(--panel); border: 1px solid var(--line); color: var(--accent);
+    font-size: 12px; font-weight:600; padding: 7px 12px; border-radius: 8px; cursor:pointer;
+  }
+  .tabela-btn:active{ background: var(--panel-hover); }
+
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background: rgba(0,0,0,.6); z-index: 50;
+    align-items:flex-end; justify-content:center;
+  }
+  .modal-overlay.active{ display:flex; }
+  .modal-box{
+    background: var(--bg); border: 1px solid var(--line); border-radius: 16px 16px 0 0;
+    width: 100%; max-width: 480px; max-height: 82vh; display:flex; flex-direction:column;
+  }
+  .modal-header{
+    display:flex; align-items:center; justify-content:space-between; padding: 16px 18px;
+    border-bottom: 1px solid var(--line); font-size: 15px; font-weight:700;
+  }
+  .modal-close{ background:none; border:none; color: var(--text-dim); font-size: 18px; cursor:pointer; padding: 2px 6px; }
+  .modal-body{ overflow:auto; padding: 12px 14px 20px 14px; }
+
+  .ensaio-card, .adv-card{
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+    margin-bottom: 16px;
+  }
+  .amostra-table{ width:100%; border-collapse: collapse; font-size: 13px; }
+  .amostra-table th{
+    text-align:center; color: var(--accent); font-size: 10.5px; text-transform:uppercase;
+    letter-spacing:.02em; padding: 6px 4px; border-bottom: 1px solid var(--line);
+  }
+  .amostra-table td{ padding: 8px 4px; border-bottom: 1px solid var(--line); text-align:center; }
+  .amostra-table td.label-col{ text-align:left; font-weight:600; color: var(--text-dim); font-size:12.5px; }
+  .amostra-table input{ padding: 8px 6px; font-size: 13px; text-align:center; }
+  .amostra-table td.calc-pct{ font-weight:700; color: var(--accent); }
+  .result-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+  .result-box.wide{ grid-column: 1 / -1; }
+
+  .formato-seg{ display:flex; gap:8px; margin-top:6px; }
+  .formato-seg button{
+    flex:1; padding: 9px 4px; background: var(--bg-deep); border: 1px solid var(--line);
+    color: var(--text-dim); border-radius: 8px; font-size: 12px; cursor:pointer;
+  }
+  .formato-seg button.selected{ background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
+  .subresult-row{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  .subresult-box{ background: var(--bg-deep); border: 1px solid var(--line); border-radius: 9px; padding: 10px; text-align:center; }
+  .subresult-box .mini-label{ font-size: 10.5px; color: var(--text-dim); margin-bottom:3px; }
+  .subresult-box .mini-value{ font-size: 14px; font-weight:700; color: var(--text); }
+
+  .btn-primary{
+    width:100%; margin-top: 22px; background: var(--accent); color: #1a1b1c; border:none;
+    border-radius: 11px; padding: 15px 16px; font-size: 15px; font-weight:700; cursor:pointer;
+  }
+  .btn-primary:active{ transform: scale(.98); }
+  .btn-secondary{
+    width:100%; margin-top: 10px; background: var(--panel); border: 1px solid var(--accent);
+    color: var(--accent); border-radius: 11px; padding: 13px 16px; font-size: 14px;
+    font-weight:600; cursor:pointer;
+  }
+  .btn-secondary:active{ background: var(--panel-hover); }
+  .btn-danger{
+    width:100%; margin-top: 22px; background: transparent; border: 1px solid var(--danger);
+    color: var(--danger); border-radius: 11px; padding: 13px 16px; font-size: 13px;
+    font-weight:600; cursor:pointer;
+  }
+  .btn-danger:active{ background: rgba(217,105,95,.12); }
+
+  .save-toast{
+    position:fixed; left:50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
+    background: var(--accent); color:#1a1b1c; padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; font-weight:700; opacity:0; transition: opacity .2s ease, transform .2s ease;
+    pointer-events:none; z-index: 90;
+  }
+  .save-toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+  /* An\0000E1 lises */
+  .analise-card{
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px; margin-bottom: 12px;
+  }
+  .analise-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .analise-tipo{
+    display:inline-flex; align-items:center; gap:6px; font-size: 11px; color: var(--accent);
+    font-weight:700; text-transform:uppercase; letter-spacing:.03em; margin-bottom:4px;
+  }
+  .analise-titulo{ font-size: 14.5px; font-weight:600; color: var(--text); }
+  .analise-data{ font-size: 11.5px; color: var(--text-dim); margin-top:3px; }
+  .analise-actions{ display:flex; gap:6px; margin-top: 12px; }
+  .analise-actions button{
+    flex:1; padding: 9px 4px; border-radius: 8px; font-size: 11.5px; font-weight:600;
+    cursor:pointer; border:1px solid var(--line); background: var(--bg-deep); color: var(--text);
+  }
+  .analise-actions button.excluir{ color: var(--danger); border-color: var(--danger); background:transparent; }
+  .vazio{ text-align:center; color: var(--text-dim); font-size: 14px; padding: 40px 10px; }
+
+  /* Relat\0000F3 rio */
+  .rel-section{
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  .rel-section h3{
+    margin:0 0 10px 0; font-size: 14px; color: var(--accent); text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .rel-row{
+    display:flex; justify-content:space-between; gap: 10px; padding: 6px 0;
+    border-bottom: 1px dashed var(--line); font-size: 13.5px;
+  }
+  .rel-row:last-child{ border-bottom:none; }
+  .rel-row span:first-child{ color: var(--text-dim); }
+  .rel-row span:last-child{ font-weight:600; text-align:right; }
+  .rel-header{ text-align:center; margin-bottom: 18px; }
+  .rel-header .brand{ font-size: 20px; font-weight:800; color: var(--accent); letter-spacing:.02em; }
+  .rel-header .sub{ font-size: 12px; color: var(--text-dim); margin-top:4px; }
+
+  @media print{
+    body *{ visibility:hidden; }
+    #relatorioPrintArea, #relatorioPrintArea *{ visibility:visible; }
+    #relatorioPrintArea{
+      position:absolute; left:0; top:0; width:100%;
+      background:#fff !important; color:#111 !important; padding: 24px;
+    }
+    #relatorioPrintArea .rel-section{ background:#f5f5f5 !important; border:1px solid #ccc !important; break-inside:avoid; }
+    #relatorioPrintArea h3{ color:#8a6a2c !important; }
+    #relatorioPrintArea .rel-header .brand{ color:#8a6a2c !important; }
+    #relatorioPrintArea .rel-row span:last-child{ color:#111 !important; }
+    .no-print{ display:none !important; }
+  }
+
+  a.tile, a.back-btn{ text-decoration:none; }
+  a.tile:visited, a.back-btn:visited{ color: var(--text); }
+
+  /* Dados do trabalho \002014  cadastros */
+  .chips{ margin-top: 8px; display:flex; flex-wrap:wrap; }
+  .chip{
+    display:inline-flex; align-items:center; gap:6px; background: var(--bg-deep);
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px 6px 12px;
+    font-size: 12px; margin: 0 6px 6px 0; color: var(--text-dim);
+  }
+  .chip button{ background:none; border:none; color: var(--text-dim); cursor:pointer; font-size: 13px; padding:0; line-height:1; }
+  .chip button:active{ color: var(--danger); }
+  .reg-card{ background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-top: 12px; margin-bottom: 14px; }
+  .reg-card .field:last-of-type{ margin-bottom: 0; }
+  .inline-form{ display:none; }
+  .inline-form.active{ display:block; }
+  .reg-list-item{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    padding: 12px 0; border-bottom: 1px dashed var(--line);
+  }
+  .reg-list-item:last-child{ border-bottom:none; }
+  .reg-list-item .info{ flex:1; min-width:0; }
+  .reg-list-item .info .titulo{ font-weight:600; font-size: 14px; display:flex; align-items:center; gap:6px; }
+  .reg-list-item .info .sub{ color: var(--text-dim); font-size: 11.5px; margin-top: 3px; line-height:1.4; }
+  .reg-list-item .acoes{ display:flex; gap:8px; flex-shrink:0; }
+  .icon-btn{
+    background:none; border: 1px solid var(--line); color: var(--text-dim); width: 32px; height: 32px;
+    border-radius: 8px; cursor:pointer; font-size: 14px; display:flex; align-items:center; justify-content:center;
+  }
+  .icon-btn.star.active{ color: var(--accent); border-color: var(--accent); }
+  .icon-btn.del{ color: var(--danger); border-color: var(--danger); }
+  .fav-tag{
+    font-size: 10px; font-weight:700; color: var(--accent); border: 1px solid var(--accent);
+    border-radius: 999px; padding: 1px 7px; letter-spacing:.03em;
+  }
+  details.reg-list-wrap{ margin-top:10px; }
+  details.reg-list-wrap summary{
+    cursor:pointer; padding: 12px 14px; background: var(--panel); border:1px solid var(--line);
+    border-radius:9px; color: var(--accent); font-weight:600; font-size:14px; list-style:none;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  details.reg-list-wrap summary::-webkit-details-marker{ display:none; }
+  details.reg-list-wrap summary::after{ content:"\0025B8 "; color: var(--text-dim); font-size:13px; transition: transform .15s ease; }
+  details.reg-list-wrap[open] summary::after{ transform: rotate(90deg); }
+  details.reg-list-wrap .reg-list-body{ margin-top:8px; max-height: 320px; overflow-y:auto; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <button class="back-btn hidden" id="backBtn" aria-label="Voltar">&#8249;</button>
+    <div class="titles">
+      <span class="crumb" id="crumb">Esta&#231;&#227;o de An&#225;lise</span>
+      <span class="screen-title" id="screenTitle">In&#237;cio</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===================== MENU PRINCIPAL ===================== -->
+    <section class="screen active" id="screen-main">
+      <button class="btn-primary" id="novaAnaliseBtn" style="margin-top:0;">&#127381; Nova An&#225;lise</button>
+
+      <div class="section-title">Ferramentas</div>
+      <div class="grid">
+        <div class="tile" data-target="ipa"><span class="tile-icon">&#128167;</span>Medi&#231;&#227;o IPA</div>
+        <div class="tile" data-target="hardness"><span class="tile-icon">&#129514;</span>Hardness</div>
+        <div class="tile" data-target="titulacao"><span class="tile-icon">&#9879;&#65039;</span>Titula&#231;&#227;o</div>
+        <div class="tile" data-target="consumo"><span class="tile-icon">&#128688;</span>Consumo</div>
+      </div>
+
+      <div class="section-title">Gest&#227;o</div>
+      <div class="grid">
+        <div class="tile" data-target="dados"><span class="tile-icon">&#128466;&#65039;</span>Dados</div>
+        <div class="tile" data-target="relatorio"><span class="tile-icon">&#128196;</span>Relat&#243;rio</div>
+        <div class="tile" data-target="analises"><span class="tile-icon">&#128450;&#65039;</span>An&#225;lises</div>
+        <div class="tile" data-target="backup"><span class="tile-icon">&#128190;</span>Backup</div>
+      </div>
+
+      <div class="hint">
+        Preencha uma ou mais ferramentas e salve cada an&#225;lise pelo bot&#227;o dedicado em cada tela.
+        Use <strong>Relat&#243;rio</strong> para gerar um documento com tudo o que estiver preenchido
+        no momento, e <strong>An&#225;lises</strong> para consultar, editar ou excluir o que j&#225; foi salvo.
+      </div>
+    </section>
+
+    <!-- ===================== IPA ===================== -->
+    <section class="screen" id="screen-ipa">
+      <div class="ipa-topbar">
+        <button class="tabela-btn" id="ipa_abrirTabelaBtn">Tabela</button>
+      </div>
+
+      <div class="field">
+        <label>Densidade da solu&#231;&#227;o de fonte</label>
+        <div class="seg" id="ipa_densSeg">
+          <button data-val="1.05">1,05</button>
+          <button data-val="1.10">1,10</button>
+          <button data-val="1.15">1,15</button>
+          <button data-val="1.20">1,20</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Dosagem da solu&#231;&#227;o de fonte (%)</label>
+        <div class="seg" id="ipa_dosSeg">
+          <button data-val="2">2%</button>
+          <button data-val="3">3%</button>
+          <button data-val="4">4%</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Alco&#244;metro calibrado a</label>
+        <div class="seg" id="ipa_tempAlcSeg">
+          <button data-val="10">10&#176;C</button>
+          <button data-val="20">20&#176;C</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Temperatura da solu&#231;&#227;o de molha</label>
+        <div class="seg" id="ipa_tempSolSeg">
+          <button data-val="10">10&#176;C</button>
+          <button data-val="15">15&#176;C</button>
+          <button data-val="20">20&#176;C</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Leitura do dens&#237;metro / alco&#244;metro</label>
+        <input type="number" id="ipa_leituraInput" step="0.1" placeholder="Ex: 8.7" inputmode="decimal">
+      </div>
+
+      <div class="result-box">
+        <div class="result-label">&#193;lcool isoprop&#237;lico (IPA) real na solu&#231;&#227;o</div>
+        <div class="result-value" id="ipa_resultValue">&#8212;</div>
+        <div class="result-sub" id="ipa_resultSub"></div>
+        <div class="result-sub" id="ipa_compSub"></div>
+      </div>
+
+      <div class="hint">
+        Selecione a temperatura de calibra&#231;&#227;o do alco&#244;metro e a temperatura da solu&#231;&#227;o &#8212; a leitura &#233;
+        compensada automaticamente. Em seguida escolha a densidade e a dosagem da m&#225;quina; o percentual
+        real de IPA &#233; calculado por interpola&#231;&#227;o da tabela de corre&#231;&#227;o Technotrans.
+      </div>
+
+      <button class="btn-primary" id="ipa_salvarBtn">Salvar an&#225;lise</button>
+    </section>
+
+    <!-- ===================== HARDNESS ===================== -->
+    <section class="screen" id="screen-hardness">
+      <div class="field">
+        <label>Dureza em graus alem&#227;es (&#176;dH)</label>
+        <input type="number" id="hard_inputDH" step="0.1" inputmode="decimal" placeholder="Ex: 12">
+      </div>
+
+      <div class="divider">ou</div>
+
+      <div class="field">
+        <label>Dureza em ppm CaCO&#8323; (mg/L)</label>
+        <input type="number" id="hard_inputPPM" step="0.1" inputmode="decimal" placeholder="Ex: 214">
+      </div>
+
+      <div class="result-box">
+        <div class="result-label">Classifica&#231;&#227;o da &#225;gua</div>
+        <div class="result-value" id="hard_resultClass">&#8212;</div>
+        <span class="badge" id="hard_resultBadge" style="display:none;"></span>
+
+        <div class="mini-grid">
+          <div class="mini-box">
+            <div class="mini-label">mMol/L (&#237;ons alcalino-terrosos)</div>
+            <div class="mini-value" id="hard_valMmol">&#8212;</div>
+          </div>
+          <div class="mini-box">
+            <div class="mini-label">Condutividade estimada</div>
+            <div class="mini-value" id="hard_valCond">&#8212;</div>
+          </div>
+        </div>
+      </div>
+
+      <table class="tech-table" id="hard_classTable">
+        <thead><tr><th>Classe</th><th>mMol/L</th><th>&#176;dH</th><th>&#176;e</th><th>&#176;f</th></tr></thead>
+        <tbody>
+          <tr data-min="0" data-max="1.3"><td class="rowlabel">Mole</td><td>0&#8211;1,3</td><td>0&#8211;7</td><td>0&#8211;9</td><td>0&#8211;13</td></tr>
+          <tr data-min="1.4" data-max="2.5"><td class="rowlabel">M&#233;dia</td><td>1,4&#8211;2,5</td><td>8&#8211;14</td><td>10&#8211;18</td><td>14&#8211;25</td></tr>
+          <tr data-min="2.6" data-max="3.7"><td class="rowlabel">Dura</td><td>2,6&#8211;3,7</td><td>15&#8211;21</td><td>19&#8211;26</td><td>26&#8211;37</td></tr>
+          <tr data-min="3.71" data-max="999"><td class="rowlabel">Muito dura</td><td>&gt;3,7</td><td>&gt;21</td><td>&gt;26</td><td>&gt;37</td></tr>
+        </tbody>
+      </table>
+
+      <div class="section-title">&#193;gua limpa (fonte)</div>
+      <div class="row2">
+        <div class="field">
+          <label>pH da &#225;gua</label>
+          <input type="number" id="hard_ph" step="0.1" inputmode="decimal" placeholder="Ex: 7.2">
+        </div>
+        <div class="field">
+          <label>Alcalinidade (mg/L CaCO&#8323;)</label>
+          <input type="number" id="hard_alcalinidade" step="1" inputmode="decimal" placeholder="Ex: 80">
+        </div>
+      </div>
+      <div class="field">
+        <label>Fonte da &#225;gua</label>
+        <input type="text" id="hard_fonteAgua" list="hard_fonteAguaList" placeholder="Rua, Po&#231;o, Osmose ou descreva...">
+        <datalist id="hard_fonteAguaList">
+          <option value="Rua">
+          <option value="Po&#231;o">
+          <option value="Osmose">
+        </datalist>
+      </div>
+
+      <div class="hint">
+        Informe o valor em um dos dois campos &#8212; o outro &#233; calculado automaticamente
+        (1 &#176;dH = 17,848 ppm CaCO&#8323;; 1 mMol/L = 5,6 &#176;dH = 100 ppm CaCO&#8323;). A condutividade &#233; uma
+        estimativa de campo (&#181;S/cm &#8776; ppm CaCO&#8323; &#215; 2); para valores oficiais use um condutiv&#237;metro calibrado.
+      </div>
+
+      <button class="btn-primary" id="hard_salvarBtn">Salvar an&#225;lise</button>
+    </section>
+
+    <!-- ===================== TITULA&#199;&#195;O ===================== -->
+    <section class="screen" id="screen-titulacao">
+      <div class="field">
+        <label>Solu&#231;&#227;o de fonte em uso</label>
+        <select id="tit_solucaoSelect"><option value="">&#8212; nenhuma selecionada &#8212;</option></select>
+      </div>
+
+      <div class="section-title">Ensaio de refer&#234;ncia</div>
+      <div class="ensaio-card">
+        <div class="row2">
+          <div class="field">
+            <label>% de refer&#234;ncia</label>
+            <input type="number" id="tit_ensaioPct" step="0.1" placeholder="Ex: 4">
+          </div>
+          <div class="field">
+            <label>Gotas de refer&#234;ncia</label>
+            <input type="number" id="tit_ensaioGotas" step="1" placeholder="Ex: 12">
+          </div>
+        </div>
+        <button class="btn-secondary" id="tit_salvarBaseBtn" style="margin-top:12px;">&#128190; Salvar % e gotas na base (solu&#231;&#227;o de fonte)</button>
+      </div>
+
+      <div class="section-title">Amostras</div>
+      <table class="amostra-table">
+        <thead><tr><th></th><th>Gotas</th><th>%</th><th>pH</th><th>&#181;S/cm</th><th>Man&#237;pulo</th></tr></thead>
+        <tbody id="tit_amostrasBody"></tbody>
+      </table>
+
+      <div class="field" style="margin-top:18px;">
+        <label>Observa&#231;&#245;es</label>
+        <textarea id="tit_obsTit" rows="3" placeholder="Anota&#231;&#245;es sobre a titula&#231;&#227;o..."></textarea>
+      </div>
+
+      <div class="hint">
+        Informe o n&#186; de gotas gastas em cada amostra at&#233; a viragem &#8212; o % &#233; calculado automaticamente
+        por propor&#231;&#227;o com o ensaio de refer&#234;ncia. pH, &#181;S e Man&#237;pulo s&#227;o leituras manuais do equipamento.
+      </div>
+
+      <button class="btn-primary" id="tit_salvarBtn">Salvar an&#225;lise</button>
+    </section>
+
+    <!-- ===================== CONSUMO ===================== -->
+    <section class="screen" id="screen-consumo">
+      <div class="field">
+        <label>M&#225;quina em uso</label>
+        <select id="cons_maquinaSelect"><option value="">&#8212; nenhuma selecionada &#8212;</option></select>
+      </div>
+
+      <div class="field">
+        <label>Papel</label>
+        <input type="text" id="cons_papel" placeholder="Ex: offset">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Qtd. unidades (chapas)</label>
+          <input type="number" id="cons_qtdUnidades" step="1" placeholder="Ex: 8">
+        </div>
+        <div class="field">
+          <label>Tiragem (folhas)</label>
+          <input type="number" id="cons_tiragem" step="1" placeholder="Ex: 500000">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Dosagem SF (%)</label>
+        <input type="number" id="cons_dosagem" step="0.1" placeholder="Ex: 3">
+      </div>
+
+      <div class="section-title">Formato / fator &#225;gua</div>
+      <div class="adv-card">
+        <div class="field">
+          <label>Formato da m&#225;quina</label>
+          <div class="formato-seg" id="cons_formatoSeg">
+            <button data-mult="1">Total (100%)</button>
+            <button data-mult="0.5">75 cm (50%)</button>
+            <button data-mult="0.25">52 cm (25%)</button>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Fator &#225;gua (ml)</label>
+            <input type="number" id="cons_fatorAgua" step="0.0001" value="0.21">
+            <div class="hint" id="cons_fatorAguaAviso" style="margin:6px 0 0 0; padding:0; border:none; font-size:11px;">Valor padr&#227;o de estudo</div>
+          </div>
+          <div class="field">
+            <label>Fator SF (Kg)</label>
+            <input type="number" id="cons_fatorSF" step="0.0000001" value="0.0000021">
+            <div class="hint" id="cons_fatorSFAviso" style="margin:6px 0 0 0; padding:0; border:none; font-size:11px;">Valor padr&#227;o de estudo</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Trocas de solu&#231;&#227;o</div>
+      <div class="adv-card">
+        <div class="row2">
+          <div class="field">
+            <label>Capacidade geladeira (L)</label>
+            <input type="number" id="cons_capGeladeira" step="1" placeholder="Ex: 120">
+          </div>
+          <div class="field">
+            <label>Qtd. trocas</label>
+            <input type="number" id="cons_qtdTrocas" step="1" placeholder="Ex: 0">
+          </div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-box">
+          <div class="result-label">&#193;gua total (com trocas)</div>
+          <div class="result-value" id="cons_valAgua" style="font-size:24px;">&#8212;</div>
+        </div>
+        <div class="result-box">
+          <div class="result-label">SF total (com trocas)</div>
+          <div class="result-value" id="cons_valSFtotal" style="font-size:24px;">&#8212;</div>
+        </div>
+      </div>
+
+      <div class="subresult-row">
+        <div class="subresult-box">
+          <div class="mini-label">Litros &#225;gua / troca</div>
+          <div class="mini-value" id="cons_valAguaTroca">&#8212;</div>
+        </div>
+        <div class="subresult-box">
+          <div class="mini-label">Litros SF / troca</div>
+          <div class="mini-value" id="cons_valSFTroca">&#8212;</div>
+        </div>
+      </div>
+
+      <div class="hint">
+        Litros &#225;gua = (fator &#225;gua &#215; unidades &#215; tiragem) / 1000 + (litros &#225;gua/troca &#215; qtd. trocas).
+        Litros SF = (fator SF &#215; dosagem) &#215; unidades &#215; tiragem + (litros SF/troca &#215; qtd. trocas).
+        Litros &#225;gua/troca = capacidade da geladeira &#215; 2.
+      </div>
+
+      <button class="btn-primary" id="cons_salvarBtn">Salvar an&#225;lise</button>
+    </section>
+
+    <!-- ===================== DADOS DO TRABALHO ===================== -->
+    <section class="screen" id="screen-dados">
+      <div class="section-title" style="margin-top:0;">Trabalho atual</div>
+
+      <div class="field">
+        <label>Cliente</label>
+        <div class="row2" style="grid-template-columns: 1fr auto;">
+          <input type="text" id="dados_clienteInput" placeholder="Nome do cliente">
+          <button class="btn-secondary" id="dados_salvarClienteBtn" style="margin-top:0; width:auto; padding:0 16px;">Salvar</button>
+        </div>
+        <details class="reg-list-wrap">
+          <summary><span id="dados_clientesResumo">Clientes cadastrados</span></summary>
+          <div class="reg-list-body" id="dados_clientesLista"></div>
+        </details>
+      </div>
+
+      <div class="field">
+        <label>M&#225;quina</label>
+        <div class="row2" style="grid-template-columns: 1fr auto;">
+          <input type="text" id="dados_maquinaInput" placeholder="Ex: XL106">
+          <button class="btn-secondary" id="dados_salvarMaquinaBtn" style="margin-top:0; width:auto; padding:0 16px;">Salvar</button>
+        </div>
+        <div class="field" style="margin-top:10px; margin-bottom:0;">
+          <label>Qtd. unidades (chapas) dessa m&#225;quina</label>
+          <input type="number" id="dados_maquinaUnidadesInput" step="1" placeholder="Ex: 8">
+        </div>
+        <details class="reg-list-wrap">
+          <summary><span id="dados_maquinasResumo">M&#225;quinas cadastradas</span></summary>
+          <div class="reg-list-body" id="dados_maquinasLista"></div>
+        </details>
+      </div>
+
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="dados_data">
+      </div>
+
+      <div class="section-title">Solu&#231;&#227;o de fonte</div>
+      <div class="field">
+        <label>Em uso neste trabalho</label>
+        <select id="dados_solucaoSelect"><option value="">&#8212; nenhuma selecionada &#8212;</option></select>
+      </div>
+      <button class="btn-secondary" id="dados_novaSolucaoBtn">+ Cadastrar solu&#231;&#227;o de fonte</button>
+      <div class="reg-card inline-form" id="dados_solucaoForm">
+        <div class="row2">
+          <div class="field"><label>Fabricante</label><input type="text" id="sol_fabricante"></div>
+          <div class="field"><label>Modelo</label><input type="text" id="sol_modelo"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>% de refer&#234;ncia</label><input type="number" id="sol_pct" step="0.1"></div>
+          <div class="field"><label>Gotas de refer&#234;ncia</label><input type="number" id="sol_gotas" step="1"></div>
+        </div>
+        <div class="field"><label>Titulador usado</label><select id="sol_titulador"><option value="">&#8212; n&#227;o informado &#8212;</option></select></div>
+        <button class="btn-primary" id="sol_salvarBtn" style="margin-top:6px;">Cadastrar solu&#231;&#227;o</button>
+      </div>
+      <details class="reg-list-wrap">
+        <summary><span id="dados_solucoesResumo">Solu&#231;&#245;es cadastradas</span></summary>
+        <div class="reg-list-body" id="dados_solucoesLista"></div>
+      </details>
+
+      <div class="section-title">&#193;lcool (IPA)</div>
+      <div class="field">
+        <label>Em uso neste trabalho</label>
+        <select id="dados_alcoolSelect"><option value="">&#8212; nenhum selecionado &#8212;</option></select>
+      </div>
+      <button class="btn-secondary" id="dados_novoAlcoolBtn">+ Cadastrar &#225;lcool</button>
+      <div class="reg-card inline-form" id="dados_alcoolForm">
+        <div class="row2">
+          <div class="field"><label>Fabricante</label><input type="text" id="alc_fabricante"></div>
+          <div class="field"><label>Modelo</label><input type="text" id="alc_modelo"></div>
+        </div>
+        <button class="btn-primary" id="alc_salvarBtn" style="margin-top:6px;">Cadastrar &#225;lcool</button>
+      </div>
+      <details class="reg-list-wrap">
+        <summary><span id="dados_alcooisResumo">&#193;lcoois cadastrados</span></summary>
+        <div class="reg-list-body" id="dados_alcooisLista"></div>
+      </details>
+
+      <div class="section-title">Titulador</div>
+      <div class="field">
+        <label>Em uso neste trabalho</label>
+        <select id="dados_tituladorSelect"><option value="">&#8212; nenhum selecionado &#8212;</option></select>
+      </div>
+      <button class="btn-secondary" id="dados_administrarTituladorBtn">Administrar tituladores</button>
+
+      <div class="hint">
+        Ao selecionar uma solu&#231;&#227;o de fonte cadastrada, o % e as gotas de refer&#234;ncia da tela de
+        Titula&#231;&#227;o s&#227;o preenchidos automaticamente. Cliente, m&#225;quina, solu&#231;&#227;o, &#225;lcool e titulador
+        selecionados aqui aparecem tamb&#233;m no Relat&#243;rio.
+      </div>
+    </section>
+
+    <!-- ===================== RELAT&#211;RIO ===================== -->
+    <section class="screen" id="screen-relatorio">
+      <div class="field no-print">
+        <label>Nome do relat&#243;rio</label>
+        <input type="text" id="rel_nomeInput" placeholder="Gerado automaticamente">
+      </div>
+
+      <button class="btn-primary no-print" id="rel_gerarBtn">Gerar relat&#243;rio</button>
+      <button class="btn-secondary no-print" id="rel_imprimirBtn" style="display:none;">Imprimir / salvar PDF</button>
+
+      <div id="relatorioPrintArea" style="display:none; margin-top:18px;">
+        <div class="rel-header">
+          <div class="brand" id="rel_nomeExibido">Relat&#243;rio de An&#225;lise &#183; Sala de M&#225;quinas</div>
+          <div class="sub" id="rel_dataGeracao"></div>
+        </div>
+        <div id="relatorioConteudo"></div>
+      </div>
+
+      <div class="hint no-print">
+        O relat&#243;rio re&#250;ne tudo o que estiver preenchido agora nas telas de IPA, Hardness,
+        Titula&#231;&#227;o e Consumo &#8212; n&#227;o depende do que j&#225; foi salvo em An&#225;lises.
+      </div>
+    </section>
+
+    <!-- ===================== AN&#193;LISES ===================== -->
+    <section class="screen" id="screen-analises">
+      <div class="reg-card" style="margin-top:0;">
+        <div class="field">
+          <label>Filtrar por cliente</label>
+          <select id="ana_filtroCliente"><option value="">&#8212; todos &#8212;</option></select>
+        </div>
+        <div class="field">
+          <label>Filtrar por m&#225;quina</label>
+          <select id="ana_filtroMaquina"><option value="">&#8212; todas &#8212;</option></select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Filtrar por solu&#231;&#227;o de fonte</label>
+          <select id="ana_filtroSolucao"><option value="">&#8212; todas &#8212;</option></select>
+        </div>
+      </div>
+      <div id="analisesLista"></div>
+      <button class="btn-danger" id="ana_excluirTudoBtn">Excluir todas as an&#225;lises</button>
+    </section>
+
+    <!-- ===================== BACKUP ===================== -->
+    <section class="screen" id="screen-backup">
+      <div class="hint" style="margin-top:0; border-top:none; padding-top:0;">
+        Todos os dados (cadastros, trabalho atual e an&#225;lises salvas) ficam apenas neste
+        navegador/dispositivo. Use o backup para levar os dados para outro aparelho ou
+        para se proteger caso o navegador seja limpo.
+      </div>
+
+      <div class="section-title" style="margin-top:22px;">Baixar backup</div>
+      <button class="btn-primary" id="backup_baixarBtn">&#128228; Baixar backup (.json)</button>
+
+      <div class="section-title">Importar backup</div>
+      <button class="btn-secondary" id="backup_importarBtn">&#128229; Selecionar arquivo de backup</button>
+      <input type="file" id="backup_arquivoInput" accept="application/json,.json" style="display:none;">
+
+      <div class="hint">
+        Importar um backup substitui os dados atuais deste navegador pelos dados do arquivo
+        selecionado. Essa a&#231;&#227;o n&#227;o pode ser desfeita &#8212; se quiser manter o que est&#225; salvo agora,
+        baixe um backup antes de importar.
+      </div>
+    </section>
+
+  </main>
+
+  <div class="modal-overlay" id="tituladorModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>Administrar tituladores</span>
+        <button class="modal-close" id="fecharTituladorModalBtn">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <div id="tituladoresLista"></div>
+        <div class="reg-card" style="margin-top:14px;">
+          <div class="field"><label>Marca</label><input type="text" id="titu_marca" placeholder="Ex: Technotrans"></div>
+          <div class="row2">
+            <div class="field"><label>N&#186; de s&#233;rie</label><input type="text" id="titu_serie"></div>
+            <div class="field"><label>Observa&#231;&#227;o</label><input type="text" id="titu_obs" placeholder="opcional"></div>
+          </div>
+          <button class="btn-primary" id="titu_salvarBtn" style="margin-top:6px;">Adicionar titulador</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="ipa_tabelaModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>Tabela de corre&#231;&#227;o (Technotrans)</span>
+        <button class="modal-close" id="ipa_fecharTabelaBtn">&#10005;</button>
+      </div>
+      <div class="modal-body" id="ipa_tabelaModalBody"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="save-toast" id="saveToast">An&#225;lise salva</div>
+
+<script>
+/* =====================================================================
+   NAVEGA\u00C7\u00C3O ENTRE TELAS
+===================================================================== */
+const TELAS = {
+  main:       { crumb: "Esta\u00E7\u00E3o de An\u00E1lise", titulo: "In\u00EDcio" },
+  ipa:        { crumb: "Molha", titulo: "Medi\u00E7\u00E3o IPA" },
+  hardness:   { crumb: "\u00C1gua", titulo: "Calculadora Hardness" },
+  titulacao:  { crumb: "Molha", titulo: "Titula\u00E7\u00E3o" },
+  consumo:    { crumb: "Molha", titulo: "Consumo" },
+  dados:      { crumb: "Esta\u00E7\u00E3o de An\u00E1lise", titulo: "Dados do Trabalho" },
+  relatorio:  { crumb: "Esta\u00E7\u00E3o de An\u00E1lise", titulo: "Relat\u00F3rio" },
+  analises:   { crumb: "Esta\u00E7\u00E3o de An\u00E1lise", titulo: "An\u00E1lises" },
+  backup:     { crumb: "Esta\u00E7\u00E3o de An\u00E1lise", titulo: "Backup" }
+};
+
+const backBtn = document.getElementById('backBtn');
+const crumbEl = document.getElementById('crumb');
+const titleEl = document.getElementById('screenTitle');
+
+function showScreen(nome){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+nome).classList.add('active');
+  crumbEl.textContent = TELAS[nome].crumb;
+  titleEl.textContent = TELAS[nome].titulo;
+  backBtn.classList.toggle('hidden', nome === 'main');
+  if(nome === 'analises') renderAnalises();
+  if(nome === 'dados' && typeof renderDados === 'function') renderDados();
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll('.tile[data-target]').forEach(tile=>{
+  tile.addEventListener('click', ()=> showScreen(tile.dataset.target));
+});
+backBtn.addEventListener('click', ()=> showScreen('main'));
+
+document.getElementById('novaAnaliseBtn').addEventListener('click', ()=>{
+  if(!confirm('Iniciar uma nova an\u00E1lise? Isso vai limpar os campos preenchidos e o trabalho atual (cliente, m\u00E1quina, solu\u00E7\u00E3o, \u00E1lcool, titulador).')) return;
+  if(typeof limparIPA === 'function') limparIPA();
+  if(typeof limparHardness === 'function') limparHardness();
+  if(typeof limparTitulacao === 'function') limparTitulacao();
+  if(typeof limparConsumo === 'function') limparConsumo();
+  localStorage.setItem('pedro_trabalho_atual', JSON.stringify({}));
+  showScreen('dados');
+});
+
+/* =====================================================================
+   HELPERS DE PERSIST\u00CANCIA (localStorage)
+===================================================================== */
+const STORAGE_KEY = 'pedro_analises';
+
+function listarAnalises(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e){ return []; }
+}
+function gravarAnalises(lista){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+}
+function salvarAnalise(tipo, titulo, campos){
+  const lista = listarAnalises();
+  lista.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+    tipo, titulo,
+    data: new Date().toISOString(),
+    campos
+  });
+  gravarAnalises(lista);
+  mostrarToast();
+}
+function salvarAnaliseCompleta(){
+  const trabalho = lerTrabalhoAtual();
+  const partes = {};
+  if(typeof coletarIPA === 'function'){ const d = coletarIPA(); if(d) partes.ipa = d; }
+  if(typeof coletarHardness === 'function'){ const d = coletarHardness(); if(d) partes.hardness = d; }
+  if(typeof coletarTitulacao === 'function'){ const d = coletarTitulacao(); if(d) partes.titulacao = d; }
+  if(typeof coletarConsumo === 'function'){ const d = coletarConsumo(); if(d) partes.consumo = d; }
+
+  if(Object.keys(partes).length === 0){
+    alert('Preencha ao menos uma das ferramentas (IPA, Hardness, Titula\u00E7\u00E3o ou Consumo) antes de salvar.');
+    return;
+  }
+
+  const campos = Object.assign({
+    cliente: trabalho.clienteNome || '',
+    maquina: trabalho.maquinaNome || '',
+    data: trabalho.data || '',
+    solucao: trabalho.solucaoNome || ''
+  }, partes);
+
+  const titulo = gerarNomeUnico(gerarNomePadrao(trabalho.clienteNome, trabalho.maquinaNome, trabalho.data));
+  salvarAnalise('completa', titulo, campos);
+}
+function mostrarToast(){
+  const t = document.getElementById('saveToast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function setValue(id, val){
+  const el = document.getElementById(id);
+  if(el && val !== undefined && val !== null) el.value = val;
+}
+function dispatch(id, evt){
+  const el = document.getElementById(id);
+  if(el) el.dispatchEvent(new Event(evt, {bubbles:true}));
+}
+function selectSeg(wrapId, val){
+  const wrap = document.getElementById(wrapId);
+  if(!wrap) return;
+  wrap.querySelectorAll('button').forEach(b=>{
+    b.classList.toggle('selected', b.dataset.val === String(val) || b.dataset.mult === String(val));
+  });
+}
+function lerTrabalhoAtual(){
+  try{ return JSON.parse(localStorage.getItem('pedro_trabalho_atual')) || {}; }
+  catch(e){ return {}; }
+}
+function lerMaquinas(){
+  try{ return JSON.parse(localStorage.getItem('pedro_maquinas')) || []; }
+  catch(e){ return []; }
+}
+function lerClientes(){
+  try{ return JSON.parse(localStorage.getItem('pedro_clientes')) || []; }
+  catch(e){ return []; }
+}
+function lerSolucoesFonte(){
+  try{ return JSON.parse(localStorage.getItem('pedro_solucoes_fonte')) || []; }
+  catch(e){ return []; }
+}
+function formatarDataBR(dataStr){
+  let d;
+  if(dataStr){
+    const partes = dataStr.split('-');
+    d = new Date(parseInt(partes[0]), parseInt(partes[1])-1, parseInt(partes[2]));
+  } else {
+    d = new Date();
+  }
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return dd+'_'+mm+'_'+yyyy;
+}
+function gerarNomePadrao(cliente, maquina, dataStr){
+  const dataFmt = formatarDataBR(dataStr);
+  const partes = [];
+  if(cliente) partes.push(cliente);
+  if(maquina) partes.push(maquina);
+  if(partes.length){
+    partes.push(dataFmt);
+    return partes.join('_');
+  }
+  return 'Relat\u00F3rio_' + dataFmt;
+}
+function escapeRegExp(str){
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+function gerarNomeUnico(nomeBase){
+  const lista = listarAnalises();
+  const re = new RegExp('^' + escapeRegExp(nomeBase) + '_A(\\d+)$');
+  let maxN = 0;
+  lista.forEach(item=>{
+    const m = item.titulo && item.titulo.match(re);
+    if(m){
+      const n = parseInt(m[1], 10);
+      if(n > maxN) maxN = n;
+    }
+  });
+  return nomeBase + '_A' + (maxN + 1);
+}
+
+/* =====================================================================
+   IPA
+===================================================================== */
+(function(){
+  const REAL_PCT = [4,6,8,10,12,14,16,18,20,22];
+  const TABLE = {
+    "1.05": { "2":[3.1,5.0,6.8,8.7,10.5,12.4,14.2,16.1,17.9,19.7], "3":[2.8,4.6,6.4,8.2,10.1,11.9,13.7,15.5,17.3,19.1], "4":[2.5,4.3,6.0,7.8,9.6,11.4,13.1,14.9,16.7,18.5] },
+    "1.10": { "2":[2.5,4.3,6.1,7.9,9.7,11.4,13.2,15.0,16.8,18.6], "3":[1.9,3.6,5.3,7.0,8.8,10.5,12.2,13.9,15.6,17.4], "4":[1.2,2.9,4.5,6.2,7.9,9.5,11.2,12.8,14.5,16.1] },
+    "1.15": { "2":[1.9,3.6,5.3,7.1,8.8,10.5,12.2,14.0,15.7,17.4], "3":[0.9,2.6,4.2,5.8,7.5,9.1,10.7,12.3,14.0,15.6], "4":[0.0,1.5,3.0,4.6,6.1,7.6,9.2,10.7,12.3,13.8] },
+    "1.20": { "2":[1.3,2.9,4.6,6.3,7.9,9.6,11.2,12.9,14.6,16.2], "3":[0.0,1.5,3.1,4.6,6.1,7.7,9.2,10.8,12.3,13.8], "4":[-1.3,0.1,1.6,3.0,4.4,5.8,7.2,8.6,10.0,11.4] }
+  };
+
+  function montarTabelaHTML(){
+    const densidades = ["1.05","1.10","1.15","1.20"];
+    const dosagens = ["2","3","4"];
+    let html = '<table class="tech-table"><thead>';
+    html += '<tr><th rowspan="2">% real IPA</th>';
+    densidades.forEach(d => { html += '<th colspan="3" class="dens-group">Densidade ' + d.replace('.',',') + '</th>'; });
+    html += '</tr><tr>';
+    densidades.forEach(() => { dosagens.forEach(dos => { html += '<th>' + dos + '%</th>'; }); });
+    html += '</tr></thead><tbody>';
+    REAL_PCT.forEach((pct, i) => {
+      html += '<tr><td class="pct-col">' + pct + '%</td>';
+      densidades.forEach(d => { dosagens.forEach(dos => {
+        const leitura = TABLE[d][dos][i];
+        html += '<td>' + leitura.toFixed(1) + '</td>';
+      }); });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  const overlay = document.getElementById('ipa_tabelaModalOverlay');
+  const body = document.getElementById('ipa_tabelaModalBody');
+  document.getElementById('ipa_abrirTabelaBtn').addEventListener('click', ()=>{
+    body.innerHTML = montarTabelaHTML();
+    overlay.classList.add('active');
+  });
+  document.getElementById('ipa_fecharTabelaBtn').addEventListener('click', ()=> overlay.classList.remove('active'));
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.classList.remove('active'); });
+
+  let densidade = null, dosagem = null, tempAlc = null, tempSol = null;
+  const TAXA_COMP_POR_GRAU = 0.3;
+
+  function setupSeg(id, onPick){
+    const wrap = document.getElementById(id);
+    wrap.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        wrap.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        onPick(btn.dataset.val);
+      });
+    });
+  }
+  setupSeg('ipa_densSeg',    v => { densidade = v; calcularIPA(); });
+  setupSeg('ipa_dosSeg',     v => { dosagem = v; calcularIPA(); });
+  setupSeg('ipa_tempAlcSeg', v => { tempAlc = parseFloat(v); calcularIPA(); });
+  setupSeg('ipa_tempSolSeg', v => { tempSol = parseFloat(v); calcularIPA(); });
+  document.getElementById('ipa_leituraInput').addEventListener('input', ()=>calcularIPA());
+
+  function interpolar(leitura, curva){
+    if(leitura <= curva[0]){
+      const t = (leitura - curva[0]) / (curva[1] - curva[0]);
+      return { valor: REAL_PCT[0] + t * (REAL_PCT[1]-REAL_PCT[0]), fora: leitura < curva[0] };
+    }
+    if(leitura >= curva[curva.length-1]){
+      const n = curva.length;
+      const t = (leitura - curva[n-2]) / (curva[n-1] - curva[n-2]);
+      return { valor: REAL_PCT[n-2] + t * (REAL_PCT[n-1]-REAL_PCT[n-2]), fora: leitura > curva[n-1] };
+    }
+    for(let i=0; i<curva.length-1; i++){
+      if(leitura >= curva[i] && leitura <= curva[i+1]){
+        const t = (leitura - curva[i]) / (curva[i+1] - curva[i]);
+        return { valor: REAL_PCT[i] + t * (REAL_PCT[i+1]-REAL_PCT[i]), fora:false };
+      }
+    }
+  }
+
+  window.calcularIPA = function(){
+    const resultValue = document.getElementById('ipa_resultValue');
+    const resultSub = document.getElementById('ipa_resultSub');
+    const compSub = document.getElementById('ipa_compSub');
+    const leituraStr = document.getElementById('ipa_leituraInput').value;
+
+    if(!densidade || !dosagem || tempAlc === null || tempSol === null || leituraStr === ""){
+      resultValue.textContent = "\u2014"; resultSub.textContent = ""; compSub.textContent = "";
+      return;
+    }
+    const leituraBruta = parseFloat(leituraStr);
+    if(isNaN(leituraBruta)){
+      resultValue.textContent = "\u2014"; resultSub.textContent = ""; compSub.textContent = "";
+      return;
+    }
+    const compensacao = TAXA_COMP_POR_GRAU * (tempAlc - tempSol);
+    const leituraCompensada = leituraBruta + compensacao;
+    const curva = TABLE[densidade][dosagem];
+    const { valor, fora } = interpolar(leituraCompensada, curva);
+
+    resultValue.textContent = valor.toFixed(1) + " %";
+    resultSub.innerHTML = fora
+      ? '<span class="warn">Leitura fora da faixa da tabela \u2014 valor extrapolado</span>'
+      : "Densidade " + densidade.replace('.',',') + " \u00B7 Dosagem " + dosagem + "%";
+    const sinal = compensacao > 0 ? "+" : "";
+    compSub.textContent = "Compensa\u00E7\u00E3o: " + sinal + compensacao.toFixed(1) + " % \u00B7 Leitura compensada: " + leituraCompensada.toFixed(1);
+  };
+
+  window.coletarIPA = function(){
+    const leitura = document.getElementById('ipa_leituraInput').value;
+    if(!densidade || !dosagem || tempAlc===null || tempSol===null || leitura==='') return null;
+    return {
+      densidade, dosagem, tempAlc, tempSol, leitura,
+      resultado: document.getElementById('ipa_resultValue').textContent,
+      compensacao: document.getElementById('ipa_compSub').textContent
+    };
+  };
+
+  document.getElementById('ipa_salvarBtn').addEventListener('click', salvarAnaliseCompleta);
+
+  window.carregarIPA = function(c){
+    densidade = c.densidade; dosagem = c.dosagem; tempAlc = c.tempAlc; tempSol = c.tempSol;
+    selectSeg('ipa_densSeg', c.densidade);
+    selectSeg('ipa_dosSeg', c.dosagem);
+    selectSeg('ipa_tempAlcSeg', c.tempAlc);
+    selectSeg('ipa_tempSolSeg', c.tempSol);
+    setValue('ipa_leituraInput', c.leitura);
+    calcularIPA();
+  };
+
+  window.limparIPA = function(){
+    densidade = null; dosagem = null; tempAlc = null; tempSol = null;
+    document.querySelectorAll('#ipa_densSeg button, #ipa_dosSeg button, #ipa_tempAlcSeg button, #ipa_tempSolSeg button')
+      .forEach(b=>b.classList.remove('selected'));
+    document.getElementById('ipa_leituraInput').value = '';
+    calcularIPA();
+  };
+})();
+
+/* =====================================================================
+   HARDNESS
+===================================================================== */
+(function(){
+  const inputDH = document.getElementById('hard_inputDH');
+  const inputPPM = document.getElementById('hard_inputPPM');
+  const resultClass = document.getElementById('hard_resultClass');
+  const resultBadge = document.getElementById('hard_resultBadge');
+  const valMmol = document.getElementById('hard_valMmol');
+  const valCond = document.getElementById('hard_valCond');
+  const classTable = document.getElementById('hard_classTable');
+  const PPM_POR_DH = 17.848;
+  let travando = false;
+
+  function classificar(mmol){
+    if(mmol <= 1.3) return {chave:'soft', nome:'Mole'};
+    if(mmol <= 2.5) return {chave:'medium', nome:'M\u00E9dia'};
+    if(mmol <= 3.7) return {chave:'hard', nome:'Dura'};
+    return {chave:'veryhard', nome:'Muito dura'};
+  }
+  window.classificarDureza = classificar;
+
+  window.atualizarHardness = function(origem){
+    if(travando) return;
+    travando = true;
+    let dh = parseFloat(inputDH.value);
+    let ppm = parseFloat(inputPPM.value);
+
+    if(origem === 'dh' && !isNaN(dh)){ ppm = dh * PPM_POR_DH; inputPPM.value = ppm.toFixed(1); }
+    else if(origem === 'ppm' && !isNaN(ppm)){ dh = ppm / PPM_POR_DH; inputDH.value = dh.toFixed(2); }
+    travando = false;
+
+    if(isNaN(dh) || isNaN(ppm)){
+      resultClass.textContent = "\u2014"; resultBadge.style.display = "none";
+      valMmol.textContent = "\u2014"; valCond.textContent = "\u2014";
+      classTable.querySelectorAll('tr').forEach(tr=>tr.classList.remove('active-row'));
+      return;
+    }
+    const mmol = ppm / 100;
+    const cond = ppm * 2;
+    const cl = classificar(mmol);
+    resultClass.textContent = cl.nome;
+    resultBadge.textContent = cl.nome.toUpperCase();
+    resultBadge.className = "badge " + cl.chave;
+    resultBadge.style.display = "inline-block";
+    valMmol.textContent = mmol.toFixed(2) + " mMol/L";
+    valCond.textContent = "\u2248 " + cond.toFixed(0) + " \u00B5S/cm";
+    classTable.querySelectorAll('tbody tr').forEach(tr=>{
+      const min = parseFloat(tr.dataset.min), max = parseFloat(tr.dataset.max);
+      tr.classList.toggle('active-row', mmol >= min && mmol <= max);
+    });
+  };
+  inputDH.addEventListener('input', ()=>atualizarHardness('dh'));
+  inputPPM.addEventListener('input', ()=>atualizarHardness('ppm'));
+
+  window.coletarHardness = function(){
+    const dh = parseFloat(inputDH.value), ppm = parseFloat(inputPPM.value);
+    const ph = document.getElementById('hard_ph').value;
+    const alcalinidade = document.getElementById('hard_alcalinidade').value;
+    const fonteAgua = document.getElementById('hard_fonteAgua').value;
+    if(isNaN(dh) && isNaN(ppm) && !ph && !alcalinidade && !fonteAgua) return null;
+    const mmol = ppm/100;
+    const cl = !isNaN(mmol) ? classificar(mmol) : null;
+    return {
+      dh: isNaN(dh) ? '' : dh.toFixed(2),
+      ppm: isNaN(ppm) ? '' : ppm.toFixed(1),
+      mmol: !isNaN(mmol) ? mmol.toFixed(2) : '',
+      condutividade: !isNaN(ppm) ? (ppm*2).toFixed(0) : '',
+      classificacao: cl ? cl.nome : '',
+      ph, alcalinidade, fonteAgua
+    };
+  };
+
+  document.getElementById('hard_salvarBtn').addEventListener('click', salvarAnaliseCompleta);
+
+  window.carregarHardness = function(c){
+    setValue('hard_inputDH', c.dh);
+    setValue('hard_inputPPM', c.ppm);
+    setValue('hard_ph', c.ph);
+    setValue('hard_alcalinidade', c.alcalinidade);
+    setValue('hard_fonteAgua', c.fonteAgua);
+    atualizarHardness('dh');
+  };
+
+  window.limparHardness = function(){
+    document.getElementById('hard_inputDH').value = '';
+    document.getElementById('hard_inputPPM').value = '';
+    document.getElementById('hard_ph').value = '';
+    document.getElementById('hard_alcalinidade').value = '';
+    document.getElementById('hard_fonteAgua').value = '';
+    atualizarHardness('dh');
+  };
+})();
+
+/* =====================================================================
+   TITULA\u00C7\u00C3O
+===================================================================== */
+(function(){
+  const amostrasBody = document.getElementById('tit_amostrasBody');
+  const ensaioPct = document.getElementById('tit_ensaioPct');
+  const ensaioGotas = document.getElementById('tit_ensaioGotas');
+  const NOMES = ['Amostra 1','Amostra 2','Amostra 3'];
+
+  NOMES.forEach((nome, i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="label-col">${nome}</td>
+      <td><input type="number" class="tit_gotasInput" data-i="${i}" step="1" inputmode="decimal"></td>
+      <td class="calc-pct" id="tit_pct${i}">\u2014</td>
+      <td><input type="number" class="tit_phInput" data-i="${i}" step="0.1" inputmode="decimal"></td>
+      <td><input type="number" class="tit_usInput" data-i="${i}" step="1" inputmode="decimal"></td>
+      <td><input type="number" class="tit_manInput" data-i="${i}" step="0.1" inputmode="decimal"></td>
+    `;
+    amostrasBody.appendChild(tr);
+  });
+
+  window.calcularTitulacao = function(){
+    const refPct = parseFloat(ensaioPct.value);
+    const refGotas = parseFloat(ensaioGotas.value);
+
+    document.querySelectorAll('.tit_gotasInput').forEach(inp=>{
+      const i = inp.dataset.i;
+      const gotas = parseFloat(inp.value);
+      const pctCell = document.getElementById('tit_pct'+i);
+      if(!isNaN(gotas) && !isNaN(refPct) && !isNaN(refGotas) && refGotas !== 0){
+        const pct = (gotas * refPct) / refGotas;
+        pctCell.textContent = pct.toFixed(2) + '%';
+      } else { pctCell.textContent = '\u2014'; }
+    });
+  };
+
+  window.calcularSFMedioTitulacao = function(){
+    let soma = 0, n = 0;
+    document.querySelectorAll('.calc-pct').forEach(td=>{
+      const v = parseFloat(td.textContent);
+      if(!isNaN(v)){ soma += v; n++; }
+    });
+    return n ? soma / n : null;
+  };
+
+  document.getElementById('screen-titulacao').addEventListener('input', (e)=>{
+    if(e.target.matches('.tit_gotasInput, .tit_usInput, .tit_phInput, #tit_ensaioPct, #tit_ensaioGotas')) calcularTitulacao();
+  });
+
+  /* ---------- Solu\u00E7\u00E3o de fonte em uso (exibi\u00E7\u00E3o + edi\u00E7\u00E3o r\u00E1pida) ---------- */
+  function preencherSelectSolucaoTit(){
+    let lista = [];
+    try{ lista = JSON.parse(localStorage.getItem('pedro_solucoes_fonte')) || []; }catch(e){}
+    const sel = document.getElementById('tit_solucaoSelect');
+    const trabalho = lerTrabalhoAtual();
+    sel.innerHTML = '<option value="">\u2014 nenhuma selecionada \u2014</option>' +
+      lista.map(s=>'<option value="'+s.id+'">'+s.fabricante+' '+s.modelo+' \u2014 '+s.porcentagem+'% / '+s.gotas+' gotas</option>').join('');
+    sel.value = trabalho.solucaoId || '';
+  }
+  preencherSelectSolucaoTit();
+
+  document.getElementById('tit_solucaoSelect').addEventListener('change', (e)=>{
+    let lista = [];
+    try{ lista = JSON.parse(localStorage.getItem('pedro_solucoes_fonte')) || []; }catch(err){}
+    const s = lista.find(x=>x.id === e.target.value);
+    const trabalho = lerTrabalhoAtual();
+    if(!s){
+      trabalho.solucaoId = null; trabalho.solucaoNome = '';
+    } else {
+      trabalho.solucaoId = s.id; trabalho.solucaoNome = s.fabricante + ' ' + s.modelo;
+      setValue('tit_ensaioPct', s.porcentagem);
+      setValue('tit_ensaioGotas', s.gotas);
+      calcularTitulacao();
+      if(s.tituladorId){
+        trabalho.tituladorId = s.tituladorId;
+        let tits = [];
+        try{ tits = JSON.parse(localStorage.getItem('pedro_tituladores')) || []; }catch(err){}
+        const t = tits.find(x=>x.id === s.tituladorId);
+        trabalho.tituladorNome = t ? (t.marca + (t.serie ? ' \u2014 ' + t.serie : '')) : '';
+      }
+    }
+    localStorage.setItem('pedro_trabalho_atual', JSON.stringify(trabalho));
+  });
+
+  window.coletarTitulacao = function(){
+    const gotasPreenchidas = Array.from(document.querySelectorAll('.tit_gotasInput')).some(i=>i.value !== '');
+    const ensaioPreenchido = ensaioPct.value !== '' || ensaioGotas.value !== '';
+    if(!gotasPreenchidas && !ensaioPreenchido) return null;
+
+    const amostras = [];
+    document.querySelectorAll('.tit_gotasInput').forEach(inp=>{
+      const i = inp.dataset.i;
+      amostras.push({
+        gotas: inp.value,
+        pct: document.getElementById('tit_pct'+i).textContent,
+        ph: document.querySelector('.tit_phInput[data-i="'+i+'"]').value,
+        us: document.querySelector('.tit_usInput[data-i="'+i+'"]').value,
+        manipulo: document.querySelector('.tit_manInput[data-i="'+i+'"]').value
+      });
+    });
+    return {
+      ensaioPct: ensaioPct.value, ensaioGotas: ensaioGotas.value,
+      amostras,
+      obs: document.getElementById('tit_obsTit').value
+    };
+  };
+
+  document.getElementById('tit_salvarBtn').addEventListener('click', salvarAnaliseCompleta);
+
+  document.getElementById('tit_salvarBaseBtn').addEventListener('click', ()=>{
+    const pct = ensaioPct.value;
+    const gotas = ensaioGotas.value;
+    if(pct === '' || gotas === ''){
+      alert('Preencha o % de refer\u00EAncia e as gotas de refer\u00EAncia antes de salvar na base.');
+      return;
+    }
+
+    let trabalho = {};
+    try{ trabalho = JSON.parse(localStorage.getItem('pedro_trabalho_atual')) || {}; }catch(e){}
+
+    function irParaCadastro(){
+      showScreen('dados');
+      setTimeout(()=>{
+        document.getElementById('dados_solucaoForm').classList.add('active');
+        setValue('sol_pct', pct);
+        setValue('sol_gotas', gotas);
+        document.getElementById('sol_fabricante').focus();
+      }, 50);
+    }
+
+    if(!trabalho.solucaoId){
+      alert('Nenhuma solu\u00E7\u00E3o de fonte selecionada em Dados. Voc\u00EA ser\u00E1 direcionado para cadastrar uma.');
+      irParaCadastro();
+      return;
+    }
+
+    let solucoes = [];
+    try{ solucoes = JSON.parse(localStorage.getItem('pedro_solucoes_fonte')) || []; }catch(e){}
+    const idx = solucoes.findIndex(s => s.id === trabalho.solucaoId);
+    if(idx === -1){
+      alert('A solu\u00E7\u00E3o de fonte selecionada n\u00E3o foi encontrada na base. Voc\u00EA ser\u00E1 direcionado para cadastrar uma nova.');
+      irParaCadastro();
+      return;
+    }
+
+    solucoes[idx].porcentagem = pct;
+    solucoes[idx].gotas = gotas;
+    localStorage.setItem('pedro_solucoes_fonte', JSON.stringify(solucoes));
+    mostrarToast();
+  });
+
+  window.carregarTitulacao = function(c){
+    setValue('tit_ensaioPct', c.ensaioPct);
+    setValue('tit_ensaioGotas', c.ensaioGotas);
+    (c.amostras||[]).forEach((a,i)=>{
+      const g = document.querySelector('.tit_gotasInput[data-i="'+i+'"]');
+      const p = document.querySelector('.tit_phInput[data-i="'+i+'"]');
+      const u = document.querySelector('.tit_usInput[data-i="'+i+'"]');
+      const m = document.querySelector('.tit_manInput[data-i="'+i+'"]');
+      if(g) g.value = a.gotas || '';
+      if(p) p.value = a.ph || '';
+      if(u) u.value = a.us || '';
+      if(m) m.value = a.manipulo || '';
+    });
+    setValue('tit_obsTit', c.obs);
+    calcularTitulacao();
+  };
+
+  window.limparTitulacao = function(){
+    setValue('tit_solucaoSelect', '');
+    ensaioPct.value = '';
+    ensaioGotas.value = '';
+    document.querySelectorAll('.tit_gotasInput, .tit_phInput, .tit_usInput, .tit_manInput').forEach(i=>i.value='');
+    document.querySelectorAll('.calc-pct').forEach(td=>td.textContent='\u2014');
+    document.getElementById('tit_obsTit').value = '';
+  };
+
+  window.atualizarSelectSolucaoTit = preencherSelectSolucaoTit;
+})();
+
+/* =====================================================================
+   CONSUMO
+===================================================================== */
+(function(){
+  const ids = ['cons_papel','cons_qtdUnidades','cons_tiragem','cons_dosagem',
+               'cons_fatorAgua','cons_fatorSF','cons_capGeladeira','cons_qtdTrocas'];
+  const FATOR_AGUA_BASE = 0.21;
+  const FATOR_SF_BASE = 0.0000021;
+  let fatorAguaPadraoAtual = FATOR_AGUA_BASE;
+  let fatorSFPadraoAtual = FATOR_SF_BASE;
+
+  /* ---------- M\u00E1quina em uso (exibi\u00E7\u00E3o + edi\u00E7\u00E3o r\u00E1pida) ---------- */
+  function preencherSelectMaquinaCons(){
+    let lista = [];
+    try{ lista = JSON.parse(localStorage.getItem('pedro_maquinas')) || []; }catch(e){}
+    const sel = document.getElementById('cons_maquinaSelect');
+    const trabalho = lerTrabalhoAtual();
+    sel.innerHTML = '<option value="">\u2014 nenhuma selecionada \u2014</option>' +
+      lista.map(m=>'<option value="'+m.id+'">'+m.nome+(m.unidades!==undefined && m.unidades!==''?' \u2014 '+m.unidades+' un.':'')+'</option>').join('');
+    sel.value = trabalho.maquinaId || '';
+  }
+  preencherSelectMaquinaCons();
+
+  document.getElementById('cons_maquinaSelect').addEventListener('change', (e)=>{
+    let lista = [];
+    try{ lista = JSON.parse(localStorage.getItem('pedro_maquinas')) || []; }catch(err){}
+    const m = lista.find(x=>x.id === e.target.value);
+    const trabalho = lerTrabalhoAtual();
+    if(!m){
+      trabalho.maquinaId = null; trabalho.maquinaNome = '';
+    } else {
+      trabalho.maquinaId = m.id; trabalho.maquinaNome = m.nome;
+      if(m.unidades !== undefined && m.unidades !== ''){
+        setValue('cons_qtdUnidades', m.unidades);
+      }
+    }
+    localStorage.setItem('pedro_trabalho_atual', JSON.stringify(trabalho));
+    calcularConsumo();
+  });
+
+  const formatoSeg = document.getElementById('cons_formatoSeg');
+  formatoSeg.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      formatoSeg.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const mult = parseFloat(btn.dataset.mult);
+
+      fatorAguaPadraoAtual = FATOR_AGUA_BASE * mult;
+      const inpAgua = document.getElementById('cons_fatorAgua');
+      inpAgua.value = fatorAguaPadraoAtual.toFixed(4);
+      inpAgua.classList.remove('editado');
+      document.getElementById('cons_fatorAguaAviso').textContent = 'Valor padr\u00E3o de estudo';
+
+      fatorSFPadraoAtual = FATOR_SF_BASE * mult;
+      const inpSF = document.getElementById('cons_fatorSF');
+      inpSF.value = fatorSFPadraoAtual.toFixed(7);
+      inpSF.classList.remove('editado');
+      document.getElementById('cons_fatorSFAviso').textContent = 'Valor padr\u00E3o de estudo';
+
+      calcularConsumo();
+    });
+  });
+
+  function vigiarFator(inputId, avisoId, getPadrao, mensagem){
+    const input = document.getElementById(inputId);
+    const aviso = document.getElementById(avisoId);
+    input.addEventListener('input', ()=>{
+      const atual = parseFloat(input.value);
+      const padrao = getPadrao();
+      const alterado = isNaN(atual) || Math.abs(atual - padrao) > 1e-9;
+      const jaMarcado = input.classList.contains('editado');
+      if(alterado && !jaMarcado){
+        alert(mensagem);
+      }
+      input.classList.toggle('editado', alterado);
+      aviso.textContent = alterado ? 'Valor alterado manualmente' : 'Valor padr\u00E3o de estudo';
+      aviso.style.color = alterado ? 'var(--danger)' : '';
+    });
+  }
+  vigiarFator('cons_fatorAgua', 'cons_fatorAguaAviso', ()=>fatorAguaPadraoAtual,
+    'Voc\u00EA est\u00E1 alterando o fator \u00E1gua, que \u00E9 um valor padr\u00E3o de estudo.');
+  vigiarFator('cons_fatorSF', 'cons_fatorSFAviso', ()=>fatorSFPadraoAtual,
+    'Voc\u00EA est\u00E1 alterando o fator SF, que \u00E9 um valor padr\u00E3o de estudo.');
+
+  function num(id){ return parseFloat(document.getElementById(id).value) || 0; }
+
+  window.calcularConsumo = function(){
+    const fatorAgua = num('cons_fatorAgua'), fatorSF = num('cons_fatorSF');
+    const unidades = num('cons_qtdUnidades'), tiragem = num('cons_tiragem');
+    const dosagem = num('cons_dosagem'), capGeladeira = num('cons_capGeladeira');
+    const qtdTrocas = num('cons_qtdTrocas');
+
+    const litrosAguaTroca = capGeladeira * 2;
+    const litrosSFTroca = dosagem * litrosAguaTroca / 100;
+    const litrosAgua = (fatorAgua * unidades * tiragem) / 1000 + (litrosAguaTroca * qtdTrocas);
+    const kgSF = (fatorSF * dosagem) * unidades * tiragem + (litrosSFTroca * qtdTrocas);
+
+    document.getElementById('cons_valAgua').innerHTML = litrosAgua.toLocaleString('pt-BR',{maximumFractionDigits:1}) + '<br><small>litros</small>';
+    document.getElementById('cons_valSFtotal').innerHTML = kgSF.toLocaleString('pt-BR',{maximumFractionDigits:2}) + '<br><small>Kg</small>';
+    document.getElementById('cons_valAguaTroca').textContent = litrosAguaTroca.toLocaleString('pt-BR',{maximumFractionDigits:1}) + ' L';
+    document.getElementById('cons_valSFTroca').textContent = litrosSFTroca.toLocaleString('pt-BR',{maximumFractionDigits:2}) + ' Kg';
+  };
+  ids.forEach(id=> document.getElementById(id).addEventListener('input', calcularConsumo));
+  calcularConsumo();
+
+  window.coletarConsumo = function(){
+    const papel = document.getElementById('cons_papel').value;
+    const tiragem = document.getElementById('cons_tiragem').value;
+    if(!papel && (!tiragem || tiragem === '0' || tiragem === '')) return null;
+    const campos = {};
+    ids.forEach(id=> campos[id] = document.getElementById(id).value);
+    campos.litrosAgua = document.getElementById('cons_valAgua').textContent.trim();
+    campos.kgSF = document.getElementById('cons_valSFtotal').textContent.trim();
+    return campos;
+  };
+
+  document.getElementById('cons_salvarBtn').addEventListener('click', salvarAnaliseCompleta);
+
+  window.carregarConsumo = function(c){
+    ids.forEach(id=> setValue(id, c[id]));
+    calcularConsumo();
+  };
+
+  window.limparConsumo = function(){
+    setValue('cons_maquinaSelect', '');
+    ids.forEach(id=> document.getElementById(id).value = '');
+    formatoSeg.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+    fatorAguaPadraoAtual = FATOR_AGUA_BASE;
+    fatorSFPadraoAtual = FATOR_SF_BASE;
+    const inpAgua = document.getElementById('cons_fatorAgua');
+    const inpSF = document.getElementById('cons_fatorSF');
+    inpAgua.value = FATOR_AGUA_BASE.toFixed(4);
+    inpSF.value = FATOR_SF_BASE.toFixed(7);
+    inpAgua.classList.remove('editado');
+    inpSF.classList.remove('editado');
+    document.getElementById('cons_fatorAguaAviso').textContent = 'Valor padr\u00E3o de estudo';
+    document.getElementById('cons_fatorSFAviso').textContent = 'Valor padr\u00E3o de estudo';
+    calcularConsumo();
+  };
+
+  window.atualizarSelectMaquinaCons = preencherSelectMaquinaCons;
+})();
+
+/* =====================================================================
+   RELAT\u00D3RIO
+===================================================================== */
+(function(){
+  function linha(label, valor){
+    return '<div class="rel-row"><span>'+label+'</span><span>'+valor+'</span></div>';
+  }
+
+  function gerarRelatorio(){
+    let html = '';
+
+    // Dados do trabalho
+    if(typeof trabalhoAtualCompleto === 'function'){
+      const t = trabalhoAtualCompleto();
+      if(t.cliente || t.maquina || t.data || t.solucao || t.alcool || t.titulador){
+        html += '<div class="rel-section"><h3>\uD83D\uDDD2\uFE0F Dados do trabalho</h3>';
+        if(t.cliente) html += linha('Cliente', t.cliente);
+        if(t.maquina) html += linha('M\u00E1quina', t.maquina);
+        if(t.data) html += linha('Data', t.data);
+        if(t.solucao) html += linha('Solu\u00E7\u00E3o de fonte', t.solucao);
+        if(t.alcool) html += linha('\u00C1lcool', t.alcool);
+        if(t.titulador) html += linha('Titulador usado', t.titulador);
+        html += '</div>';
+      }
+    }
+
+    // IPA
+    const ipaLeitura = document.getElementById('ipa_leituraInput').value;
+    if(ipaLeitura){
+      html += '<div class="rel-section"><h3>\uD83D\uDCA7 Medi\u00E7\u00E3o IPA</h3>';
+      html += linha('Leitura informada', ipaLeitura);
+      html += linha('IPA real calculado', document.getElementById('ipa_resultValue').textContent);
+      html += linha('Compensa\u00E7\u00E3o', document.getElementById('ipa_compSub').textContent || '\u2014');
+      html += '</div>';
+    }
+
+    // Hardness
+    const dh = document.getElementById('hard_inputDH').value;
+    const ppm = document.getElementById('hard_inputPPM').value;
+    const ph = document.getElementById('hard_ph').value;
+    const alcalinidade = document.getElementById('hard_alcalinidade').value;
+    const fonteAgua = document.getElementById('hard_fonteAgua').value;
+    if(dh || ppm || ph || alcalinidade || fonteAgua){
+      html += '<div class="rel-section"><h3>\uD83E\uDDEA \u00C1gua limpa (fonte)</h3>';
+      if(dh || ppm){
+        html += linha('\u00B0dH', dh || '\u2014');
+        html += linha('ppm CaCO\u2083', ppm || '\u2014');
+        html += linha('mMol/L', document.getElementById('hard_valMmol').textContent);
+        html += linha('Condutividade estimada', document.getElementById('hard_valCond').textContent);
+        html += linha('Classifica\u00E7\u00E3o', document.getElementById('hard_resultClass').textContent);
+      }
+      if(ph) html += linha('pH', ph);
+      if(alcalinidade) html += linha('Alcalinidade (mg/L CaCO\u2083)', alcalinidade);
+      if(fonteAgua) html += linha('Fonte da \u00E1gua', fonteAgua);
+      html += '</div>';
+    }
+
+    // Titula\u00E7\u00E3o
+    const gotasPreenchidas = Array.from(document.querySelectorAll('.tit_gotasInput')).some(i=>i.value !== '');
+    const ensaioPreenchido = document.getElementById('tit_ensaioPct').value !== '' || document.getElementById('tit_ensaioGotas').value !== '';
+    if(gotasPreenchidas || ensaioPreenchido){
+      html += '<div class="rel-section"><h3>\u2697\uFE0F Titula\u00E7\u00E3o</h3>';
+      const solOpt = document.getElementById('tit_solucaoSelect');
+      const solTexto = solOpt.selectedIndex > 0 ? solOpt.options[solOpt.selectedIndex].textContent : '';
+      if(solTexto) html += linha('Solu\u00E7\u00E3o de fonte', solTexto);
+      html += linha('Ensaio (ref.)', ensaioTexto());
+      document.querySelectorAll('.tit_gotasInput').forEach(inp=>{
+        const i = inp.dataset.i;
+        if(inp.value !== ''){
+          const ph = document.querySelector('.tit_phInput[data-i="'+i+'"]').value;
+          html += linha('Amostra ' + (parseInt(i)+1) + ' (gotas / %' + (ph ? ' / pH' : '') + ')',
+            inp.value + ' / ' + document.getElementById('tit_pct'+i).textContent + (ph ? ' / ' + ph : ''));
+        }
+      });
+      const sfMedio = typeof calcularSFMedioTitulacao === 'function' ? calcularSFMedioTitulacao() : null;
+      if(sfMedio !== null) html += linha('SF (% m\u00E9dio)', sfMedio.toFixed(2) + '%');
+      const obs = document.getElementById('tit_obsTit').value;
+      if(obs) html += linha('Obs.', obs);
+      html += '</div>';
+    }
+
+    // Consumo
+    const consPapel = document.getElementById('cons_papel').value;
+    const tiragem = document.getElementById('cons_tiragem').value;
+    if(consPapel || (tiragem && tiragem !== '0')){
+      html += '<div class="rel-section"><h3>\uD83D\uDEB0 Consumo de \u00E1gua e SF</h3>';
+      html += linha('Papel', consPapel || '\u2014');
+      html += linha('Unidades (chapas)', document.getElementById('cons_qtdUnidades').value);
+      html += linha('Tiragem (folhas)', document.getElementById('cons_tiragem').value);
+      html += linha('Dosagem SF', document.getElementById('cons_dosagem').value + '%');
+      html += linha('\u00C1gua total (com trocas)', document.getElementById('cons_valAgua').textContent.replace('litros','L'));
+      html += linha('SF total (com trocas)', document.getElementById('cons_valSFtotal').textContent.replace('Kg','Kg'));
+      html += '</div>';
+    }
+
+    if(!html){
+      html = '<div class="rel-section"><div class="vazio" style="padding:10px 0;">Nenhum campo preenchido ainda nas ferramentas.</div></div>';
+    }
+    return html;
+  }
+
+  function ensaioTexto(){
+    return document.getElementById('tit_ensaioPct').value + '% / ' + document.getElementById('tit_ensaioGotas').value + ' gotas';
+  }
+
+  document.getElementById('rel_gerarBtn').addEventListener('click', ()=>{
+    document.getElementById('relatorioConteudo').innerHTML = gerarRelatorio();
+    document.getElementById('rel_dataGeracao').textContent =
+      'Gerado em ' + new Date().toLocaleString('pt-BR');
+
+    const nomeInput = document.getElementById('rel_nomeInput');
+    if(!nomeInput.value.trim()){
+      const t = typeof trabalhoAtualCompleto === 'function' ? trabalhoAtualCompleto() : {};
+      nomeInput.value = gerarNomePadrao(t.cliente, t.maquina, t.data);
+    }
+    document.getElementById('rel_nomeExibido').textContent = nomeInput.value.trim();
+    document.title = nomeInput.value.trim();
+
+    document.getElementById('relatorioPrintArea').style.display = 'block';
+    document.getElementById('rel_imprimirBtn').style.display = 'block';
+  });
+
+  document.getElementById('rel_nomeInput').addEventListener('input', (e)=>{
+    const nome = e.target.value.trim() || 'Relat\u00F3rio de An\u00E1lise \u00B7 Sala de M\u00E1quinas';
+    document.getElementById('rel_nomeExibido').textContent = nome;
+    document.title = nome;
+  });
+
+  document.getElementById('rel_imprimirBtn').addEventListener('click', ()=> window.print());
+})();
+
+/* =====================================================================
+   DADOS DO TRABALHO (clientes, m\u00E1quinas, solu\u00E7\u00F5es, \u00E1lcoois, tituladores)
+===================================================================== */
+(function(){
+  const K_CLIENTES = 'pedro_clientes';
+  const K_MAQUINAS = 'pedro_maquinas';
+  const K_TITULADORES = 'pedro_tituladores';
+  const K_SOLUCOES = 'pedro_solucoes_fonte';
+  const K_ALCOOIS = 'pedro_alcoois';
+  const K_TRABALHO = 'pedro_trabalho_atual';
+
+  function ler(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || def; }catch(e){ return def; } }
+  function gravar(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+  function novoId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function trabalhoAtual(){ return ler(K_TRABALHO, {}); }
+  function salvarTrabalho(obj){
+    gravar(K_TRABALHO, Object.assign(trabalhoAtual(), obj));
+    aplicarTrabalhoNasCalculadoras();
+  }
+  function aplicarTrabalhoNasCalculadoras(){
+    const t = trabalhoAtual();
+    if(t.maquinaId){
+      const m = ler(K_MAQUINAS, []).find(x=>x.id === t.maquinaId);
+      if(m && m.unidades !== undefined && m.unidades !== ''){
+        setValue('cons_qtdUnidades', m.unidades);
+        if(typeof calcularConsumo === 'function') calcularConsumo();
+      }
+    }
+  }
+
+  function tituladores(){ return ler(K_TITULADORES, []); }
+  function solucoes(){ return ler(K_SOLUCOES, []); }
+  function alcoois(){ return ler(K_ALCOOIS, []); }
+
+  function atualizarSelectsExternos(){
+    if(typeof atualizarSelectMaquinaCons === 'function') atualizarSelectMaquinaCons();
+    if(typeof atualizarSelectSolucaoTit === 'function') atualizarSelectSolucaoTit();
+  }
+
+  /* ---------- Clientes ---------- */
+  function renderClientes(){
+    const lista = ler(K_CLIENTES, []).slice().sort((a,b)=>a.nome.localeCompare(b.nome, 'pt-BR'));
+    const atualId = trabalhoAtual().clienteId;
+    document.getElementById('dados_clientesResumo').textContent = 'Clientes cadastrados (' + lista.length + ')';
+    const el = document.getElementById('dados_clientesLista');
+    if(lista.length===0){ el.innerHTML = '<div class="vazio" style="padding:14px 0;">Nenhum cliente cadastrado ainda.</div>'; return; }
+    el.innerHTML = lista.map(c=>`
+      <div class="reg-list-item">
+        <div class="info">
+          <div class="titulo">${c.nome} ${c.id===atualId?'<span class="fav-tag">EM USO</span>':''}</div>
+        </div>
+        <div class="acoes">
+          <button class="icon-btn usar-cliente" data-id="${c.id}" title="Usar neste trabalho">\u2713</button>
+          <button class="icon-btn edit-cliente" data-id="${c.id}" title="Editar">\u270E</button>
+          <button class="icon-btn del" data-id="${c.id}" title="Excluir">\uD83D\uDDD1</button>
+        </div>
+      </div>`).join('');
+    el.querySelectorAll('.usar-cliente').forEach(b=> b.addEventListener('click', ()=>{
+      const c = ler(K_CLIENTES, []).find(x=>x.id===b.dataset.id);
+      if(!c) return;
+      salvarTrabalho({clienteId: c.id, clienteNome: c.nome});
+      renderClientes();
+      mostrarToast();
+    }));
+    el.querySelectorAll('.edit-cliente').forEach(b=> b.addEventListener('click', ()=>{
+      const c = ler(K_CLIENTES, []).find(x=>x.id===b.dataset.id);
+      if(!c) return;
+      setValue('dados_clienteInput', c.nome);
+      document.getElementById('dados_clienteInput').focus();
+    }));
+    el.querySelectorAll('.del').forEach(b=> b.addEventListener('click', ()=>{
+      if(!confirm('Excluir este cliente?')) return;
+      gravar(K_CLIENTES, ler(K_CLIENTES,[]).filter(c=>c.id!==b.dataset.id));
+      renderClientes();
+    }));
+  }
+  document.getElementById('dados_salvarClienteBtn').addEventListener('click', ()=>{
+    const nome = document.getElementById('dados_clienteInput').value.trim();
+    if(!nome) return;
+    const lista = ler(K_CLIENTES, []);
+    let existente = lista.find(c=>c.nome.toLowerCase()===nome.toLowerCase());
+    if(!existente){ existente = {id: novoId(), nome}; lista.push(existente); }
+    else { existente.nome = nome; }
+    gravar(K_CLIENTES, lista);
+    salvarTrabalho({clienteId: existente.id, clienteNome: existente.nome});
+    document.getElementById('dados_clienteInput').value = '';
+    renderClientes();
+    mostrarToast();
+  });
+
+  /* ---------- M\u00E1quinas ---------- */
+  function renderMaquinas(){
+    const lista = ler(K_MAQUINAS, []).slice().sort((a,b)=>a.nome.localeCompare(b.nome, 'pt-BR'));
+    const atualId = trabalhoAtual().maquinaId;
+    document.getElementById('dados_maquinasResumo').textContent = 'M\u00E1quinas cadastradas (' + lista.length + ')';
+    const el = document.getElementById('dados_maquinasLista');
+    if(lista.length===0){ el.innerHTML = '<div class="vazio" style="padding:14px 0;">Nenhuma m\u00E1quina cadastrada ainda.</div>'; return; }
+    el.innerHTML = lista.map(m=>`
+      <div class="reg-list-item">
+        <div class="info">
+          <div class="titulo">${m.nome} ${m.id===atualId?'<span class="fav-tag">EM USO</span>':''}</div>
+          <div class="sub">${m.unidades!==undefined && m.unidades!=='' ? m.unidades+' unidades (chapas)' : 'Unidades n\u00E3o informadas'}</div>
+        </div>
+        <div class="acoes">
+          <button class="icon-btn usar-maquina" data-id="${m.id}" title="Usar neste trabalho">\u2713</button>
+          <button class="icon-btn edit-maquina" data-id="${m.id}" title="Editar">\u270E</button>
+          <button class="icon-btn del" data-id="${m.id}" title="Excluir">\uD83D\uDDD1</button>
+        </div>
+      </div>`).join('');
+    el.querySelectorAll('.usar-maquina').forEach(b=> b.addEventListener('click', ()=>{
+      const m = ler(K_MAQUINAS, []).find(x=>x.id===b.dataset.id);
+      if(!m) return;
+      salvarTrabalho({maquinaId: m.id, maquinaNome: m.nome});
+      atualizarSelectsExternos();
+      renderMaquinas();
+      mostrarToast();
+    }));
+    el.querySelectorAll('.edit-maquina').forEach(b=> b.addEventListener('click', ()=>{
+      const m = ler(K_MAQUINAS, []).find(x=>x.id===b.dataset.id);
+      if(!m) return;
+      setValue('dados_maquinaInput', m.nome);
+      setValue('dados_maquinaUnidadesInput', m.unidades);
+      document.getElementById('dados_maquinaInput').focus();
+    }));
+    el.querySelectorAll('.del').forEach(b=> b.addEventListener('click', ()=>{
+      if(!confirm('Excluir esta m\u00E1quina?')) return;
+      gravar(K_MAQUINAS, ler(K_MAQUINAS,[]).filter(m=>m.id!==b.dataset.id));
+      atualizarSelectsExternos();
+      renderMaquinas();
+    }));
+  }
+  document.getElementById('dados_salvarMaquinaBtn').addEventListener('click', ()=>{
+    const nome = document.getElementById('dados_maquinaInput').value.trim();
+    const unidades = document.getElementById('dados_maquinaUnidadesInput').value;
+    if(!nome) return;
+    const lista = ler(K_MAQUINAS, []);
+    let existente = lista.find(m=>m.nome.toLowerCase()===nome.toLowerCase());
+    if(!existente){
+      existente = {id: novoId(), nome, unidades};
+      lista.push(existente);
+    } else {
+      existente.nome = nome;
+      existente.unidades = unidades;
+    }
+    gravar(K_MAQUINAS, lista);
+    salvarTrabalho({maquinaId: existente.id, maquinaNome: existente.nome});
+    document.getElementById('dados_maquinaInput').value = '';
+    document.getElementById('dados_maquinaUnidadesInput').value = '';
+    atualizarSelectsExternos();
+    renderMaquinas();
+    mostrarToast();
+  });
+
+  /* ---------- Data do trabalho ---------- */
+  document.getElementById('dados_data').addEventListener('input', (e)=>{
+    salvarTrabalho({data: e.target.value});
+  });
+
+  /* ---------- Tituladores ---------- */
+  let editandoTituladorId = null;
+
+  function preencherSelectTituladores(){
+    const lista = tituladores();
+    const selDados = document.getElementById('dados_tituladorSelect');
+    const selSol = document.getElementById('sol_titulador');
+    [selDados, selSol].forEach(sel=>{
+      const atual = sel.value;
+      const placeholder = sel===selSol ? '\u2014 n\u00E3o informado \u2014' : '\u2014 nenhum selecionado \u2014';
+      sel.innerHTML = '<option value="">'+placeholder+'</option>' +
+        lista.map(t=>'<option value="'+t.id+'">'+t.marca+(t.serie?' \u2014 '+t.serie:'')+(t.favorito?' \u2B50':'')+'</option>').join('');
+      if(lista.some(t=>t.id===atual)) sel.value = atual;
+    });
+  }
+
+  function renderTituladoresModal(){
+    const lista = tituladores().slice().sort((a,b)=>(a.marca||'').localeCompare(b.marca||'', 'pt-BR'));
+    const el = document.getElementById('tituladoresLista');
+    if(lista.length===0){ el.innerHTML = '<div class="vazio" style="padding:16px 0;">Nenhum titulador cadastrado ainda.</div>'; return; }
+    el.innerHTML = lista.map(t=>`
+      <div class="reg-list-item">
+        <div class="info">
+          <div class="titulo">${t.marca||'(sem marca)'} ${t.favorito?'<span class="fav-tag">FAVORITO</span>':''}</div>
+          <div class="sub">${t.serie ? 'N\u00BA s\u00E9rie: '+t.serie : ''}${t.obs ? (t.serie?' \u00B7 ':'')+t.obs : ''}</div>
+        </div>
+        <div class="acoes">
+          <button class="icon-btn star ${t.favorito?'active':''}" data-id="${t.id}" title="Marcar como favorito">\u2605</button>
+          <button class="icon-btn edit-titulador" data-id="${t.id}" title="Editar">\u270E</button>
+          <button class="icon-btn del" data-id="${t.id}" title="Excluir">\uD83D\uDDD1</button>
+        </div>
+      </div>`).join('');
+    el.querySelectorAll('.star').forEach(b=> b.addEventListener('click', ()=>{
+      gravar(K_TITULADORES, tituladores().map(t=>({...t, favorito: t.id===b.dataset.id})));
+      renderTituladoresModal(); preencherSelectTituladores();
+    }));
+    el.querySelectorAll('.edit-titulador').forEach(b=> b.addEventListener('click', ()=>{
+      const t = tituladores().find(x=>x.id===b.dataset.id);
+      if(!t) return;
+      editandoTituladorId = t.id;
+      setValue('titu_marca', t.marca);
+      setValue('titu_serie', t.serie);
+      setValue('titu_obs', t.obs);
+      document.getElementById('titu_salvarBtn').textContent = 'Salvar altera\u00E7\u00F5es';
+      document.getElementById('titu_marca').focus();
+    }));
+    el.querySelectorAll('.del').forEach(b=> b.addEventListener('click', ()=>{
+      if(!confirm('Excluir este titulador?')) return;
+      let lista = tituladores().filter(t=>t.id!==b.dataset.id);
+      if(lista.length && !lista.some(t=>t.favorito)) lista[0].favorito = true;
+      gravar(K_TITULADORES, lista);
+      renderTituladoresModal(); preencherSelectTituladores();
+    }));
+  }
+
+  document.getElementById('dados_administrarTituladorBtn').addEventListener('click', ()=>{
+    renderTituladoresModal();
+    document.getElementById('tituladorModalOverlay').classList.add('active');
+  });
+  document.getElementById('fecharTituladorModalBtn').addEventListener('click', ()=>{
+    document.getElementById('tituladorModalOverlay').classList.remove('active');
+  });
+  document.getElementById('tituladorModalOverlay').addEventListener('click', (e)=>{
+    if(e.target.id==='tituladorModalOverlay') e.currentTarget.classList.remove('active');
+  });
+  document.getElementById('titu_salvarBtn').addEventListener('click', ()=>{
+    const marca = document.getElementById('titu_marca').value.trim();
+    if(!marca){ alert('Informe ao menos a marca do titulador.'); return; }
+    const lista = tituladores();
+    if(editandoTituladorId){
+      const t = lista.find(x=>x.id===editandoTituladorId);
+      if(t){
+        t.marca = marca;
+        t.serie = document.getElementById('titu_serie').value.trim();
+        t.obs = document.getElementById('titu_obs').value.trim();
+      }
+      editandoTituladorId = null;
+      document.getElementById('titu_salvarBtn').textContent = 'Adicionar titulador';
+    } else {
+      lista.push({
+        id: novoId(), marca,
+        serie: document.getElementById('titu_serie').value.trim(),
+        obs: document.getElementById('titu_obs').value.trim(),
+        favorito: lista.length === 0
+      });
+    }
+    gravar(K_TITULADORES, lista);
+    document.getElementById('titu_marca').value='';
+    document.getElementById('titu_serie').value='';
+    document.getElementById('titu_obs').value='';
+    renderTituladoresModal();
+    preencherSelectTituladores();
+    mostrarToast();
+  });
+  document.getElementById('dados_tituladorSelect').addEventListener('change', (e)=>{
+    const t = tituladores().find(x=>x.id===e.target.value);
+    salvarTrabalho({ tituladorId: e.target.value || null, tituladorNome: t ? (t.marca+(t.serie?' \u2014 '+t.serie:'')) : '' });
+  });
+
+  /* ---------- Solu\u00E7\u00F5es de fonte ---------- */
+  let editandoSolucaoId = null;
+
+  function preencherSelectSolucoes(){
+    const lista = solucoes();
+    const sel = document.getElementById('dados_solucaoSelect');
+    const atual = sel.value;
+    sel.innerHTML = '<option value="">\u2014 nenhuma selecionada \u2014</option>' +
+      lista.map(s=>'<option value="'+s.id+'">'+s.fabricante+' '+s.modelo+' \u2014 '+s.porcentagem+'% / '+s.gotas+' gotas</option>').join('');
+    if(lista.some(s=>s.id===atual)) sel.value = atual;
+  }
+  function renderSolucoesLista(){
+    const lista = solucoes().slice().sort((a,b)=>(a.fabricante+' '+a.modelo).localeCompare(b.fabricante+' '+b.modelo, 'pt-BR'));
+    document.getElementById('dados_solucoesResumo').textContent = 'Solu\u00E7\u00F5es cadastradas (' + lista.length + ')';
+    const el = document.getElementById('dados_solucoesLista');
+    if(lista.length===0){ el.innerHTML = '<div class="vazio" style="padding:14px 0;">Nenhuma solu\u00E7\u00E3o cadastrada ainda.</div>'; return; }
+    el.innerHTML = lista.map(s=>{
+      const tit = tituladores().find(t=>t.id===s.tituladorId);
+      return `<div class="reg-list-item">
+        <div class="info">
+          <div class="titulo">${s.fabricante} ${s.modelo}</div>
+          <div class="sub">${s.porcentagem}% / ${s.gotas} gotas${tit ? ' \u00B7 Titulador: '+tit.marca : ''}</div>
+        </div>
+        <div class="acoes">
+          <button class="icon-btn edit-solucao" data-id="${s.id}" title="Editar">\u270E</button>
+          <button class="icon-btn del" data-id="${s.id}" title="Excluir">\uD83D\uDDD1</button>
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.edit-solucao').forEach(b=> b.addEventListener('click', ()=>{
+      const s = solucoes().find(x=>x.id===b.dataset.id);
+      if(!s) return;
+      editandoSolucaoId = s.id;
+      setValue('sol_fabricante', s.fabricante);
+      setValue('sol_modelo', s.modelo);
+      setValue('sol_pct', s.porcentagem);
+      setValue('sol_gotas', s.gotas);
+      setValue('sol_titulador', s.tituladorId || '');
+      document.getElementById('sol_salvarBtn').textContent = 'Salvar altera\u00E7\u00F5es';
+      document.getElementById('dados_solucaoForm').classList.add('active');
+      document.getElementById('sol_fabricante').focus();
+    }));
+    el.querySelectorAll('.del').forEach(b=> b.addEventListener('click', ()=>{
+      if(!confirm('Excluir esta solu\u00E7\u00E3o de fonte?')) return;
+      gravar(K_SOLUCOES, solucoes().filter(s=>s.id!==b.dataset.id));
+      renderSolucoesLista(); preencherSelectSolucoes(); atualizarSelectsExternos();
+    }));
+  }
+  document.getElementById('dados_novaSolucaoBtn').addEventListener('click', ()=>{
+    document.getElementById('dados_solucaoForm').classList.toggle('active');
+  });
+  document.getElementById('sol_salvarBtn').addEventListener('click', ()=>{
+    const fabricante = document.getElementById('sol_fabricante').value.trim();
+    const modelo = document.getElementById('sol_modelo').value.trim();
+    const pct = document.getElementById('sol_pct').value;
+    const gotas = document.getElementById('sol_gotas').value;
+    if(!fabricante || pct==='' || gotas===''){ alert('Informe ao menos fabricante, % e gotas de refer\u00EAncia.'); return; }
+    const lista = solucoes();
+    const tituladorId = document.getElementById('sol_titulador').value || '';
+    if(editandoSolucaoId){
+      const s = lista.find(x=>x.id===editandoSolucaoId);
+      if(s){ s.fabricante=fabricante; s.modelo=modelo; s.porcentagem=pct; s.gotas=gotas; s.tituladorId=tituladorId; }
+      editandoSolucaoId = null;
+      document.getElementById('sol_salvarBtn').textContent = 'Cadastrar solu\u00E7\u00E3o';
+    } else {
+      lista.push({ id: novoId(), fabricante, modelo, porcentagem: pct, gotas, tituladorId });
+    }
+    gravar(K_SOLUCOES, lista);
+    ['sol_fabricante','sol_modelo','sol_pct','sol_gotas'].forEach(id=> document.getElementById(id).value='');
+    document.getElementById('sol_titulador').value='';
+    document.getElementById('dados_solucaoForm').classList.remove('active');
+    renderSolucoesLista(); preencherSelectSolucoes(); atualizarSelectsExternos();
+    mostrarToast();
+  });
+  document.getElementById('dados_solucaoSelect').addEventListener('change', (e)=>{
+    const s = solucoes().find(x=>x.id===e.target.value);
+    if(!s){ salvarTrabalho({solucaoId:null, solucaoNome:''}); return; }
+    salvarTrabalho({solucaoId: s.id, solucaoNome: s.fabricante+' '+s.modelo});
+    setValue('tit_ensaioPct', s.porcentagem);
+    setValue('tit_ensaioGotas', s.gotas);
+    if(typeof calcularTitulacao === 'function') calcularTitulacao();
+    atualizarSelectsExternos();
+    if(s.tituladorId){
+      document.getElementById('dados_tituladorSelect').value = s.tituladorId;
+      const t = tituladores().find(x=>x.id===s.tituladorId);
+      salvarTrabalho({ tituladorId: s.tituladorId, tituladorNome: t ? (t.marca+(t.serie?' \u2014 '+t.serie:'')) : '' });
+    }
+  });
+
+  /* ---------- \u00C1lcoois ---------- */
+  let editandoAlcoolId = null;
+
+  function preencherSelectAlcoois(){
+    const lista = alcoois();
+    const sel = document.getElementById('dados_alcoolSelect');
+    const atual = sel.value;
+    sel.innerHTML = '<option value="">\u2014 nenhum selecionado \u2014</option>' +
+      lista.map(a=>'<option value="'+a.id+'">'+a.fabricante+' '+a.modelo+'</option>').join('');
+    if(lista.some(a=>a.id===atual)) sel.value = atual;
+  }
+  function renderAlcooisLista(){
+    const lista = alcoois().slice().sort((a,b)=>(a.fabricante+' '+a.modelo).localeCompare(b.fabricante+' '+b.modelo, 'pt-BR'));
+    document.getElementById('dados_alcooisResumo').textContent = '\u00C1lcoois cadastrados (' + lista.length + ')';
+    const el = document.getElementById('dados_alcooisLista');
+    if(lista.length===0){ el.innerHTML = '<div class="vazio" style="padding:14px 0;">Nenhum \u00E1lcool cadastrado ainda.</div>'; return; }
+    el.innerHTML = lista.map(a=>`
+      <div class="reg-list-item">
+        <div class="info"><div class="titulo">${a.fabricante} ${a.modelo}</div></div>
+        <div class="acoes">
+          <button class="icon-btn edit-alcool" data-id="${a.id}" title="Editar">\u270E</button>
+          <button class="icon-btn del" data-id="${a.id}" title="Excluir">\uD83D\uDDD1</button>
+        </div>
+      </div>`).join('');
+    el.querySelectorAll('.edit-alcool').forEach(b=> b.addEventListener('click', ()=>{
+      const a = alcoois().find(x=>x.id===b.dataset.id);
+      if(!a) return;
+      editandoAlcoolId = a.id;
+      setValue('alc_fabricante', a.fabricante);
+      setValue('alc_modelo', a.modelo);
+      document.getElementById('alc_salvarBtn').textContent = 'Salvar altera\u00E7\u00F5es';
+      document.getElementById('dados_alcoolForm').classList.add('active');
+      document.getElementById('alc_fabricante').focus();
+    }));
+    el.querySelectorAll('.del').forEach(b=> b.addEventListener('click', ()=>{
+      if(!confirm('Excluir este \u00E1lcool?')) return;
+      gravar(K_ALCOOIS, alcoois().filter(a=>a.id!==b.dataset.id));
+      renderAlcooisLista(); preencherSelectAlcoois();
+    }));
+  }
+  document.getElementById('dados_novoAlcoolBtn').addEventListener('click', ()=>{
+    document.getElementById('dados_alcoolForm').classList.toggle('active');
+  });
+  document.getElementById('alc_salvarBtn').addEventListener('click', ()=>{
+    const fabricante = document.getElementById('alc_fabricante').value.trim();
+    const modelo = document.getElementById('alc_modelo').value.trim();
+    if(!fabricante){ alert('Informe ao menos o fabricante do \u00E1lcool.'); return; }
+    const lista = alcoois();
+    if(editandoAlcoolId){
+      const a = lista.find(x=>x.id===editandoAlcoolId);
+      if(a){ a.fabricante=fabricante; a.modelo=modelo; }
+      editandoAlcoolId = null;
+      document.getElementById('alc_salvarBtn').textContent = 'Cadastrar \u00E1lcool';
+    } else {
+      lista.push({ id: novoId(), fabricante, modelo });
+    }
+    gravar(K_ALCOOIS, lista);
+    document.getElementById('alc_fabricante').value='';
+    document.getElementById('alc_modelo').value='';
+    document.getElementById('dados_alcoolForm').classList.remove('active');
+    renderAlcooisLista(); preencherSelectAlcoois();
+    mostrarToast();
+  });
+  document.getElementById('dados_alcoolSelect').addEventListener('change', (e)=>{
+    const a = alcoois().find(x=>x.id===e.target.value);
+    salvarTrabalho({alcoolId: a?a.id:null, alcoolNome: a ? (a.fabricante+' '+a.modelo) : ''});
+  });
+
+  /* ---------- Render geral / exposi\u00E7\u00E3o para as outras telas ---------- */
+  window.renderDados = function(){
+    renderClientes();
+    renderMaquinas();
+    preencherSelectTituladores();
+    preencherSelectSolucoes();
+    preencherSelectAlcoois();
+    renderSolucoesLista();
+    renderAlcooisLista();
+
+    const t = trabalhoAtual();
+    setValue('dados_data', t.data);
+    if(!document.getElementById('dados_data').value){
+      document.getElementById('dados_data').valueAsDate = new Date();
+    }
+    document.getElementById('dados_solucaoSelect').value = t.solucaoId || '';
+    document.getElementById('dados_alcoolSelect').value = t.alcoolId || '';
+    document.getElementById('dados_tituladorSelect').value = t.tituladorId || '';
+  };
+
+  window.trabalhoAtualCompleto = function(){
+    const t = trabalhoAtual();
+    const tit = tituladores().find(x=>x.id===t.tituladorId);
+    return {
+      cliente: t.clienteNome || '',
+      maquina: t.maquinaNome || '',
+      data: t.data || '',
+      solucao: t.solucaoNome || '',
+      alcool: t.alcoolNome || '',
+      titulador: tit ? (tit.marca + (tit.serie ? ' \u2014 n\u00BA ' + tit.serie : '') + (tit.favorito ? ' (favorito)' : '')) : (t.tituladorNome || '')
+    };
+  };
+
+  aplicarTrabalhoNasCalculadoras();
+})();
+
+/* =====================================================================
+   AN\u00C1LISES (salvas) \u2014 com filtros por cliente, m\u00E1quina e solu\u00E7\u00E3o de fonte
+===================================================================== */
+const ICONES_TIPO = { ipa:'\uD83D\uDCA7', hardness:'\uD83E\uDDEA', titulacao:'\u2697\uFE0F', consumo:'\uD83D\uDEB0' };
+const NOMES_TIPO = { ipa:'Medi\u00E7\u00E3o IPA', hardness:'Hardness', titulacao:'Titula\u00E7\u00E3o', consumo:'Consumo' };
+const SUBTIPOS = ['ipa','hardness','titulacao','consumo'];
+
+function iconesParaItem(item){
+  if(item.tipo === 'completa'){
+    return SUBTIPOS.filter(t => item.campos && item.campos[t]).map(t => ICONES_TIPO[t]).join(' ');
+  }
+  return ICONES_TIPO[item.tipo] || '';
+}
+function nomeTipoParaItem(item){
+  if(item.tipo === 'completa'){
+    const nomes = SUBTIPOS.filter(t => item.campos && item.campos[t]).map(t => NOMES_TIPO[t]);
+    return nomes.join(' + ') || 'An\u00E1lise';
+  }
+  return NOMES_TIPO[item.
