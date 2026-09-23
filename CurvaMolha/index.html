@@ -202,12 +202,7 @@
                 </h3>
                 <button onclick="closeNewCurveModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-xs text-slate-400">O ID será gerado automaticamente pelo primeiro valor (3000 RPM).</p>
-            
-            <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Nome da Curva / Descrição</label>
-                <input type="text" id="newModalName" placeholder="Ex: Curva Especial Operador" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
-            </div>
+            <p class="text-xs text-slate-400">O ID e o nome serão gerados automaticamente com base no valor de 3000 RPM.</p>
 
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-2">Valores para os 6 Pontos (RPM)</label>
@@ -308,7 +303,7 @@
 
                 const saved = JSON.parse(localStorage.getItem(`molha_curves_${zone}`)) || [];
                 saved.forEach((item, idx) => {
-                    allCurves.push({ type: 'saved', index: idx, name: `⭐ [Salva] ${item.name}`, values: item.values });
+                    allCurves.push({ type: 'saved', index: idx, name: item.name, values: item.values });
                 });
 
                 // Ordenação crescente pelo primeiro valor numérico (ID automático)
@@ -511,13 +506,12 @@
             chartInstance.update();
         }
 
-        // Funções para Criar, Editar e Deletar Curvas
+        // Funções para Criar, Editar e Deletar Curvas (Nome automático baseado no primeiro valor)
         function openNewCurveModal(zone) {
             appState.activeZoneModal = zone;
             appState[zone].editingIndex = null;
             document.getElementById('modalZoneName').innerText = zone;
             document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-circle-plus text-blue-500"></i> Criar Nova Curva para <span id="modalZoneName">${zone}</span>`;
-            document.getElementById('newModalName').value = '';
             for(let i=0; i<6; i++) {
                 document.getElementById(`modalVal_${i}`).value = '';
             }
@@ -547,7 +541,6 @@
 
             document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Editar Curva Salva (${zone})`;
             document.getElementById('modalZoneName').innerText = zone;
-            document.getElementById('newModalName').value = curve.name;
             for(let i=0; i<6; i++) {
                 document.getElementById(`modalVal_${i}`).value = curve.values[i];
             }
@@ -584,11 +577,6 @@
 
         function saveCustomCurve() {
             const zone = appState.activeZoneModal;
-            const name = document.getElementById('newModalName').value.trim();
-            if(!name) {
-                alert('Por favor, informe um nome para a curva.');
-                return;
-            }
 
             let values = [];
             for(let i=0; i<6; i++) {
@@ -600,17 +588,20 @@
                 values.push(val);
             }
 
+            // Nome/ID gerado automaticamente pelo primeiro valor (3000 RPM)
+            const autoName = `Curva ID: ${values[0]}`;
+
             const storageKey = `molha_curves_${zone}`;
             const saved = JSON.parse(localStorage.getItem(storageKey)) || [];
 
             if(appState[zone].editingIndex !== null) {
-                // Atualiza existente
-                saved[appState[zone].editingIndex] = { name, values };
+                // Atualiza existente mantendo nome automático baseado no novo primeiro valor
+                saved[appState[zone].editingIndex] = { name: autoName, values };
                 alert('Curva atualizada com sucesso!');
             } else {
                 // Cria nova
-                saved.push({ name, values });
-                alert(`Nova curva ID: ${values[0]} salva com sucesso em ${zone}!`);
+                saved.push({ name: autoName, values });
+                alert(`Nova curva ${autoName} salva com sucesso em ${zone}!`);
             }
             
             localStorage.setItem(storageKey, JSON.stringify(saved));
@@ -625,7 +616,7 @@
                 Z1_saved: JSON.parse(localStorage.getItem('molha_curves_Z1')) || [],
                 Z2_saved: JSON.parse(localStorage.getItem('molha_curves_Z2')) || [],
                 appState: appState,
-                version: "2.2",
+                version: "2.3",
                 date: new Date().toISOString()
             };
 
