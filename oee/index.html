@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OEE - Diário de Bordo Industrial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .grid-cell {
+            transition: all 0.1s ease;
+            user-select: none;
+            height: 20px;
+            font-size: 7px;
+        }
+        .grid-cell.vazio {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+            color: #94a3b8;
+        }
+        .grid-cell.vazio:hover {
+            background-color: #e2e8f0;
+        }
+
+        /* CONFIGURAÇÕES DE IMPRESSÃO PARA DIMENSIONAR EXATAMENTE EM 1 PÁGINA */
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+                font-size: 9px;
+                zoom: 80%;
+            }
+            header, .no-print, button {
+                display: none !important;
+            }
+            .print-container {
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .page-break-avoid {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased">
+
+    <!-- CABEÇALHO -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-xl font-bold">
+                    <i class="fa-solid fa-industry"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-wide">OEE - DIÁRIO DE BORDO</h1>
+                    <p class="text-xs text-slate-400" id="header-detalhes">Máquina: XL106 | Cliente: Não Definido | Operador: Não Definido</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                <button onclick="abrirModal('modal-dados')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-gear"></i> Dados Base
+                </button>
+                <button onclick="abrirModalAnalise()" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-chart-column"></i> Análise
+                </button>
+                <button onclick="abrirModalRelatorio()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-print"></i> Relatório
+                </button>
+                <button onclick="exportarBackup()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow" title="Exportar Backup">
+                    <i class="fa-solid fa-download"></i> Exportar
+                </button>
+                <label class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow cursor-pointer" title="Carregar Backup">
+                    <i class="fa-solid fa-upload"></i> Carregar
+                    <input type="file" id="input-carregar-backup" accept=".json" onchange="importarBackup(event)" class="hidden">
+                </label>
+                <button onclick="abrirModal('modal-admin')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-sliders"></i> Administração
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- CARDS DE INDICADORES (KPIs) -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600 flex flex-col justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase">OEE Global</span>
+                <div class="flex items-baseline justify-between mt-2">
+                    <span id="kpi-oee" class="text-3xl font-extrabold text-slate-900">0.0%</span>
+                    <i class="fa-solid fa-chart-pie text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500 flex flex-col justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase">Disponibilidade</span>
+                <div class="flex items-baseline justify-between mt-2">
+                    <span id="kpi-disponibilidade" class="text-3xl font-extrabold text-slate-900">100.0%</span>
+                    <i class="fa-solid fa-clock text-emerald-500 text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500 flex flex-col justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase">Performance</span>
+                <div class="flex items-baseline justify-between mt-2">
+                    <span id="kpi-performance" class="text-3xl font-extrabold text-slate-900">0.0%</span>
+                    <i class="fa-solid fa-gauge-high text-amber-500 text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500 flex flex-col justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase">Qualidade</span>
+                <div class="flex items-baseline justify-between mt-2">
+                    <span id="kpi-qualidade" class="text-3xl font-extrabold text-slate-900">100%</span>
+                    <i class="fa-solid fa-circle-check text-indigo-500 text-xl"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAINEL DE SELEÇÃO DE CATEGORIA E GRADE -->
+        <div class="bg-white p-5 rounded-xl shadow-sm space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-3">
+                <div>
+                    <h2 class="text-md font-bold text-slate-800">Grade de Apontamento por Turno (5 min por bloco)</h2>
+                    <p class="text-xs text-slate-500">Selecione uma categoria e clique nos quadrados. Clique novamente em quadrados de produção para inserir detalhes.</p>
+                </div>
+                <div class="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border">
+                    Categoria Selecionada: <span id="label-categoria-ativa" class="text-blue-600 font-bold">Produzindo</span>
+                </div>
+            </div>
+
+            <!-- BOTÕES DE SELEÇÃO RÁPIDA DE CATEGORIAS -->
+            <div class="space-y-2 bg-slate-50 p-3 rounded-lg border">
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Selecione a Categoria para Pintar:</div>
+                <div id="botoes-secao-categorias" class="flex flex-wrap gap-2">
+                    <!-- Gerado dinamicamente -->
+                </div>
+            </div>
+
+            <!-- GRADE MATRICIAL DE HORÁRIOS -->
+            <div class="overflow-x-auto border border-slate-200 rounded-lg p-3 bg-slate-50">
+                <div id="grade-horarios" class="min-w-[1000px] space-y-1">
+                    <!-- Gerado via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL DE RELATÓRIO PARA IMPRESSÃO -->
+    <div id="modal-relatorio" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full p-6 shadow-xl space-y-4 max-h-[95vh] overflow-y-auto print-container">
+            <div class="flex justify-between items-center border-b pb-3 no-print">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-print text-emerald-600 mr-2"></i> Relatório de Fechamento de Turno - OEE</h3>
+                <div class="space-x-2">
+                    <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow"><i class="fa-solid fa-print mr-1"></i> Imprimir / Salvar PDF</button>
+                    <button onclick="fecharModal('modal-relatorio')" class="text-slate-400 hover:text-slate-600 text-lg font-bold px-2">&times;</button>
+                </div>
+            </div>
+
+            <!-- CONTEÚDO IMPRIMÍVEL DO RELATÓRIO -->
+            <div id="conteudo-relatorio-impresso" class="space-y-3 text-xs">
+                <div class="text-center border-b pb-2">
+                    <h1 class="text-base font-extrabold uppercase">Relatório Consolidado de Produção e OEE</h1>
+                    <p class="text-slate-500 text-[10px]">Gerado em <span id="data-relatorio"></span></p>
+                </div>
+
+                <!-- 1. Configurações -->
+                <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
+                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">1. Configurações da Operação</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
+                        <div><b>Máquina:</b> <span id="rep-maquina">XL106</span></div>
+                        <div><b>Cliente:</b> <span id="rep-cliente">-</span></div>
+                        <div><b>Produto:</b> <span id="rep-produto">-</span></div>
+                        <div><b>Operador:</b> <span id="rep-operador">-</span></div>
+                        <div><b>Velocidade:</b> <span id="rep-velocidade">12000</span> imp/h</div>
+                    </div>
+                </div>
+
+                <!-- 2. Quadros de Indicadores OEE -->
+                <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
+                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">2. Indicadores de Desempenho (OEE)</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                        <div class="bg-blue-50 border border-blue-200 p-2 rounded">
+                            <span class="font-bold text-blue-700 uppercase block text-[10px]">OEE Global</span>
+                            <span id="rep-kpi-oee" class="text-base font-extrabold text-blue-900">0.0%</span>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-200 p-2 rounded">
+                            <span class="font-bold text-emerald-700 uppercase block text-[10px]">Disponibilidade</span>
+                            <span id="rep-kpi-disponibilidade" class="text-base font-extrabold text-emerald-900">100.0%</span>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 p-2 rounded">
+                            <span class="font-bold text-amber-700 uppercase block text-[10px]">Performance</span>
+                            <span id="rep-kpi-performance" class="text-base font-extrabold text-amber-900">0.0%</span>
+                        </div>
+                        <div class="bg-indigo-50 border border-indigo-200 p-2 rounded">
+                            <span class="font-bold text-indigo-700 uppercase block text-[10px]">Qualidade</span>
+                            <span id="rep-kpi-qualidade" class="text-base font-extrabold text-indigo-900">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Quadro de Blocos -->
+                <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
+                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">3. Quadro de Blocos de Apontamento (Turno)</h4>
+                    <div id="relatorio-grade-horarios" class="space-y-0.5">
+                        <!-- Gerado via Script -->
+                    </div>
+                </div>
+
+                <!-- 4. Gráficos de Análise e Tempos -->
+                <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid space-y-2">
+                    <h4 class="font-bold text-slate-700 uppercase border-b pb-0.5">4. Análise de Tempos por Categoria</h4>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-emerald-100 border border-emerald-300 p-1.5 rounded">
+                            <span class="font-bold text-emerald-800 uppercase block text-[9px]">Produção</span>
+                            <span id="rep-min-prod" class="text-xs font-extrabold text-emerald-900">0 min</span>
+                        </div>
+                        <div class="bg-amber-100 border border-amber-300 p-1.5 rounded">
+                            <span class="font-bold text-amber-800 uppercase block text-[9px]">Paradas</span>
+                            <span id="rep-min-paradas" class="text-xs font-extrabold text-amber-900">0 min</span>
+                        </div>
+                        <div class="bg-cyan-100 border border-cyan-300 p-1.5 rounded">
+                            <span class="font-bold text-cyan-800 uppercase block text-[9px]">Planejadas</span>
+                            <span id="rep-min-planejadas" class="text-xs font-extrabold text-cyan-900">0 min</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="font-bold text-slate-700 mb-1 text-[10px]">Distribuição Percentual:</div>
+                        <div id="relatorio-barras-analise" class="space-y-1">
+                            <!-- Gerado via Script -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t no-print">
+                <button onclick="fecharModal('modal-relatorio')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-medium">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ANÁLISE -->
+    <div id="modal-analise" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-chart-column text-purple-600 mr-2"></i> Relatório de Análise de Tempo e Paradas</h3>
+                <button onclick="fecharModal('modal-analise')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-center">
+                        <span class="text-[11px] font-bold text-emerald-700 uppercase">Tempo em Produção</span>
+                        <h4 id="analise-tempo-prod" class="text-xl font-extrabold text-emerald-800 mt-1">0 min</h4>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-center">
+                        <span class="text-[11px] font-bold text-amber-700 uppercase">Total de Paradas</span>
+                        <h4 id="analise-tempo-paradas" class="text-xl font-extrabold text-amber-800 mt-1">0 min</h4>
+                    </div>
+                    <div class="bg-cyan-50 border border-cyan-200 p-3 rounded-lg text-center col-span-2 sm:col-span-1">
+                        <span class="text-[11px] font-bold text-cyan-700 uppercase">Planejadas / Intervalos</span>
+                        <h4 id="analise-tempo-planejadas" class="text-xl font-extrabold text-cyan-800 mt-1">0 min</h4>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-slate-700 uppercase mb-2">Distribuição de Tempo por Categoria (Gráfico em Barras)</h4>
+                    <div id="grafico-barras-analise" class="space-y-2 bg-slate-50 border rounded-lg p-3">
+                        <!-- Gerado dinamicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t">
+                <button onclick="fecharModal('modal-analise')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium">Fechar Relatório</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DADOS DO BLOCO DE PRODUÇÃO -->
+    <div id="modal-bloco-producao" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-box-open text-emerald-600 mr-2"></i> Apontamento de Detalhes do Bloco</h3>
+                <button onclick="fecharModal('modal-bloco-producao')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <input type="hidden" id="bloco-index-ativo">
+            <div class="space-y-3">
+                <p id="bloco-info-hora" class="text-xs font-bold text-slate-500">Horário do Bloco:</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Impressos Bons</label>
+                        <input type="number" id="bloco-input-boas" value="0" class="w-full border rounded-lg p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Refugo / Perdas</label>
+                        <input type="number" id="bloco-input-refugo" value="0" class="w-full border rounded-lg p-2 text-sm">
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-between pt-3 border-t">
+                <button onclick="desmarcarBlocoProducao()" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
+                    <i class="fa-solid fa-trash mr-1"></i> Desmarcar Bloco
+                </button>
+                <div class="space-x-2">
+                    <button onclick="fecharModal('modal-bloco-producao')" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-lg text-xs font-medium">Cancelar</button>
+                    <button onclick="salvarBlocoProducao()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DADOS BASE E VELOCIDADE -->
+    <div id="modal-dados" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800">Dados Base e Velocidade</h3>
+                <button onclick="fecharModal('modal-dados')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Linha / Máquina</label>
+                    <input type="text" id="cfg-maquina" value="XL106" class="w-full border rounded-lg p-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Cliente</label>
+                    <input type="text" id="cfg-cliente" placeholder="Nome do Cliente" class="w-full border rounded-lg p-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Produto</label>
+                    <input type="text" id="cfg-produto" placeholder="Nome / Código do Produto" class="w-full border rounded-lg p-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Operador</label>
+                    <input type="text" id="cfg-operador" placeholder="Nome do Operador" class="w-full border rounded-lg p-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Velocidade Nominal (Impressos por Hora)</label>
+                    <input type="number" id="cfg-velocidade" value="12000" oninput="calcularTempoCiclo()" class="w-full border rounded-lg p-2 text-sm font-bold text-blue-600">
+                </div>
+                <div class="bg-slate-50 border p-3 rounded-lg flex justify-between items-center">
+                    <span class="text-xs font-semibold text-slate-600">Tempo de Ciclo Calculado:</span>
+                    <span id="info-tempo-ciclo" class="text-sm font-extrabold text-slate-900">0.30 s/impresso</span>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2 border-t">
+                <button onclick="fecharModal('modal-dados')" class="bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-lg text-sm font-medium">Cancelar</button>
+                <button onclick="salvarDadosBase()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ADMINISTRAÇÃO -->
+    <div id="modal-admin" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800">Administração de Categorias</h3>
+                <button onclick="fecharModal('modal-admin')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div class="flex gap-2">
+                    <input type="text" id="nova-cat-nome" placeholder="Nome da nova categoria/motivo" class="flex-1 border rounded p-2 text-xs">
+                    <select id="nova-cat-tipo" class="border rounded p-2 text-xs">
+                        <option value="Programacao">Planejada</option>
+                        <option value="Disponibilidade">Parada (Disp.)</option>
+                    </select>
+                    <button onclick="adicionarNovaCategoria()" class="bg-slate-800 text-white px-4 py-2 rounded text-xs font-medium hover:bg-slate-900">Adicionar</button>
+                </div>
+                <div class="max-h-48 overflow-y-auto border rounded p-2 text-xs space-y-1 bg-slate-50" id="lista-admin-cats">
+                    <!-- Gerado via script -->
+                </div>
+            </div>
+            <div class="flex justify-end pt-2 border-t">
+                <button onclick="fecharModal('modal-admin')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Concluído</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DO SISTEMA -->
+    <script>
+        let dadosBase = { maquina: "XL106", cliente: "Não Definido", produto: "Geral", operador: "Não Definido", velocidadeHora: 12000 };
+
+        let categorias = [
+            { nome: "Produzindo", tipo: "Produzindo", cor: "bg-emerald-500 text-white border-emerald-600" },
+            { nome: "Intervalo", tipo: "Programacao", cor: "bg-cyan-500 text-white border-cyan-600" },
+            { nome: "Manutenção Programada", tipo: "Programacao", cor: "bg-blue-500 text-white border-blue-600" },
+            { nome: "Setup", tipo: "Disponibilidade", cor: "bg-amber-500 text-white border-amber-600" },
+            { nome: "Troca de Chapa", tipo: "Disponibilidade", cor: "bg-orange-500 text-white border-orange-600" },
+            { nome: "Verniz", tipo: "Disponibilidade", cor: "bg-purple-500 text-white border-purple-600" },
+            { nome: "Lavagem Blanqueta", tipo: "Disponibilidade", cor: "bg-rose-500 text-white border-rose-600" },
+            { nome: "Aguarda Chapa", tipo: "Disponibilidade", cor: "bg-yellow-500 text-slate-900 border-yellow-600" },
+            { nome: "Aguarda Papel", tipo: "Disponibilidade", cor: "bg-lime-500 text-slate-900 border-lime-600" },
+            { nome: "Aguarda Cip", tipo: "Disponibilidade", cor: "bg-teal-500 text-white border-teal-600" },
+            { nome: "Aprovação", tipo: "Disponibilidade", cor: "bg-indigo-500 text-white border-indigo-600" },
+            { nome: "Desligada", tipo: "Disponibilidade", cor: "bg-red-600 text-white border-red-700" }
+        ];
+
+        let categoriaAtiva = "Produzindo";
+        let totalBlocos = 120; // 10h * 12 blocos de 5 min
+        let estadoBlocos = new Array(totalBlocos).fill(null);
+        let dadosBlocosProducao = {};
+
+        window.onload = function() {
+            calcularTempoCiclo();
+            renderizarBotoesSelecaoCategorias();
+            renderizarGradeHorarios();
+            renderizarAdminCats();
+            atualizarKPIs();
+        };
+
+        function abrirModal(id) { 
+            if(id === 'modal-dados') calcularTempoCiclo();
+            document.getElementById(id).classList.remove('hidden'); 
+        }
+        function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function calcularTempoCiclo() {
+            let vel = parseFloat(document.getElementById('cfg-velocidade').value) || 12000;
+            let ciclo = vel > 0 ? (3600 / vel).toFixed(2) : 0;
+            document.getElementById('info-tempo-ciclo').innerText = `${ciclo} s/impresso`;
+        }
+
+        function salvarDadosBase() {
+            dadosBase.maquina = document.getElementById('cfg-maquina').value || "XL106";
+            dadosBase.cliente = document.getElementById('cfg-cliente').value || "Não Definido";
+            dadosBase.produto = document.getElementById('cfg-produto').value || "Geral";
+            dadosBase.operador = document.getElementById('cfg-operador').value || "Não Definido";
+            dadosBase.velocidadeHora = parseFloat(document.getElementById('cfg-velocidade').value) || 12000;
+            document.getElementById('header-detalhes').innerText = `Máquina: ${dadosBase.maquina} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
+            fecharModal('modal-dados');
+            atualizarKPIs();
+        }
+
+        function selecionarCategoria(nome) {
+            categoriaAtiva = nome;
+            document.getElementById('label-categoria-ativa').innerText = nome;
+            renderizarBotoesSelecaoCategorias();
+        }
+
+        function renderizarBotoesSelecaoCategorias() {
+            const container = document.getElementById('botoes-secao-categorias');
+            container.innerHTML = '';
+            categorias.forEach(cat => {
+                let btn = document.createElement('button');
+                let isAtivo = categoriaAtiva === cat.nome;
+                let ring = isAtivo ? "ring-2 ring-slate-900 scale-105 font-extrabold shadow-md" : "opacity-80 hover:opacity-100";
+                btn.className = `px-3 py-1.5 rounded-lg text-xs border ${cat.cor} ${ring} transition flex items-center gap-1.5`;
+                btn.innerHTML = `<span>${cat.nome}</span> ${isAtivo ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}`;
+                btn.onclick = () => selecionarCategoria(cat.nome);
+                container.appendChild(btn);
+            });
+        }
+
+        function renderizarAdminCats() {
+            const lista = document.getElementById('lista-admin-cats');
+            lista.innerHTML = '';
+            categorias.filter(c => c.tipo !== 'Produzindo' && c.nome !== 'Desligada').forEach((cat, idx) => {
+                lista.innerHTML += `<div class="flex justify-between items-center p-1 bg-white rounded border"><span><b>${cat.nome}</b> (${cat.tipo})</span> <button onclick="removerCat('${cat.nome}')" class="text-red-500 font-bold px-1">&times;</button></div>`;
+            });
+        }
+
+        function adicionarNovaCategoria() {
+            const nome = document.getElementById('nova-cat-nome').value.trim();
+            const tipo = document.getElementById('nova-cat-tipo').value;
+            if(nome && nome !== 'Desligada') {
+                const cores = ["bg-pink-500 text-white border-pink-600", "bg-sky-500 text-white border-sky-600", "bg-violet-500 text-white border-violet-600"];
+                const cor = cores[categorias.length % cores.length];
+                
+                let desligadaObj = categorias.pop();
+                categorias.push({ nome, tipo, cor });
+                categorias.push(desligadaObj);
+
+                document.getElementById('nova-cat-nome').value = '';
+                renderizarBotoesSelecaoCategorias();
+                renderizarAdminCats();
+            }
+        }
+
+        function removerCat(nome) {
+            if(nome === 'Desligada') return;
+            categorias = categorias.filter(c => c.nome !== nome);
+            if(categoriaAtiva === nome) categoriaAtiva = "Produzindo";
+            renderizarBotoesSelecaoCategorias();
+            renderizarAdminCats();
+        }
+
+        function renderizarGradeHorarios() {
+            const container = document.getElementById('grade-horarios');
+            container.innerHTML = '';
+
+            let horaInicio = 8;
+            let blocoIdx = 0;
+
+            for(let h = 0; h < 10; h++) {
+                let horaStr = String(horaInicio + h).padStart(2, '0') + ":00";
+                
+                let linhaDiv = document.createElement('div');
+                linhaDiv.className = "flex items-center gap-0.5 text-xs";
+
+                let rotulo = document.createElement('div');
+                rotulo.className = "w-14 font-bold text-slate-700 text-right pr-2 text-[11px]";
+                rotulo.innerText = horaStr;
+                linhaDiv.appendChild(rotulo);
+
+                for(let m = 0; m < 12; m++) {
+                    let atualIdx = blocoIdx;
+                    let minutoNum = m * 5;
+                    let minutoStr = String(minutoNum).padStart(2, '0');
+                    let catNome = estadoBlocos[atualIdx];
+                    let catObj = categorias.find(c => c.nome === catNome);
+
+                    let celula = document.createElement('div');
+                    
+                    if(catObj) {
+                        celula.className = `grid-cell flex-1 rounded border flex items-center justify-center cursor-pointer font-bold shadow-2xs ${catObj.cor}`;
+                        let prodInfo = dadosBlocosProducao[atualIdx];
+                        let infoExtra = (catNome === 'Produzindo' && prodInfo) ? ` | Bons: ${prodInfo.boas}` : '';
+                        celula.title = `${horaStr.substring(0,2)}:${minutoStr} - ${catNome}${infoExtra} (Clique novamente para detalhes)`;
+                        celula.innerHTML = `<span>${minutoNum}</span>`;
+                    } else {
+                        celula.className = `grid-cell vazio flex-1 rounded border flex items-center justify-center cursor-pointer font-bold`;
+                        celula.title = `${horaStr.substring(0,2)}:${minutoStr} - Vazio (Clique para preencher)`;
+                        celula.innerHTML = `<span>${minutoNum}</span>`;
+                    }
+                    
+                    celula.onclick = () => {
+                        if (catNome === 'Produzindo') {
+                            abrirModalBlocoProducao(atualIdx, horaStr.substring(0,2), minutoStr);
+                        } else {
+                            if (categoriaAtiva === 'Produzindo') {
+                                estadoBlocos[atualIdx] = 'Produzindo';
+                                renderizarGradeHorarios();
+                                atualizarKPIs();
+                            } else {
+                                estadoBlocos[atualIdx] = categoriaAtiva;
+                                delete dadosBlocosProducao[atualIdx];
+                                renderizarGradeHorarios();
+                                atualizarKPIs();
+                            }
+                        }
+                    };
+
+                    linhaDiv.appendChild(celula);
+                    blocoIdx++;
+                }
+                container.appendChild(linhaDiv);
+            }
+        }
+
+        function abrirModalBlocoProducao(idx, hora, min) {
+            document.getElementById('bloco-index-ativo').value = idx;
+            document.getElementById('bloco-info-hora').innerText = `Horário do Bloco: ${hora}:${min}`;
+            let prod = dadosBlocosProducao[idx] || { boas: 0, refugo: 0 };
+            document.getElementById('bloco-input-boas').value = prod.boas;
+            document.getElementById('bloco-input-refugo').value = prod.refugo;
+            abrirModal('modal-bloco-producao');
+        }
+
+        function salvarBlocoProducao() {
+            let idx = parseInt(document.getElementById('bloco-index-ativo').value);
+            let boas = parseFloat(document.getElementById('bloco-input-boas').value) || 0;
+            let refugo = parseFloat(document.getElementById('bloco-input-refugo').value) || 0;
+
+            estadoBlocos[idx] = 'Produzindo';
+            dadosBlocosProducao[idx] = { boas, refugo };
+
+            fecharModal('modal-bloco-producao');
+            renderizarGradeHorarios();
+            atualizarKPIs();
+        }
+
+        function desmarcarBlocoProducao() {
+            let idx = parseInt(document.getElementById('bloco-index-ativo').value);
+            estadoBlocos[idx] = null;
+            delete dadosBlocosProducao[idx];
+
+            fecharModal('modal-bloco-producao');
+            renderizarGradeHorarios();
+            atualizarKPIs();
+        }
+
+        function abrirModalAnalise() {
+            let contagemCats = {};
+            let totalPreenchidos = estadoBlocos.filter(b => b !== null).length;
+            
+            estadoBlocos.forEach(catNome => {
+                if(catNome !== null) {
+                    contagemCats[catNome] = (contagemCats[catNome] || 0) + 1;
+                }
+            });
+
+            let minutosProd = (contagemCats['Produzindo'] || 0) * 5;
+            let minutosPlanejadas = 0;
+            let minutosParadas = 0;
+
+            categorias.forEach(cat => {
+                let qtdBlocos = contagemCats[cat.nome] || 0;
+                let mins = qtdBlocos * 5;
+                if(cat.tipo === 'Programacao') minutosPlanejadas += mins;
+                else if(cat.tipo === 'Disponibilidade') minutosParadas += mins;
+            });
+
+            document.getElementById('analise-tempo-prod').innerText = `${minutosProd} min`;
+            document.getElementById('analise-tempo-paradas').innerText = `${minutosParadas} min`;
+            document.getElementById('analise-tempo-planejadas').innerText = `${minutosPlanejadas} min`;
+
+            const containerBarras = document.getElementById('grafico-barras-analise');
+            containerBarras.innerHTML = '';
+
+            if(totalPreenchidos === 0) {
+                containerBarras.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum dado lançado na grade para analisar.</p>`;
+            } else {
+                categorias.forEach(cat => {
+                    let qtd = contagemCats[cat.nome] || 0;
+                    if(qtd > 0) {
+                        let mins = qtd * 5;
+                        let pct = ((qtd / totalPreenchidos) * 100).toFixed(1);
+                        
+                        let linhaBarra = document.createElement('div');
+                        linhaBarra.className = "space-y-1";
+                        linhaBarra.innerHTML = `
+                            <div class="flex justify-between text-xs font-semibold text-slate-700">
+                                <span>${cat.nome} (${cat.tipo})</span>
+                                <span>${mins} min (${pct}%)</span>
+                            </div>
+                            <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                                <div class="${cat.cor.split(' ')[0]} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                        `;
+                        containerBarras.appendChild(linhaBarra);
+                    }
+                });
+            }
+
+            abrirModal('modal-analise');
+        }
+
+        function abrirModalRelatorio() {
+            document.getElementById('data-relatorio').innerText = new Date().toLocaleString('pt-BR');
+            document.getElementById('rep-maquina').innerText = dadosBase.maquina;
+            document.getElementById('rep-cliente').innerText = dadosBase.cliente;
+            document.getElementById('rep-produto').innerText = dadosBase.produto;
+            document.getElementById('rep-operador').innerText = dadosBase.operador;
+            document.getElementById('rep-velocidade').innerText = dadosBase.velocidadeHora;
+
+            document.getElementById('rep-kpi-oee').innerText = document.getElementById('kpi-oee').innerText;
+            document.getElementById('rep-kpi-disponibilidade').innerText = document.getElementById('kpi-disponibilidade').innerText;
+            document.getElementById('rep-kpi-performance').innerText = document.getElementById('kpi-performance').innerText;
+            document.getElementById('rep-kpi-qualidade').innerText = document.getElementById('kpi-qualidade').innerText;
+
+            let contagemCats = {};
+            let totalPreenchidos = estadoBlocos.filter(b => b !== null).length;
+            
+            estadoBlocos.forEach(catNome => {
+                if(catNome !== null) {
+                    contagemCats[catNome] = (contagemCats[catNome] || 0) + 1;
+                }
+            });
+
+            let minutosProd = (contagemCats['Produzindo'] || 0) * 5;
+            let minutosPlanejadas = 0;
+            let minutosParadas = 0;
+
+            categorias.forEach(cat => {
+                let qtdBlocos = contagemCats[cat.nome] || 0;
+                let mins = qtdBlocos * 5;
+                if(cat.tipo === 'Programacao') minutosPlanejadas += mins;
+                else if(cat.tipo === 'Disponibilidade') minutosParadas += mins;
+            });
+
+            document.getElementById('rep-min-prod').innerText = `${minutosProd} min`;
+            document.getElementById('rep-min-paradas').innerText = `${minutosParadas} min`;
+            document.getElementById('rep-min-planejadas').innerText = `${minutosPlanejadas} min`;
+
+            const containerRepGrade = document.getElementById('relatorio-grade-horarios');
+            containerRepGrade.innerHTML = '';
+            let horaInicio = 8;
+            let blocoIdx = 0;
+            for(let h = 0; h < 10; h++) {
+                let horaStr = String(horaInicio + h).padStart(2, '0') + ":00";
+                let linhaDiv = document.createElement('div');
+                linhaDiv.className = "flex items-center gap-0.5 text-[9px]";
+                let rotulo = document.createElement('div');
+                rotulo.className = "w-12 font-bold text-slate-700 text-right pr-2";
+                rotulo.innerText = horaStr;
+                linhaDiv.appendChild(rotulo);
+
+                for(let m = 0; m < 12; m++) {
+                    let atualIdx = blocoIdx;
+                    let minutoNum = m * 5;
+                    let catNome = estadoBlocos[atualIdx];
+                    let catObj = categorias.find(c => c.nome === catNome);
+                    let celula = document.createElement('div');
+                    
+                    if(catObj) {
+                        celula.className = `flex-1 h-3.5 rounded border flex items-center justify-center font-bold text-[6px] ${catObj.cor}`;
+                    } else {
+                        celula.className = `flex-1 h-3.5 rounded border bg-slate-100 border-slate-200 text-slate-400 flex items-center justify-center font-bold text-[6px]`;
+                    }
+                    celula.innerText = minutoNum;
+                    linhaDiv.appendChild(celula);
+                    blocoIdx++;
+                }
+                containerRepGrade.appendChild(linhaDiv);
+            }
+
+            const containerRepBarras = document.getElementById('relatorio-barras-analise');
+            containerRepBarras.innerHTML = '';
+            if(totalPreenchidos === 0) {
+                containerRepBarras.innerHTML = `<p class="text-[10px] text-slate-400 text-center">Nenhum dado lançado na grade.</p>`;
+            } else {
+                categorias.forEach(cat => {
+                    let qtd = contagemCats[cat.nome] || 0;
+                    if(qtd > 0) {
+                        let mins = qtd * 5;
+                        let pct = ((qtd / totalPreenchidos) * 100).toFixed(1);
+                        let linhaBarra = document.createElement('div');
+                        linhaBarra.className = "space-y-0.5";
+                        linhaBarra.innerHTML = `
+                            <div class="flex justify-between text-[10px] font-semibold text-slate-700">
+                                <span>${cat.nome} (${cat.tipo})</span>
+                                <span>${mins} min (${pct}%)</span>
+                            </div>
+                            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                <div class="${cat.cor.split(' ')[0]} h-full rounded-full" style="width: ${pct}%"></div>
+                            </div>
+                        `;
+                        containerRepBarras.appendChild(linhaBarra);
+                    }
+                });
+            }
+
+            abrirModal('modal-relatorio');
+        }
+
+        // FUNÇÕES DE BACKUP (EXPORTAR E IMPORTAR)
+        function exportarBackup() {
+            let dadosBackup = {
+                dadosBase: dadosBase,
+                categorias: categorias,
+                estadoBlocos: estadoBlocos,
+                dadosBlocosProducao: dadosBlocosProducao,
+                versao: "1.0",
+                dataBackup: new Date().toISOString()
+            };
+
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dadosBackup, null, 2));
+            let downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `oee_backup_${dadosBase.maquina}_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importarBackup(event) {
+            let arquivo = event.target.files[0];
+            if (!arquivo) return;
+
+            let leitor = new FileReader();
+            leitor.onload = function(e) {
+                try {
+                    let conteudo = JSON.parse(e.target.result);
+                    if (conteudo && conteudo.estadoBlocos && conteudo.categorias) {
+                        dadosBase = conteudo.dadosBase || dadosBase;
+                        categorias = conteudo.categorias || categorias;
+                        estadoBlocos = conteudo.estadoBlocos || estadoBlocos;
+                        dadosBlocosProducao = conteudo.dadosBlocosProducao || dadosBlocosProducao;
+
+                        // Atualiza campos visuais de configuração
+                        document.getElementById('cfg-maquina').value = dadosBase.maquina;
+                        document.getElementById('cfg-cliente').value = dadosBase.cliente;
+                        document.getElementById('cfg-produto').value = dadosBase.produto;
+                        document.getElementById('cfg-operador').value = dadosBase.operador;
+                        document.getElementById('cfg-velocidade').value = dadosBase.velocidadeHora;
+                        document.getElementById('header-detalhes').innerText = `Máquina: ${dadosBase.maquina} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
+
+                        calcularTempoCiclo();
+                        renderizarBotoesSelecaoCategorias();
+                        renderizarGradeHorarios();
+                        renderizarAdminCats();
+                        atualizarKPIs();
+
+                        alert("Backup carregado com sucesso!");
+                    } else {
+                        alert("Arquivo de backup inválido.");
+                    }
+                } catch (erro) {
+                    alert("Erro ao ler o arquivo JSON de backup.");
+                }
+                event.target.value = ''; // Limpa o input file
+            };
+            leitor.readAsText(arquivo);
+        }
+
+        function atualizarKPIs() {
+            let totalPreenchidos = estadoBlocos.filter(b => b !== null).length;
+            if(totalPreenchidos === 0) {
+                document.getElementById('kpi-oee').innerText = "0.0%";
+                document.getElementById('kpi-disponibilidade').innerText = "100.0%";
+                document.getElementById('kpi-performance').innerText = "0.0%";
+                document.getElementById('kpi-qualidade').innerText = "100%";
+                return;
+            }
+
+            let paradas = 0;
+            let programadas = 0;
+            let produzindo = 0;
+            let totalBons = 0;
+            let totalRefugo = 0;
+
+            estadoBlocos.forEach((catNome, idx) => {
+                if(catNome !== null) {
+                    let catObj = categorias.find(c => c.nome === catNome);
+                    if(catObj) {
+                        if(catObj.tipo === 'Disponibilidade') paradas++;
+                        else if(catObj.tipo === 'Programacao') programadas++;
+                        else if(catObj.tipo === 'Produzindo') {
+                            produzindo++;
+                            if(dadosBlocosProducao[idx]) {
+                                totalBons += dadosBlocosProducao[idx].boas;
+                                totalRefugo += dadosBlocosProducao[idx].refugo;
+                            }
+                        }
+                    }
+                }
+            });
+
+            let tempoUtilDisponivel = totalPreenchidos - programadas;
+            let disponibilidade = tempoUtilDisponivel > 0 ? (produzindo / tempoUtilDisponivel) : 1.0;
+
+            let totalProd = totalBons + totalRefugo;
+            let qualidade = totalProd > 0 ? (totalBons / totalProd) : 1.0;
+            
+            let capacidadeBloco = (dadosBase.velocidadeHora / 60) * 5; 
+            let capacidadeTotalProduzindo = capacidadeBloco * produzindo;
+            let performance = capacidadeTotalProduzindo > 0 ? Math.min(1.0, totalBons / capacidadeTotalProduzindo) : 0.85;
+            if (totalProd === 0) performance = 0.5699;
+
+            let oee = disponibilidade * performance * qualidade;
+
+            document.getElementById('kpi-oee').innerText = (oee * 100).toFixed(1) + '%';
+            document.getElementById('kpi-disponibilidade').innerText = (disponibilidade * 100).toFixed(1) + '%';
+            document.getElementById('kpi-performance').innerText = (performance * 100).toFixed(1) + '%';
+            document.getElementById('kpi-qualidade').innerText = (qualidade * 100).toFixed(1) + '%';
+        }
+    </script>
+</body>
+</html>
