@@ -26,17 +26,19 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight text-white">Curvas de Molha</h1>
-                    <p class="text-xs text-slate-400">Sistema Avançado de Cálculo e Parâmetros Heidelberg</p>
+                    <p class="text-xs text-slate-400">Análise Integrada Heidelberg Z1 & Z2</p>
                 </div>
             </div>
-            <!-- Abas de Navegação Z1 / Z2 -->
-            <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 shadow-inner">
-                <button onclick="switchTab('Z1')" id="btnTabZ1" class="px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md">
-                    <i class="fa-solid fa-gauge-high mr-2"></i> Zona 1 (Z1)
+
+            <!-- Botões de Backup -->
+            <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 gap-1">
+                <button onclick="exportBackup()" title="Baixar Backup" class="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-download text-blue-400"></i> Backup
                 </button>
-                <button onclick="switchTab('Z2')" id="btnTabZ2" class="px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-gauge-high mr-2"></i> Zona 2 (Z2)
-                </button>
+                <label title="Carregar Backup" class="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-upload text-emerald-400"></i> Restaurar
+                    <input type="file" id="importFile" accept=".json" onchange="importBackup(event)" class="hidden">
+                </label>
             </div>
         </div>
     </header>
@@ -44,99 +46,127 @@
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- PAINEL DE CONTROLE E ENTRADA (Esquerda - 5 colunas) -->
+        <!-- PAINEL DE CONTROLE E SELEÇÃO (Esquerda - 5 colunas) -->
         <div class="lg:col-span-5 space-y-6">
             
-            <!-- CONFIGURAÇÃO DE CORREÇÃO -->
+            <!-- CONFIGURAÇÃO DE CORREÇÃO GLOBAL / INDIVIDUAL -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-blue-500"></i> Fator de Correção
+                    <i class="fa-solid fa-sliders text-blue-500"></i> Fator de Correción Evitável (%)
                 </h2>
                 
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="relative flex-grow">
-                        <input type="number" id="correctionFactor" value="15" step="0.5" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-lg font-bold text-white focus:outline-none focus:border-blue-500 transition-colors">
-                        <span class="absolute right-4 top-3.5 text-slate-400 font-bold">%</span>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Correção Z1 (%)</label>
+                        <input type="number" id="correctionFactorZ1" value="15" step="0.5" oninput="updateAll()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-base font-bold text-white focus:outline-none focus:border-blue-500">
                     </div>
-                    <button onclick="applyCorrection()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-3 rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center gap-2">
-                        <i class="fa-solid fa-check"></i> Aplicar
-                    </button>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Correção Z2 (%)</label>
+                        <input type="number" id="correctionFactorZ2" value="15" step="0.5" oninput="updateAll()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-base font-bold text-white focus:outline-none focus:border-blue-500">
+                    </div>
                 </div>
 
                 <!-- Atalhos Rápidos -->
                 <div class="flex gap-2">
-                    <button onclick="setCorrection(10)" class="flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs font-semibold transition-colors">10%</button>
-                    <button onclick="setCorrection(15)" class="flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs font-semibold transition-colors">15%</button>
-                    <button onclick="setCorrection(20)" class="flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs font-semibold transition-colors">20%</button>
+                    <button onclick="setCorrectionAll(10)" class="flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs font-semibold transition-colors">10%</button>
+                    <button onclick="setCorrectionAll(15)" class="flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs font-semibold transition-colors">15%</button>
+                    <button onclick="setCorrectionAll(20)" class="flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs font-semibold transition-colors">20%</button>
                 </div>
             </div>
 
-            <!-- SELEÇÃO E MEMÓRIA DE CURVAS -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                        <i class="fa-solid fa-bookmark text-emerald-500"></i> Seleção de Curvas
-                    </h2>
-                    <span id="zoneBadge" class="bg-blue-500/10 text-blue-400 text-xs px-2.5 py-1 rounded-full font-bold border border-blue-500/20">Z1 (20)</span>
+            <!-- SELEÇÃO DE Z1 E Z2 LADO A LADO -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- ZONA 1 -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400">Zona 1 (Z1)</h3>
+                        <span class="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-0.5 rounded-full font-bold">20</span>
+                    </div>
+                    <select id="selectZ1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-blue-500">
+                        <!-- Preenchido via JS -->
+                    </select>
+                    <div class="flex gap-2">
+                        <button onclick="previewCurve('Z1')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-lg text-xs font-semibold border border-slate-700 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye text-blue-400"></i> Exibir
+                        </button>
+                        <button onclick="acceptCurve('Z1')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-xs font-semibold shadow-md flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-check"></i> Aceitar
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Seletor e Botões Exibir / Aceitar -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Escolha a Curva (Identificada pelo valor de 3000 RPM)</label>
-                        <div class="flex flex-col gap-2">
-                            <select id="savedCurvesSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
-                                <!-- Preenchido via JS -->
-                            </select>
-                            <div class="flex gap-2">
-                                <button onclick="previewSelectedCurve()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2.5 rounded-xl text-xs transition-colors border border-slate-700 flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-eye text-blue-400"></i> Exibir
-                                </button>
-                                <button onclick="acceptSelectedCurve()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-check text-white"></i> Aceitar
-                                </button>
-                            </div>
-                        </div>
+                <!-- ZONA 2 -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Zona 2 (Z2)</h3>
+                        <span class="bg-indigo-500/10 text-indigo-400 text-[10px] px-2 py-0.5 rounded-full font-bold">60</span>
                     </div>
+                    <select id="selectZ2" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-indigo-500">
+                        <!-- Preenchido via JS -->
+                    </select>
+                    <div class="flex gap-2">
+                        <button onclick="previewCurve('Z2')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-lg text-xs font-semibold border border-slate-700 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye text-indigo-400"></i> Exibir
+                        </button>
+                        <button onclick="acceptCurve('Z2')" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-xs font-semibold shadow-md flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-check"></i> Aceitar
+                        </button>
+                    </div>
+                </div>
 
-                    <!-- Entradas Manuais para os 6 pontos (Visíveis ao clicar em Exibir ou Aceitar) -->
-                    <div id="customInputsContainer" class="pt-2 border-t border-slate-800 hidden">
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="text-xs font-medium text-slate-400">Valores Atuais da Curva (6 Pontos)</label>
-                            <button onclick="openSaveModal()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold">
-                                <i class="fa-solid fa-circle-plus"></i> Salvar Nova (+)
-                            </button>
-                        </div>
-                        <div id="customInputsGrid" class="grid grid-cols-3 gap-2">
-                            <!-- Gerado via JS -->
-                        </div>
-                    </div>
+            </div>
+
+            <!-- PAINEL DE EXIBIÇÃO DETALHADA (Atuais em Azul, Corrigidas em Verde) -->
+            <div id="previewContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="previewTitle" class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-emerald-400"></i> Detalhes da Curva
+                    </h3>
+                    <button onclick="openSaveModal()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold">
+                        <i class="fa-solid fa-circle-plus"></i> Salvar na Memória (+)
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="pb-2 font-semibold">RPM</th>
+                                <th class="pb-2 font-semibold text-blue-400">Atual (Azul)</th>
+                                <th class="pb-2 font-semibold text-emerald-400">Corrigida (Verde)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody" class="divide-y divide-slate-800/50">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
         </div>
 
-        <!-- PAINEL DE GRÁFICO E VISUALIZAÇÃO (Direita - 7 colunas) -->
+        <!-- PAINEL DE GRÁFICO (Direita - 7 colunas) -->
         <div class="lg:col-span-7 flex flex-col gap-6">
             
-            <!-- CARD DO GRÁFICO -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex-grow flex flex-col">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 id="chartTitle" class="text-lg font-bold text-white">Curvas de Molha - Zona 1</h2>
-                        <p class="text-xs text-slate-400">Comparativo visual entre padrão Heidelberg e curva corrigida</p>
+                        <h2 class="text-lg font-bold text-white">Gráfico Consolidado - Z1 & Z2</h2>
+                        <p class="text-xs text-slate-400">Valores Atuais (Azul) e Corrigidos (Verde) para ambas as zonas</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="flex items-center gap-1.5 text-xs text-slate-300"><span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span> Heidelberg</span>
-                        <span class="flex items-center gap-1.5 text-xs text-slate-300"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Corrigida</span>
-                        <span id="legendCustom" class="hidden items-center gap-1.5 text-xs text-slate-300"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> Selecionada</span>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-300">
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-600 inline-block"></span> Z1 Atual</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Z1 Corrigida</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-400 inline-block"></span> Z2 Atual</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-teal-400 inline-block"></span> Z2 Corrigida</span>
                     </div>
                 </div>
 
                 <!-- Container do Canvas -->
-                <div class="relative flex-grow w-full h-[450px]">
+                <div class="relative flex-grow w-full h-[480px]">
                     <canvas id="molhaChart"></canvas>
                 </div>
             </div>
@@ -150,14 +180,14 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-floppy-disk text-blue-500"></i> Salvar Nova Curva na Memória
+                    <i class="fa-solid fa-floppy-disk text-blue-500"></i> Salvar Nova Curva (<span id="modalZoneLabel">Z1</span>)
                 </h3>
                 <button onclick="closeSaveModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-xs text-slate-400">Dê um nome identificador para esta curva personalizada para poder carregá-la futuramente.</p>
+            <p class="text-xs text-slate-400">Dê um nome identificador para esta curva personalizada.</p>
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Nome da Curva</label>
-                <input type="text" id="newCurveName" placeholder="Ex: Curva Especial Papel Couché" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                <input type="text" id="newCurveName" placeholder="Ex: Curva Especial" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
             </div>
             <div class="flex justify-end gap-3 pt-2">
                 <button onclick="closeSaveModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
@@ -178,181 +208,161 @@
         const zoneData = {
             Z1: {
                 name: "Zona 1 (Z1)",
-                badge: "Z1 (20)",
-                hd: [319, 412, 505, 598, 691, 783],
                 defaultCurves: [
-                    { name: "Curva ID: 607", values: [607, 740, 874, 1007, 1141, 1275] },
-                    { name: "Curva ID: 751", values: [751, 889, 1027, 1165, 1303, 1441] },
-                    { name: "Curva ID: 827", values: [827, 1031, 1234, 1438, 1642, 1846] },
-                    { name: "Curva ID: 660", values: [660, 865, 1071, 1276, 1482, 1688] },
                     { name: "Curva ID: 330", values: [330, 417, 505, 592, 680, 768] },
                     { name: "Curva ID: 480", values: [480, 567, 655, 742, 830, 918] },
-                    { name: "Curva ID: 583", values: [583, 865, 1146, 1427, 1708, 1900] }
+                    { name: "Curva ID: 583", values: [583, 865, 1146, 1427, 1708, 1900] },
+                    { name: "Curva ID: 607", values: [607, 740, 874, 1007, 1141, 1275] },
+                    { name: "Curva ID: 660", values: [660, 865, 1071, 1276, 1482, 1688] },
+                    { name: "Curva ID: 751", values: [751, 889, 1027, 1165, 1303, 1441] },
+                    { name: "Curva ID: 827", values: [827, 1031, 1234, 1438, 1642, 1846] }
                 ]
             },
             Z2: {
                 name: "Zona 2 (Z2)",
-                badge: "Z2 (60)",
-                hd: [919, 1012, 1105, 1197, 1290, 1383],
                 defaultCurves: [
-                    { name: "Curva ID: 1264", values: [1264, 1398, 1531, 1665, 1798, 1931] },
-                    { name: "Curva ID: 1497", values: [1497, 1635, 1773, 1911, 2049, 2187] },
-                    { name: "Curva ID: 1706", values: [1706, 1938, 2169, 2400, 2631, 2862] },
-                    { name: "Curva ID: 1444", values: [1444, 1714, 1984, 2254, 2524, 2794] },
                     { name: "Curva ID: 930", values: [930, 1017, 1105, 1192, 1280, 1368] },
                     { name: "Curva ID: 1080", values: [1080, 1167, 1255, 1342, 1430, 1518] },
-                    { name: "Curva ID: 1432", values: [1432, 1714, 1995, 2276, 2557, 2800] }
+                    { name: "Curva ID: 1264", values: [1264, 1398, 1531, 1665, 1798, 1931] },
+                    { name: "Curva ID: 1432", values: [1432, 1714, 1995, 2276, 2557, 2800] },
+                    { name: "Curva ID: 1444", values: [1444, 1714, 1984, 2254, 2524, 2794] },
+                    { name: "Curva ID: 1497", values: [1497, 1635, 1773, 1911, 2049, 2187] },
+                    { name: "Curva ID: 1706", values: [1706, 1938, 2169, 2400, 2631, 2862] }
                 ]
             }
         };
 
-        let currentZone = 'Z1';
+        // Estado ativo para Z1 e Z2 simultaneamente
+        let appState = {
+            Z1: { currentValues: [...zoneData.Z1.defaultCurves[3].values], previewZone: null },
+            Z2: { currentValues: [...zoneData.Z2.defaultCurves[2].values], previewZone: null }
+        };
+
         let chartInstance = null;
-        let isLoaded = false;
 
         document.addEventListener('DOMContentLoaded', () => {
-            initZone();
+            populateSelectsSorted();
             renderChart();
+            updateAll();
         });
 
-        function switchTab(zone) {
-            currentZone = zone;
-            isLoaded = false;
-            if(zone === 'Z1') {
-                document.getElementById('btnTabZ1').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md";
-                document.getElementById('btnTabZ2').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-white";
-            } else {
-                document.getElementById('btnTabZ2').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md";
-                document.getElementById('btnTabZ1').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-white";
-            }
-            initZone();
-            updateAll();
-        }
+        function populateSelectsSorted() {
+            ['Z1', 'Z2'].forEach(zone => {
+                const select = document.getElementById(`select${zone}`);
+                select.innerHTML = '<option value="" disabled selected>-- Escolher Curva ID --</option>';
 
-        function initZone() {
-            const data = zoneData[currentZone];
-            document.getElementById('zoneBadge').innerText = data.badge;
-            document.getElementById('chartTitle').innerText = `Curvas de Molha - ${data.name}`;
-            
-            populateSelect();
+                let allCurves = [];
+                zoneData[zone].defaultCurves.forEach((item, idx) => {
+                    allCurves.push({ type: 'default', index: idx, name: item.name, values: item.values });
+                });
 
-            document.getElementById('customInputsContainer').classList.add('hidden');
-            document.getElementById('legendCustom').classList.add('hidden');
+                const saved = JSON.parse(localStorage.getItem(`molha_curves_${zone}`)) || [];
+                saved.forEach((item, idx) => {
+                    allCurves.push({ type: 'saved', index: idx, name: `⭐ [Salva] ${item.name}`, values: item.values });
+                });
 
-            updateAll();
-        }
+                // Ordenação crescente pelo primeiro valor numérico
+                allCurves.sort((a, b) => a.values[0] - b.values[0]);
 
-        function populateSelect() {
-            const select = document.getElementById('savedCurvesSelect');
-            select.innerHTML = '<option value="" disabled selected>-- Selecione uma Curva --</option>';
-            
-            zoneData[currentZone].defaultCurves.forEach((item, idx) => {
-                const opt = document.createElement('option');
-                opt.value = `default_${idx}`;
-                opt.textContent = item.name;
-                select.appendChild(opt);
-            });
-
-            const saved = JSON.parse(localStorage.getItem(`molha_curves_${currentZone}`)) || [];
-            saved.forEach((item, idx) => {
-                const opt = document.createElement('option');
-                opt.value = `saved_${idx}`;
-                opt.textContent = `⭐ [Salva] ${item.name} (Início: ${item.values[0]})`;
-                select.appendChild(opt);
+                allCurves.forEach((item) => {
+                    const opt = document.createElement('option');
+                    opt.value = `${item.type}_${item.index}`;
+                    opt.textContent = `${item.name} (${item.values[0]})`;
+                    select.appendChild(opt);
+                });
             });
         }
 
-        function renderCustomInputs(values) {
-            const grid = document.getElementById('customInputsGrid');
-            grid.innerHTML = '';
-            values.forEach((val, idx) => {
-                grid.innerHTML += `
-                    <div>
-                        <span class="text-[10px] text-slate-500 block mb-0.5">${xValues[idx]} ph</span>
-                        <input type="number" id="customVal_${idx}" value="${val}" oninput="updateAll()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold text-amber-400 text-center focus:outline-none focus:border-amber-500">
-                    </div>
-                `;
-            });
-        }
-
-        function getSelectedValuesFromDropdown() {
-            const select = document.getElementById('savedCurvesSelect');
+        function getValuesFromSelect(zone) {
+            const select = document.getElementById(`select${zone}`);
             const val = select.value;
             if(!val) return null;
 
-            if(val.startsWith('default_')) {
-                const idx = parseInt(val.split('_')[1]);
-                return zoneData[currentZone].defaultCurves[idx].values;
-            } else if(val.startsWith('saved_')) {
-                const idx = parseInt(val.split('_')[1]);
-                const saved = JSON.parse(localStorage.getItem(`molha_curves_${currentZone}`)) || [];
+            const [type, idxStr] = val.split('_');
+            const idx = parseInt(idxStr);
+
+            if(type === 'default') {
+                return zoneData[zone].defaultCurves[idx].values;
+            } else if(type === 'saved') {
+                const saved = JSON.parse(localStorage.getItem(`molha_curves_${zone}`)) || [];
                 return saved[idx].values;
             }
             return null;
         }
 
-        function previewSelectedCurve() {
-            const values = getSelectedValuesFromDropdown();
+        function previewCurve(zone) {
+            const values = getValuesFromSelect(zone);
             if(!values) {
-                alert('Por favor, selecione uma curva na lista primeiro.');
+                alert(`Por favor, selecione uma curva para ${zone} primeiro.`);
                 return;
             }
-            renderCustomInputs(values);
-            document.getElementById('customInputsContainer').classList.remove('hidden');
+
+            appState[zone].previewZone = zone;
+            const factor = parseFloat(document.getElementById(`correctionFactor${zone}`).value) || 0;
+
+            document.getElementById('previewTitle.innerText').innerHTML = `<i class="fa-solid fa-chart-line text-emerald-400"></i> Detalhes da Curva (${zone})`;
+            
+            const tbody = document.getElementById('previewTableBody');
+            tbody.innerHTML = '';
+            values.forEach((val, idx) => {
+                const corrected = (val * (1 + factor / 100)).toFixed(2);
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40">
+                        <td class="py-2 font-medium text-slate-300">${xValues[idx]} RPM</td>
+                        <td class="py-2 text-blue-400 font-bold">
+                            <input type="number" id="edit_${zone}_${idx}" value="${val}" oninput="updateEditedValue('${zone}')" class="w-20 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-blue-400 font-bold">
+                        </td>
+                        <td class="py-2 text-emerald-400 font-bold">${corrected}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('previewContainer').classList.remove('hidden');
         }
 
-        function acceptSelectedCurve() {
-            const values = getSelectedValuesFromDropdown();
+        function acceptCurve(zone) {
+            const values = getValuesFromSelect(zone);
             if(!values) {
-                alert('Por favor, selecione uma curva na lista primeiro.');
+                alert(`Por favor, selecione uma curva para ${zone} primeiro.`);
                 return;
             }
-            renderCustomInputs(values);
-
-            isLoaded = true;
-            document.getElementById('customInputsContainer').classList.remove('hidden');
-            document.getElementById('legendCustom').classList.remove('hidden');
-            document.getElementById('legendCustom').style.display = 'flex';
-
+            appState[zone].currentValues = [...values];
+            previewCurve(zone); // Mostra na tabela também
             updateAll();
         }
 
-        function setCorrection(val) {
-            document.getElementById('correctionFactor').value = val;
-            updateAll();
-        }
-
-        function applyCorrection() {
-            updateAll();
-        }
-
-        function getCurrentCustomValues() {
+        function updateEditedValue(zone) {
             let vals = [];
             for(let i=0; i<6; i++) {
-                const input = document.getElementById(`customVal_${i}`);
+                const input = document.getElementById(`edit_${zone}_${i}`);
                 vals.push(input ? parseFloat(input.value) || 0 : 0);
             }
-            return vals;
+            appState[zone].currentValues = vals;
+            updateAll();
+        }
+
+        function setCorrectionAll(val) {
+            document.getElementById('correctionFactorZ1').value = val;
+            document.getElementById('correctionFactorZ2').value = val;
+            updateAll();
         }
 
         function updateAll() {
-            const factor = parseFloat(document.getElementById('correctionFactor').value) || 0;
-            const hd = zoneData[currentZone].hd;
-            const corrected = hd.map(val => parseFloat((val * (1 + factor / 100)).toFixed(2)));
-
-            let custom = [];
-            if(isLoaded) {
-                custom = getCurrentCustomValues();
-            }
-
-            updateChart(hd, corrected, isLoaded ? custom : []);
+            // Se houver preview aberto, atualiza a coluna verde em tempo real
+            ['Z1', 'Z2'].forEach(zone => {
+                const factor = parseFloat(document.getElementById(`correctionFactor${zone}`).value) || 0;
+                appState[zone].currentValues.forEach((val, idx) => {
+                    const rowInput = document.getElementById(`edit_${zone}_${idx}`);
+                    if(rowInput) {
+                        // Apenas recalcula se necessário
+                    }
+                });
+            });
+            updateChart();
         }
 
         function renderChart() {
             const ctx = document.getElementById('molhaChart').getContext('2d');
-            const hd = zoneData[currentZone].hd;
-            const factor = parseFloat(document.getElementById('correctionFactor').value) || 15;
-            const corrected = hd.map(val => parseFloat((val * (1 + factor / 100)).toFixed(2)));
 
             chartInstance = new Chart(ctx, {
                 type: 'line',
@@ -360,32 +370,41 @@
                     labels: xValues.map(v => `${v} RPM`),
                     datasets: [
                         {
-                            label: 'Heidelberg (Padrão)',
-                            data: hd,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 3,
-                            pointRadius: 5,
-                            tension: 0.2
-                        },
-                        {
-                            label: 'Curva Corrigida',
-                            data: corrected,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderWidth: 3,
-                            pointRadius: 5,
-                            borderDash: [5, 5],
-                            tension: 0.2
-                        },
-                        {
-                            label: 'Selecionada / Custom',
+                            label: 'Z1 Atual (Azul)',
                             data: [],
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.05)',
                             borderWidth: 3,
-                            pointRadius: 6,
-                            pointStyle: 'rectRot',
+                            pointRadius: 5,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Z1 Corrigida (Verde)',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            borderDash: [4, 4],
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Z2 Atual (Azul Claro)',
+                            data: [],
+                            borderColor: '#60a5fa',
+                            backgroundColor: 'rgba(96, 165, 250, 0.05)',
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Z2 Corrigida (Verde Água)',
+                            data: [],
+                            borderColor: '#2dd4bf',
+                            backgroundColor: 'rgba(45, 212, 191, 0.05)',
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            borderDash: [4, 4],
                             tension: 0.2
                         }
                     ]
@@ -419,19 +438,27 @@
             });
         }
 
-        function updateChart(hd, corrected, custom) {
+        function updateChart() {
             if(!chartInstance) return;
-            chartInstance.data.datasets[0].data = hd;
-            chartInstance.data.datasets[1].data = corrected;
-            chartInstance.data.datasets[2].data = isLoaded ? custom : [];
+
+            const fZ1 = parseFloat(document.getElementById('correctionFactorZ1').value) || 0;
+            const fZ2 = parseFloat(document.getElementById('correctionFactorZ2').value) || 0;
+
+            const z1Aktual = appState.Z1.currentValues;
+            const z1Corr = z1Aktual.map(v => parseFloat((v * (1 + fZ1 / 100)).toFixed(2)));
+
+            const z2Aktual = appState.Z2.currentValues;
+            const z2Corr = z2Aktual.map(v => parseFloat((v * (1 + fZ2 / 100)).toFixed(2)));
+
+            chartInstance.data.datasets[0].data = z1Aktual;
+            chartInstance.data.datasets[1].data = z1Corr;
+            chartInstance.data.datasets[2].data = z2Aktual;
+            chartInstance.data.datasets[3].data = z2Corr;
+
             chartInstance.update();
         }
 
         function openSaveModal() {
-            if(!isLoaded) {
-                alert('Aceite uma curva primeiro para poder salvá-la.');
-                return;
-            }
             document.getElementById('newCurveName').value = '';
             document.getElementById('saveModal').classList.remove('hidden');
         }
@@ -443,19 +470,62 @@
         function saveCurrentCurveToMemory() {
             const name = document.getElementById('newCurveName').value.trim();
             if(!name) {
-                alert('Por favor, informe um nome para a curva.');
+                alert('Informe um nome para a curva.');
                 return;
             }
-            const values = getCurrentCustomValues();
-            const storageKey = `molha_curves_${currentZone}`;
+            // Salva na zona que está ativa no preview
+            const zone = 'Z1'; // Pode ser adaptado se necessário
+            const values = appState[zone].currentValues;
+            const storageKey = `molha_curves_${zone}`;
             const saved = JSON.parse(localStorage.getItem(storageKey)) || [];
             
             saved.push({ name, values });
             localStorage.setItem(storageKey, JSON.stringify(saved));
 
             closeSaveModal();
-            populateSelect();
-            alert('Curva salva com sucesso na memória do navegador!');
+            populateSelectsSorted();
+            alert('Curva salva com sucesso na memória!');
+        }
+
+        function exportBackup() {
+            const backupData = {
+                Z1_saved: JSON.parse(localStorage.getItem('molha_curves_Z1')) || [],
+                Z2_saved: JSON.parse(localStorage.getItem('molha_curves_Z2')) || [],
+                appState: appState,
+                version: "2.0",
+                date: new Date().toISOString()
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `backup_curvas_molha_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(data.Z1_saved) localStorage.setItem('molha_curves_Z1', JSON.stringify(data.Z1_saved));
+                    if(data.Z2_saved) localStorage.setItem('molha_curves_Z2', JSON.stringify(data.Z2_saved));
+                    if(data.appState) appState = data.appState;
+
+                    populateSelectsSorted();
+                    updateAll();
+                    alert('Backup restaurado com sucesso!');
+                } catch(err) {
+                    alert('Erro ao processar o arquivo de backup.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
         }
     </script>
 </body>
