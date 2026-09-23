@@ -49,55 +49,55 @@
 <body class="bg-slate-100 text-slate-800 font-sans antialiased">
 
     <!-- CABEÇALHO -->
-    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 space-y-3">
+    <header class="bg-slate-900 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 space-y-2.5">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-blue-600 p-2 rounded-lg text-xl font-bold">
+                <div class="flex items-center space-x-2.5">
+                    <div class="bg-blue-600 p-1.5 rounded-lg text-base font-bold">
                         <i class="fa-solid fa-industry"></i>
                     </div>
                     <div>
-                        <h1 class="text-xl font-extrabold tracking-wide">OEE - DIÁRIO DE BORDO</h1>
-                        <p class="text-xs text-slate-400" id="header-detalhes">Máquina: Não Definido | Cliente: Não Definido | Operador: Não Definido</p>
+                        <h1 class="text-sm font-extrabold tracking-wide">OEE - DIÁRIO DE BORDO</h1>
+                        <p class="text-[10px] text-slate-400" id="header-detalhes">Máquina: Não Definido | Cliente: Não Definido | Operador: Não Definido</p>
                     </div>
                 </div>
             </div>
 
-            <!-- BOTÕES DO CABEÇALHO RETANGULARES EM LINHAS DE EXATAMENTE 3 POR LINHA -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
-                <button onclick="clicarNovoTurno()" class="w-full h-11 bg-sky-600 hover:bg-sky-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
-                    <i class="fa-solid fa-file-circle-plus text-sm"></i> Novo
+            <!-- BOTÕES DO CABEÇALHO EM 3 COLUNAS EXATAS -->
+            <div class="grid grid-cols-3 gap-1.5 pt-1">
+                <button onclick="clicarNovoTurno()" class="w-full h-8 bg-sky-600 hover:bg-sky-700 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate">
+                    <i class="fa-solid fa-file-circle-plus text-[10px]"></i> Novo
                 </button>
-                <button onclick="abrirModal('modal-dados')" class="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
-                    <i class="fa-solid fa-gear text-sm"></i> Dados Base
+                <button onclick="abrirModal('modal-dados')" class="w-full h-8 bg-blue-600 hover:bg-blue-700 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate">
+                    <i class="fa-solid fa-gear text-[10px]"></i> Dados Base
                 </button>
-                <button onclick="salvarTurnoAtual()" class="w-full h-11 bg-emerald-700 hover:bg-emerald-800 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide" title="Salvar Turno no Histórico">
-                    <i class="fa-solid fa-floppy-disk text-sm"></i> Salvar
+                <button onclick="salvarTurnoAtual()" class="w-full h-8 bg-emerald-700 hover:bg-emerald-800 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate" title="Salvar Turno no Histórico">
+                    <i class="fa-solid fa-floppy-disk text-[10px]"></i> Salvar
                 </button>
-                <button onclick="abrirModalHistorico()" class="w-full h-11 bg-amber-700 hover:bg-amber-800 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
-                    <i class="fa-solid fa-box-archive text-sm"></i> Histórico (<span id="contador-historico">0</span>)
+                <button onclick="abrirModalHistorico()" class="w-full h-8 bg-amber-700 hover:bg-amber-800 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate">
+                    <i class="fa-solid fa-box-archive text-[10px]"></i> Histórico (<span id="contador-historico">0</span>)
                 </button>
-                <button onclick="abrirModal('modal-calculadora')" class="w-full h-11 bg-indigo-700 hover:bg-indigo-800 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
-                    <i class="fa-solid fa-calculator text-sm"></i> Calculadora
+                <button onclick="abrirModal('modal-calculadora')" class="w-full h-8 bg-indigo-700 hover:bg-indigo-800 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate">
+                    <i class="fa-solid fa-calculator text-[10px]"></i> Calc.
                 </button>
-                <button onclick="abrirModalNotasGerais()" class="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
-                    <i class="fa-solid fa-note-sticky text-sm"></i> Notas (<span id="contador-notas">0</span>)
+                <button onclick="abrirModalNotasGerais()" class="w-full h-8 bg-indigo-600 hover:bg-indigo-700 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate">
+                    <i class="fa-solid fa-note-sticky text-[10px]"></i> Notas (<span id="contador-notas">0</span>)
                 </button>
-                <button onclick="abrirModalAnalise()" class="w-full h-11 bg-purple-600 hover:bg-purple-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
-                    <i class="fa-solid fa-chart-column text-sm"></i> Análise
+                <button onclick="abrirModalAnalise()" class="w-full h-8 bg-purple-600 hover:bg-purple-700 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate">
+                    <i class="fa-solid fa-chart-column text-[10px]"></i> Análise
                 </button>
-                <button onclick="abrirModalRelatorio()" class="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
-                    <i class="fa-solid fa-print text-sm"></i> Relatório
+                <button onclick="abrirModalRelatorio()" class="w-full h-8 bg-emerald-600 hover:bg-emerald-700 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate">
+                    <i class="fa-solid fa-print text-[10px]"></i> Relatório
                 </button>
-                <button onclick="exportarBackup()" class="w-full h-11 bg-amber-600 hover:bg-amber-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide" title="Exportar Backup">
-                    <i class="fa-solid fa-download text-sm"></i> Exportar
+                <button onclick="exportarBackup()" class="w-full h-8 bg-amber-600 hover:bg-amber-700 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate" title="Exportar Backup">
+                    <i class="fa-solid fa-download text-[10px]"></i> Exportar
                 </button>
-                <label class="w-full h-11 bg-cyan-600 hover:bg-cyan-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow cursor-pointer text-center uppercase tracking-wide" title="Carregar Backup">
-                    <i class="fa-solid fa-upload text-sm"></i> Carregar
+                <label class="w-full h-8 bg-cyan-600 hover:bg-cyan-700 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow cursor-pointer text-center truncate" title="Carregar Backup">
+                    <i class="fa-solid fa-upload text-[10px]"></i> Carregar
                     <input type="file" id="input-carregar-backup" accept=".json" onchange="importarBackup(event)" class="hidden">
                 </label>
-                <button onclick="abrirModal('modal-admin')" class="w-full h-11 bg-slate-700 hover:bg-slate-600 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
-                    <i class="fa-solid fa-sliders text-sm"></i> Administração
+                <button onclick="abrirModal('modal-admin')" class="w-full h-8 bg-slate-700 hover:bg-slate-600 text-white px-2 rounded text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow truncate">
+                    <i class="fa-solid fa-sliders text-[10px]"></i> Admin
                 </button>
             </div>
         </div>
@@ -173,14 +173,14 @@
                 </div>
             </div>
 
-            <!-- BOTÕES DE SELEÇÃO RÁPIDA SEPARADOS POR SUAS ORIGENS (EM GRADES DE 3 COLUNAS) -->
+            <!-- BOTÕES DE SELEÇÃO RÁPIDA EM EXATAMENTE 3 COLUNAS POR LINHA (COMPACTOS E ORGANIZADOS) -->
             <div class="space-y-4 bg-slate-50 p-4 rounded-lg border">
                 <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b pb-1">Selecione a Categoria para Pintar (Separadas por Origem):</div>
                 
                 <!-- GRUPO 1: PRODUÇÃO -->
                 <div class="space-y-1.5">
                     <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block"><i class="fa-solid fa-industry mr-1"></i> Produção</span>
-                    <div id="botoes-grupo-produzindo" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    <div id="botoes-grupo-produzindo" class="grid grid-cols-3 gap-1.5">
                         <!-- Gerado via JS -->
                     </div>
                 </div>
@@ -188,7 +188,7 @@
                 <!-- GRUPO 2: DISPONIBILIDADE (PARADAS) -->
                 <div class="space-y-1.5 pt-2 border-t">
                     <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider block"><i class="fa-solid fa-wrench mr-1"></i> Disponibilidade / Paradas</span>
-                    <div id="botoes-grupo-disponibilidade" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    <div id="botoes-grupo-disponibilidade" class="grid grid-cols-3 gap-1.5">
                         <!-- Gerado via JS -->
                     </div>
                 </div>
@@ -196,7 +196,7 @@
                 <!-- GRUPO 3: PROGRAMADA / PLANEJADA -->
                 <div class="space-y-1.5 pt-2 border-t">
                     <span class="text-[11px] font-bold text-cyan-700 uppercase tracking-wider block"><i class="fa-solid fa-calendar-check mr-1"></i> Programada / Planejada</span>
-                    <div id="botoes-grupo-programacao" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    <div id="botoes-grupo-programacao" class="grid grid-cols-3 gap-1.5">
                         <!-- Gerado via JS -->
                     </div>
                 </div>
@@ -1155,8 +1155,9 @@
                 let btn = document.createElement('button');
                 let isAtivo = categoriaAtiva === cat.nome;
                 let ring = isAtivo ? "ring-2 ring-slate-900 scale-105 font-extrabold shadow-md" : "opacity-80 hover:opacity-100";
-                btn.className = `w-full h-11 px-3 rounded-lg text-xs border ${cat.cor} ${ring} transition flex items-center justify-between gap-1.5 uppercase tracking-wide font-bold`;
-                btn.innerHTML = `<span class="truncate">${cat.nome}</span> ${isAtivo ? '<i class="fa-solid fa-check text-xs"></i>' : ''}`;
+                // Altura fixa h-8 (mesmo padrão do cabeçalho) e fonte compacta text-[11px]
+                btn.className = `w-full h-8 px-2 rounded text-[11px] border ${cat.cor} ${ring} transition flex items-center justify-between gap-1 uppercase tracking-wide font-semibold truncate`;
+                btn.innerHTML = `<span class="truncate">${cat.nome}</span> ${isAtivo ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}`;
                 btn.onclick = () => selecionarCategoria(cat.nome);
 
                 if (cat.tipo === "Produzindo") {
@@ -1834,7 +1835,7 @@
                 notasBlocos: notasBlocos,
                 historicoTurnos: historicoTurnos,
                 contadoresGeraisSalvos: contadoresGeraisSalvos,
-                versao: "2.9",
+                versao: "3.1",
                 dataBackup: new Date().toISOString()
             };
 
