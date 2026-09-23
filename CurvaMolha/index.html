@@ -49,11 +49,11 @@
         <!-- PAINEL DE CONTROLE E SELEÇÃO (Esquerda - 5 colunas) -->
         <div class="lg:col-span-5 space-y-6">
             
-            <!-- CONFIGURAÇÃO DE CORREÇÃO GLOBAL / INDIVIDUAL -->
+            <!-- CONFIGURAÇÃO DE CORREÇÃO -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-blue-500"></i> Fator de Correción Evitável (%)
+                    <i class="fa-solid fa-sliders text-blue-500"></i> Fator de Correção Evitável (%)
                 </h2>
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
@@ -81,9 +81,11 @@
                 <!-- ZONA 1 -->
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                    <div class="flex justify-between items-center mb-3">
+                    <div class="flex justify-between items-center mb-2">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400">Zona 1 (Z1)</h3>
-                        <span class="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-0.5 rounded-full font-bold">20</span>
+                        <button onclick="openNewCurveModal('Z1')" class="text-[11px] bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 px-2.5 py-0.5 rounded-md font-bold transition-colors flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Nova
+                        </button>
                     </div>
                     <select id="selectZ1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-blue-500">
                         <!-- Preenchido via JS -->
@@ -101,9 +103,11 @@
                 <!-- ZONA 2 -->
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-                    <div class="flex justify-between items-center mb-3">
+                    <div class="flex justify-between items-center mb-2">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Zona 2 (Z2)</h3>
-                        <span class="bg-indigo-500/10 text-indigo-400 text-[10px] px-2 py-0.5 rounded-full font-bold">60</span>
+                        <button onclick="openNewCurveModal('Z2')" class="text-[11px] bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/30 px-2.5 py-0.5 rounded-md font-bold transition-colors flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Nova
+                        </button>
                     </div>
                     <select id="selectZ2" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-indigo-500">
                         <!-- Preenchido via JS -->
@@ -120,15 +124,13 @@
 
             </div>
 
-            <!-- PAINEL DE EXIBIÇÃO DETALHADA (Atuais em Azul, Corrigidas em Verde) -->
+            <!-- PAINEL DE EXIBIÇÃO DETALHADA -->
             <div id="previewContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden">
                 <div class="flex justify-between items-center mb-4">
                     <h3 id="previewTitle" class="text-sm font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-chart-line text-emerald-400"></i> Detalhes da Curva
                     </h3>
-                    <button onclick="openSaveModal()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold">
-                        <i class="fa-solid fa-circle-plus"></i> Salvar na Memória (+)
-                    </button>
+                    <span class="text-[10px] text-slate-400">Edição direta permitida</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
@@ -175,23 +177,55 @@
 
     </main>
 
-    <!-- MODAL PARA SALVAR CURVA PERSONALIZADA -->
-    <div id="saveModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+    <!-- MODAL PARA CRIAR NOVA CURVA -->
+    <div id="newCurveModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-floppy-disk text-blue-500"></i> Salvar Nova Curva (<span id="modalZoneLabel">Z1</span>)
+                    <i class="fa-solid fa-circle-plus text-blue-500"></i> Criar Nova Curva para <span id="modalZoneName">Z1</span>
                 </h3>
-                <button onclick="closeSaveModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button onclick="closeNewCurveModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-xs text-slate-400">Dê um nome identificador para esta curva personalizada.</p>
+            <p class="text-xs text-slate-400">Informe um nome e os 6 valores correspondentes às velocidades (3000 a 18000 RPM).</p>
+            
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Nome da Curva</label>
-                <input type="text" id="newCurveName" placeholder="Ex: Curva Especial" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                <input type="text" id="newModalName" placeholder="Ex: Curva Especial Operador" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
             </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-2">Valores para os 6 Pontos (RPM)</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <span class="text-[10px] text-slate-500 block mb-1">3000 RPM</span>
+                        <input type="number" id="modalVal_0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold text-blue-400 text-center focus:outline-none">
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 block mb-1">6000 RPM</span>
+                        <input type="number" id="modalVal_1" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold text-blue-400 text-center focus:outline-none">
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 block mb-1">9000 RPM</span>
+                        <input type="number" id="modalVal_2" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold text-blue-400 text-center focus:outline-none">
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 block mb-1">12000 RPM</span>
+                        <input type="number" id="modalVal_3" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold text-blue-400 text-center focus:outline-none">
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 block mb-1">15000 RPM</span>
+                        <input type="number" id="modalVal_4" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold text-blue-400 text-center focus:outline-none">
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 block mb-1">18000 RPM</span>
+                        <input type="number" id="modalVal_5" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold text-blue-400 text-center focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
             <div class="flex justify-end gap-3 pt-2">
-                <button onclick="closeSaveModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
-                <button onclick="saveCurrentCurveToMemory()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/25">Salvar Curva</button>
+                <button onclick="closeNewCurveModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
+                <button onclick="saveNewCustomCurve()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/25">Salvar Curva</button>
             </div>
         </div>
     </div>
@@ -232,10 +266,9 @@
             }
         };
 
-        // Estado ativo para Z1 e Z2 simultaneamente
         let appState = {
-            Z1: { currentValues: [...zoneData.Z1.defaultCurves[3].values], previewZone: null },
-            Z2: { currentValues: [...zoneData.Z2.defaultCurves[2].values], previewZone: null }
+            Z1: { currentValues: [...zoneData.Z1.defaultCurves[3].values], activeZoneModal: 'Z1' },
+            Z2: { currentValues: [...zoneData.Z2.defaultCurves[2].values], activeZoneModal: 'Z2' }
         };
 
         let chartInstance = null;
@@ -297,10 +330,10 @@
                 return;
             }
 
-            appState[zone].previewZone = zone;
+            appState[zone].currentValues = [...values];
             const factor = parseFloat(document.getElementById(`correctionFactor${zone}`).value) || 0;
 
-            document.getElementById('previewTitle.innerText').innerHTML = `<i class="fa-solid fa-chart-line text-emerald-400"></i> Detalhes da Curva (${zone})`;
+            document.getElementById('previewTitle').innerHTML = `<i class="fa-solid fa-chart-line text-emerald-400"></i> Detalhes da Curva (${zone})`;
             
             const tbody = document.getElementById('previewTableBody');
             tbody.innerHTML = '';
@@ -310,32 +343,34 @@
                     <tr class="hover:bg-slate-800/40">
                         <td class="py-2 font-medium text-slate-300">${xValues[idx]} RPM</td>
                         <td class="py-2 text-blue-400 font-bold">
-                            <input type="number" id="edit_${zone}_${idx}" value="${val}" oninput="updateEditedValue('${zone}')" class="w-20 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-blue-400 font-bold">
+                            <input type="number" id="edit_${zone}_${idx}" value="${val}" oninput="updateEditedValue('${zone}')" class="w-20 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-blue-400 font-bold focus:outline-none focus:border-blue-500">
                         </td>
-                        <td class="py-2 text-emerald-400 font-bold">${corrected}</td>
+                        <td class="py-2 text-emerald-400 font-bold" id="corr_${zone}_${idx}">${corrected}</td>
                     </tr>
                 `;
             });
 
             document.getElementById('previewContainer').classList.remove('hidden');
+            updateAll();
         }
 
         function acceptCurve(zone) {
-            const values = getValuesFromSelect(zone);
-            if(!values) {
-                alert(`Por favor, selecione uma curva para ${zone} primeiro.`);
-                return;
-            }
-            appState[zone].currentValues = [...values];
-            previewCurve(zone); // Mostra na tabela também
-            updateAll();
+            previewCurve(zone);
         }
 
         function updateEditedValue(zone) {
             let vals = [];
+            const factor = parseFloat(document.getElementById(`correctionFactor${zone}`).value) || 0;
+            
             for(let i=0; i<6; i++) {
                 const input = document.getElementById(`edit_${zone}_${i}`);
-                vals.push(input ? parseFloat(input.value) || 0 : 0);
+                const v = input ? parseFloat(input.value) || 0 : 0;
+                vals.push(v);
+                
+                const corrTd = document.getElementById(`corr_${zone}_${i}`);
+                if(corrTd) {
+                    corrTd.innerText = (v * (1 + factor / 100)).toFixed(2);
+                }
             }
             appState[zone].currentValues = vals;
             updateAll();
@@ -348,13 +383,13 @@
         }
 
         function updateAll() {
-            // Se houver preview aberto, atualiza a coluna verde em tempo real
+            // Recalcula colunas verdes no preview se estiver aberto
             ['Z1', 'Z2'].forEach(zone => {
                 const factor = parseFloat(document.getElementById(`correctionFactor${zone}`).value) || 0;
                 appState[zone].currentValues.forEach((val, idx) => {
-                    const rowInput = document.getElementById(`edit_${zone}_${idx}`);
-                    if(rowInput) {
-                        // Apenas recalcula se necessário
+                    const corrTd = document.getElementById(`corr_${zone}_${idx}`);
+                    if(corrTd) {
+                        corrTd.innerText = (val * (1 + factor / 100)).toFixed(2);
                     }
                 });
             });
@@ -458,41 +493,57 @@
             chartInstance.update();
         }
 
-        function openSaveModal() {
-            document.getElementById('newCurveName').value = '';
-            document.getElementById('saveModal').classList.remove('hidden');
+        // Funções para criar nova curva via botão "Nova" (+)
+        function openNewCurveModal(zone) {
+            appState.activeZoneModal = zone;
+            document.getElementById('modalZoneName').innerText = zone;
+            document.getElementById('newModalName').value = '';
+            for(let i=0; i<6; i++) {
+                document.getElementById(`modalVal_${i}`).value = '';
+            }
+            document.getElementById('newCurveModal').classList.remove('hidden');
         }
 
-        function closeSaveModal() {
-            document.getElementById('saveModal').classList.add('hidden');
+        function closeNewCurveModal() {
+            document.getElementById('newCurveModal').classList.add('hidden');
         }
 
-        function saveCurrentCurveToMemory() {
-            const name = document.getElementById('newCurveName').value.trim();
+        function saveNewCustomCurve() {
+            const zone = appState.activeZoneModal;
+            const name = document.getElementById('newModalName').value.trim();
             if(!name) {
-                alert('Informe um nome para a curva.');
+                alert('Por favor, informe um nome para a curva.');
                 return;
             }
-            // Salva na zona que está ativa no preview
-            const zone = 'Z1'; // Pode ser adaptado se necessário
-            const values = appState[zone].currentValues;
+
+            let values = [];
+            for(let i=0; i<6; i++) {
+                const val = parseFloat(document.getElementById(`modalVal_${i}`).value);
+                if(isNaN(val)) {
+                    alert('Por favor, preencha todos os 6 valores numéricos.');
+                    return;
+                }
+                values.push(val);
+            }
+
             const storageKey = `molha_curves_${zone}`;
             const saved = JSON.parse(localStorage.getItem(storageKey)) || [];
             
             saved.push({ name, values });
             localStorage.setItem(storageKey, JSON.stringify(saved));
 
-            closeSaveModal();
+            closeNewCurveModal();
             populateSelectsSorted();
-            alert('Curva salva com sucesso na memória!');
+            alert(`Nova curva salva com sucesso em ${zone}!`);
         }
 
+        // Backup
         function exportBackup() {
             const backupData = {
                 Z1_saved: JSON.parse(localStorage.getItem('molha_curves_Z1')) || [],
                 Z2_saved: JSON.parse(localStorage.getItem('molha_curves_Z2')) || [],
                 appState: appState,
-                version: "2.0",
+                version: "2.1",
                 date: new Date().toISOString()
             };
 
