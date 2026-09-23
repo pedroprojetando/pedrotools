@@ -61,6 +61,9 @@
                 </div>
             </div>
             <div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                <button onclick="clicarNovoTurno()" class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow" title="Iniciar Nova Análise">
+                    <i class="fa-solid fa-file-circle-plus"></i> Novo
+                </button>
                 <button onclick="abrirModal('modal-dados')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
                     <i class="fa-solid fa-gear"></i> Dados Base
                 </button>
@@ -738,6 +741,37 @@
             atualizarContadorRegistrosGerais();
             atualizarKPIs();
         };
+
+        // --- FUNÇÃO DO BOTÃO NOVO ---
+        function clicarNovoTurno() {
+            let querSalvar = confirm("Salvar antes de criar um novo?");
+            if (querSalvar) {
+                salvarTurnoAtual();
+            }
+            
+            // Limpar dados para nova análise
+            estadoBlocos = [];
+            dadosBlocosProducao = {};
+            dadosBlocosSetup = {};
+            notasBlocos = {};
+            dadosBase = { 
+                maquina: "", 
+                cliente: "Não Definido", 
+                produto: "Geral", 
+                operador: "Não Definido", 
+                velocidadeHora: 18000,
+                horaInicio: "08:00",
+                horaFim: "18:00"
+            };
+
+            document.getElementById('header-detalhes').innerText = "Máquina: Não Definido | Cliente: Não Definido | Operador: Não Definido";
+            inicializarGrade();
+            renderizarGradeHorarios();
+            atualizarContadorNotas();
+            atualizarKPIs();
+            gravarAutomatico();
+            alert("Nova análise iniciada com sucesso!");
+        }
 
         // --- FUNÇÕES DE GRAVAR (AUTO-SALVAMENTO LOCALSTORAGE) ---
         function gravarAutomatico() {
@@ -1668,7 +1702,7 @@
                 notasBlocos: notasBlocos,
                 historicoTurnos: historicoTurnos,
                 contadoresGeraisSalvos: contadoresGeraisSalvos,
-                versao: "2.5",
+                versao: "2.6",
                 dataBackup: new Date().toISOString()
             };
 
