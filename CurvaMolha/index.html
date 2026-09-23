@@ -90,12 +90,20 @@
                     <select id="selectZ1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-blue-500">
                         <!-- Preenchido via JS -->
                     </select>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 mb-2">
                         <button onclick="previewCurve('Z1')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-lg text-xs font-semibold border border-slate-700 flex items-center justify-center gap-1">
                             <i class="fa-solid fa-eye text-blue-400"></i> Exibir
                         </button>
                         <button onclick="acceptCurve('Z1')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-xs font-semibold shadow-md flex items-center justify-center gap-1">
                             <i class="fa-solid fa-check"></i> Aceitar
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editSelectedCurve('Z1')" class="flex-1 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 py-1.5 rounded-lg text-[11px] font-semibold border border-amber-600/30 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-pen"></i> Editar
+                        </button>
+                        <button onclick="deleteSelectedCurve('Z1')" class="flex-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 py-1.5 rounded-lg text-[11px] font-semibold border border-rose-600/30 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-trash"></i> Deletar
                         </button>
                     </div>
                 </div>
@@ -112,12 +120,20 @@
                     <select id="selectZ2" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-indigo-500">
                         <!-- Preenchido via JS -->
                     </select>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 mb-2">
                         <button onclick="previewCurve('Z2')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-lg text-xs font-semibold border border-slate-700 flex items-center justify-center gap-1">
                             <i class="fa-solid fa-eye text-indigo-400"></i> Exibir
                         </button>
                         <button onclick="acceptCurve('Z2')" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-xs font-semibold shadow-md flex items-center justify-center gap-1">
                             <i class="fa-solid fa-check"></i> Aceitar
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editSelectedCurve('Z2')" class="flex-1 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 py-1.5 rounded-lg text-[11px] font-semibold border border-amber-600/30 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-pen"></i> Editar
+                        </button>
+                        <button onclick="deleteSelectedCurve('Z2')" class="flex-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 py-1.5 rounded-lg text-[11px] font-semibold border border-rose-600/30 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-trash"></i> Deletar
                         </button>
                     </div>
                 </div>
@@ -177,19 +193,19 @@
 
     </main>
 
-    <!-- MODAL PARA CRIAR NOVA CURVA -->
+    <!-- MODAL PARA CRIAR / EDITAR CURVA -->
     <div id="newCurveModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
             <div class="flex justify-between items-center">
-                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <h3 id="modalTitle" class="text-base font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-circle-plus text-blue-500"></i> Criar Nova Curva para <span id="modalZoneName">Z1</span>
                 </h3>
                 <button onclick="closeNewCurveModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-xs text-slate-400">Informe um nome e os 6 valores correspondentes às velocidades (3000 a 18000 RPM).</p>
+            <p class="text-xs text-slate-400">O ID será gerado automaticamente pelo primeiro valor (3000 RPM).</p>
             
             <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Nome da Curva</label>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Nome da Curva / Descrição</label>
                 <input type="text" id="newModalName" placeholder="Ex: Curva Especial Operador" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
             </div>
 
@@ -197,7 +213,7 @@
                 <label class="block text-xs font-medium text-slate-400 mb-2">Valores para os 6 Pontos (RPM)</label>
                 <div class="grid grid-cols-3 gap-2">
                     <div>
-                        <span class="text-[10px] text-slate-500 block mb-1">3000 RPM</span>
+                        <span class="text-[10px] text-slate-500 block mb-1">3000 RPM (ID)</span>
                         <input type="number" id="modalVal_0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold text-blue-400 text-center focus:outline-none">
                     </div>
                     <div>
@@ -225,7 +241,7 @@
 
             <div class="flex justify-end gap-3 pt-2">
                 <button onclick="closeNewCurveModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
-                <button onclick="saveNewCustomCurve()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/25">Salvar Curva</button>
+                <button onclick="saveCustomCurve()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/25">Salvar Curva</button>
             </div>
         </div>
     </div>
@@ -267,8 +283,8 @@
         };
 
         let appState = {
-            Z1: { currentValues: [...zoneData.Z1.defaultCurves[3].values], activeZoneModal: 'Z1' },
-            Z2: { currentValues: [...zoneData.Z2.defaultCurves[2].values], activeZoneModal: 'Z2' }
+            Z1: { currentValues: [...zoneData.Z1.defaultCurves[3].values], activeZoneModal: 'Z1', editingIndex: null },
+            Z2: { currentValues: [...zoneData.Z2.defaultCurves[2].values], activeZoneModal: 'Z2', editingIndex: null }
         };
 
         let chartInstance = null;
@@ -282,6 +298,7 @@
         function populateSelectsSorted() {
             ['Z1', 'Z2'].forEach(zone => {
                 const select = document.getElementById(`select${zone}`);
+                const currentVal = select.value;
                 select.innerHTML = '<option value="" disabled selected>-- Escolher Curva ID --</option>';
 
                 let allCurves = [];
@@ -294,15 +311,17 @@
                     allCurves.push({ type: 'saved', index: idx, name: `⭐ [Salva] ${item.name}`, values: item.values });
                 });
 
-                // Ordenação crescente pelo primeiro valor numérico
+                // Ordenação crescente pelo primeiro valor numérico (ID automático)
                 allCurves.sort((a, b) => a.values[0] - b.values[0]);
 
                 allCurves.forEach((item) => {
                     const opt = document.createElement('option');
                     opt.value = `${item.type}_${item.index}`;
-                    opt.textContent = `${item.name} (${item.values[0]})`;
+                    opt.textContent = `${item.name} (Início: ${item.values[0]})`;
                     select.appendChild(opt);
                 });
+
+                if(currentVal) select.value = currentVal;
             });
         }
 
@@ -318,7 +337,7 @@
                 return zoneData[zone].defaultCurves[idx].values;
             } else if(type === 'saved') {
                 const saved = JSON.parse(localStorage.getItem(`molha_curves_${zone}`)) || [];
-                return saved[idx].values;
+                return saved[idx] ? saved[idx].values : null;
             }
             return null;
         }
@@ -383,7 +402,6 @@
         }
 
         function updateAll() {
-            // Recalcula colunas verdes no preview se estiver aberto
             ['Z1', 'Z2'].forEach(zone => {
                 const factor = parseFloat(document.getElementById(`correctionFactor${zone}`).value) || 0;
                 appState[zone].currentValues.forEach((val, idx) => {
@@ -493,10 +511,12 @@
             chartInstance.update();
         }
 
-        // Funções para criar nova curva via botão "Nova" (+)
+        // Funções para Criar, Editar e Deletar Curvas
         function openNewCurveModal(zone) {
             appState.activeZoneModal = zone;
+            appState[zone].editingIndex = null;
             document.getElementById('modalZoneName').innerText = zone;
+            document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-circle-plus text-blue-500"></i> Criar Nova Curva para <span id="modalZoneName">${zone}</span>`;
             document.getElementById('newModalName').value = '';
             for(let i=0; i<6; i++) {
                 document.getElementById(`modalVal_${i}`).value = '';
@@ -504,11 +524,65 @@
             document.getElementById('newCurveModal').classList.remove('hidden');
         }
 
+        function editSelectedCurve(zone) {
+            const select = document.getElementById(`select${zone}`);
+            const val = select.value;
+            if(!val) {
+                alert(`Selecione uma curva salva em ${zone} para editar.`);
+                return;
+            }
+
+            const [type, idxStr] = val.split('_');
+            if(type !== 'saved') {
+                alert('Apenas curvas salvas customizadas podem ser editadas.');
+                return;
+            }
+
+            const idx = parseInt(idxStr);
+            const saved = JSON.parse(localStorage.getItem(`molha_curves_${zone}`)) || [];
+            const curve = saved[idx];
+
+            appState.activeZoneModal = zone;
+            appState[zone].editingIndex = idx;
+
+            document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Editar Curva Salva (${zone})`;
+            document.getElementById('modalZoneName').innerText = zone;
+            document.getElementById('newModalName').value = curve.name;
+            for(let i=0; i<6; i++) {
+                document.getElementById(`modalVal_${i}`).value = curve.values[i];
+            }
+            document.getElementById('newCurveModal').classList.remove('hidden');
+        }
+
+        function deleteSelectedCurve(zone) {
+            const select = document.getElementById(`select${zone}`);
+            const val = select.value;
+            if(!val) {
+                alert(`Selecione uma curva salva em ${zone} para deletar.`);
+                return;
+            }
+
+            const [type, idxStr] = val.split('_');
+            if(type !== 'saved') {
+                alert('Apenas curvas salvas customizadas podem ser deletadas.');
+                return;
+            }
+
+            if(confirm('Tem certeza que deseja excluir esta curva permanentemente?')) {
+                const idx = parseInt(idxStr);
+                const saved = JSON.parse(localStorage.getItem(`molha_curves_${zone}`)) || [];
+                saved.splice(idx, 1);
+                localStorage.setItem(`molha_curves_${zone}`, JSON.stringify(saved));
+                populateSelectsSorted();
+                alert('Curva deletada com sucesso!');
+            }
+        }
+
         function closeNewCurveModal() {
             document.getElementById('newCurveModal').classList.add('hidden');
         }
 
-        function saveNewCustomCurve() {
+        function saveCustomCurve() {
             const zone = appState.activeZoneModal;
             const name = document.getElementById('newModalName').value.trim();
             if(!name) {
@@ -528,13 +602,21 @@
 
             const storageKey = `molha_curves_${zone}`;
             const saved = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+            if(appState[zone].editingIndex !== null) {
+                // Atualiza existente
+                saved[appState[zone].editingIndex] = { name, values };
+                alert('Curva atualizada com sucesso!');
+            } else {
+                // Cria nova
+                saved.push({ name, values });
+                alert(`Nova curva ID: ${values[0]} salva com sucesso em ${zone}!`);
+            }
             
-            saved.push({ name, values });
             localStorage.setItem(storageKey, JSON.stringify(saved));
 
             closeNewCurveModal();
             populateSelectsSorted();
-            alert(`Nova curva salva com sucesso em ${zone}!`);
         }
 
         // Backup
@@ -543,7 +625,7 @@
                 Z1_saved: JSON.parse(localStorage.getItem('molha_curves_Z1')) || [],
                 Z2_saved: JSON.parse(localStorage.getItem('molha_curves_Z2')) || [],
                 appState: appState,
-                version: "2.1",
+                version: "2.2",
                 date: new Date().toISOString()
             };
 
