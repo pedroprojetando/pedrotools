@@ -90,7 +90,7 @@
                     <select id="selectZ1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-blue-500">
                         <!-- Preenchido via JS -->
                     </select>
-                    <!-- Botões Reduzidos a Ícones -->
+                    <!-- Ícones Compactos -->
                     <div class="flex gap-2">
                         <button onclick="previewCurve('Z1')" title="Exibir" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-lg border border-slate-700 flex items-center justify-center transition-colors">
                             <i class="fa-solid fa-eye text-blue-400 text-sm"></i>
@@ -116,7 +116,7 @@
                     <select id="selectZ2" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-indigo-500">
                         <!-- Preenchido via JS -->
                     </select>
-                    <!-- Botões Reduzidos a Ícones -->
+                    <!-- Ícones Compactos -->
                     <div class="flex gap-2">
                         <button onclick="previewCurve('Z2')" title="Exibir" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-lg border border-slate-700 flex items-center justify-center transition-colors">
                             <i class="fa-solid fa-eye text-indigo-400 text-sm"></i>
@@ -188,12 +188,21 @@
     <!-- MODAL PARA CRIAR / EDITAR / DELETAR CURVA -->
     <div id="newCurveModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <div class="flex justify-between items-center">
+            
+            <!-- CABEÇALHO DO MODAL COM O BOTÃO DE LIXEIRA INTEGRADO -->
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 id="modalTitle" class="text-base font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-circle-plus text-blue-500"></i> Criar Nova Curva para <span id="modalZoneName">Z1</span>
                 </h3>
-                <button onclick="closeNewCurveModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <div class="flex items-center gap-2">
+                    <!-- Botão de Lixeira embutido no topo ao editar -->
+                    <button id="modalDeleteBtnTop" onclick="deleteCurrentEditingCurve()" style="display: none;" title="Deletar Curva" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-semibold border border-rose-600/30 transition-colors flex items-center gap-1">
+                        <i class="fa-solid fa-trash"></i> Deletar
+                    </button>
+                    <button onclick="closeNewCurveModal()" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
             </div>
+
             <p class="text-xs text-slate-400">O ID e o nome são gerados automaticamente com base no valor de 3000 RPM.</p>
 
             <div>
@@ -226,15 +235,10 @@
                 </div>
             </div>
 
-            <!-- Botões dentro do modal (incluindo o botão Deletar com lixeira quando estiver editando) -->
-            <div class="flex justify-between items-center pt-2">
-                <button id="modalDeleteBtn" onclick="deleteCurrentEditingCurve()" style="display: none;" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors border border-rose-600/30 flex items-center gap-1.5">
-                    <i class="fa-solid fa-trash"></i> Deletar Curva
-                </button>
-                <div class="flex gap-3 ml-auto">
-                    <button onclick="closeNewCurveModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
-                    <button onclick="saveCustomCurve()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/25">Salvar Curva</button>
-                </div>
+            <!-- Botões inferiores do modal -->
+            <div class="flex justify-end gap-3 pt-2 border-t border-slate-800">
+                <button onclick="closeNewCurveModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
+                <button onclick="saveCustomCurve()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/25">Salvar Curva</button>
             </div>
         </div>
     </div>
@@ -504,13 +508,13 @@
             chartInstance.update();
         }
 
-        // Funções do Modal (Criar / Editar / Deletar integrado)
+        // Funções do Modal (Criar / Editar / Deletar integrado no topo)
         function openNewCurveModal(zone) {
             appState.activeZoneModal = zone;
             appState[zone].editingIndex = null;
             document.getElementById('modalZoneName').innerText = zone;
             document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-circle-plus text-blue-500"></i> Criar Nova Curva para <span id="modalZoneName">${zone}</span>`;
-            document.getElementById('modalDeleteBtn').style.display = 'none'; // Oculta deletar ao criar nova
+            document.getElementById('modalDeleteBtnTop').style.display = 'none'; // Oculta lixeira ao criar nova
             for(let i=0; i<6; i++) {
                 document.getElementById(`modalVal_${i}`).value = '';
             }
@@ -540,7 +544,7 @@
 
             document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Editar Curva Salva (${zone})`;
             document.getElementById('modalZoneName').innerText = zone;
-            document.getElementById('modalDeleteBtn').style.display = 'flex'; // Exibe o botão de deletar dentro do modal de edição
+            document.getElementById('modalDeleteBtnTop').style.display = 'flex'; // Exibe a lixeira no topo ao editar
             for(let i=0; i<6; i++) {
                 document.getElementById(`modalVal_${i}`).value = curve.values[i];
             }
@@ -601,7 +605,7 @@
                 Z1_saved: JSON.parse(localStorage.getItem('molha_curves_Z1')) || [],
                 Z2_saved: JSON.parse(localStorage.getItem('molha_curves_Z2')) || [],
                 appState: appState,
-                version: "2.4",
+                version: "2.5",
                 date: new Date().toISOString()
             };
 
