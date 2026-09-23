@@ -77,59 +77,42 @@
                 <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                        <i class="fa-solid fa-bookmark text-emerald-500"></i> Gerenciamento de Curvas
+                        <i class="fa-solid fa-bookmark text-emerald-500"></i> Seleção de Curvas
                     </h2>
                     <span id="zoneBadge" class="bg-blue-500/10 text-blue-400 text-xs px-2.5 py-1 rounded-full font-bold border border-blue-500/20">Z1 (20)</span>
                 </div>
 
-                <!-- Botão Carregar com Memória -->
+                <!-- Seletor e Botões Exibir / Aceitar -->
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Selecione uma Curva Memorizada</label>
-                        <div class="flex gap-2">
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Escolha a Curva (Identificada pelo valor de 3000 RPM)</label>
+                        <div class="flex flex-col gap-2">
                             <select id="savedCurvesSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
                                 <!-- Preenchido via JS -->
                             </select>
-                            <button onclick="loadSelectedCurve()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/25 whitespace-nowrap flex items-center gap-2">
-                                <i class="fa-solid fa-folder-open"></i> Carregar
-                            </button>
+                            <div class="flex gap-2">
+                                <button onclick="previewSelectedCurve()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2.5 rounded-xl text-xs transition-colors border border-slate-700 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-eye text-blue-400"></i> Exibir
+                                </button>
+                                <button onclick="acceptSelectedCurve()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-check text-white"></i> Aceitar
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Entradas Manuais para os 6 pontos (Ocultas inicialmente até carregar) -->
+                    <!-- Entradas Manuais para os 6 pontos (Visíveis ao clicar em Exibir ou Aceitar) -->
                     <div id="customInputsContainer" class="pt-2 border-t border-slate-800 hidden">
                         <div class="flex justify-between items-center mb-2">
-                            <label class="text-xs font-medium text-slate-400">Valores Personalizados (6 Pontos)</label>
+                            <label class="text-xs font-medium text-slate-400">Valores Atuais da Curva (6 Pontos)</label>
                             <button onclick="openSaveModal()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold">
-                                <i class="fa-solid fa-circle-plus"></i> Salvar na Memória (+)
+                                <i class="fa-solid fa-circle-plus"></i> Salvar Nova (+)
                             </button>
                         </div>
                         <div id="customInputsGrid" class="grid grid-cols-3 gap-2">
                             <!-- Gerado via JS -->
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- TABELA DE DADOS CALCULADOS (Oculta inicialmente até carregar) -->
-            <div id="dataTableContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden">
-                <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-table text-indigo-500"></i> Tabela Analítica
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-800 text-slate-400">
-                                <th class="pb-3 font-semibold">Velocidade</th>
-                                <th class="pb-3 font-semibold">Heidelberg</th>
-                                <th class="pb-3 font-semibold">Corrigida</th>
-                                <th class="pb-3 font-semibold">Atual</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dataTableBody" class="divide-y divide-slate-800/50">
-                            <!-- Preenchido via JS -->
-                        </tbody>
-                    </table>
                 </div>
             </div>
 
@@ -153,20 +136,8 @@
                 </div>
 
                 <!-- Container do Canvas -->
-                <div class="relative flex-grow w-full h-[400px]">
+                <div class="relative flex-grow w-full h-[450px]">
                     <canvas id="molhaChart"></canvas>
-                </div>
-            </div>
-
-            <!-- ESTATÍSTICAS RÁPIDAS -->
-            <div class="grid grid-cols-2 gap-4" id="statsGrid">
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
-                    <span class="text-xs text-slate-400 block mb-1">Média Heidelberg</span>
-                    <span id="statHd" class="text-xl font-bold text-white">-</span>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
-                    <span class="text-xs text-slate-400 block mb-1">Média Corrigida</span>
-                    <span id="statCorr" class="text-xl font-bold text-emerald-400">-</span>
                 </div>
             </div>
 
@@ -210,13 +181,13 @@
                 badge: "Z1 (20)",
                 hd: [319, 412, 505, 598, 691, 783],
                 defaultCurves: [
-                    { name: "Padrão Z1 (Planilha)", values: [607, 740, 874, 1007, 1141, 1275] },
-                    { name: "Curva Alternativa 1", values: [751, 889, 1027, 1165, 1303, 1441] },
-                    { name: "Curva Alternativa 2", values: [827, 1031, 1234, 1438, 1642, 1846] },
-                    { name: "Curva Alternativa 3", values: [660, 865, 1071, 1276, 1482, 1688] },
-                    { name: "Curva Alternativa 4", values: [330, 417, 505, 592, 680, 768] },
-                    { name: "Curva Alternativa 5", values: [480, 567, 655, 742, 830, 918] },
-                    { name: "Curva Alternativa 6", values: [583, 865, 1146, 1427, 1708, 1900] }
+                    { name: "Curva ID: 607", values: [607, 740, 874, 1007, 1141, 1275] },
+                    { name: "Curva ID: 751", values: [751, 889, 1027, 1165, 1303, 1441] },
+                    { name: "Curva ID: 827", values: [827, 1031, 1234, 1438, 1642, 1846] },
+                    { name: "Curva ID: 660", values: [660, 865, 1071, 1276, 1482, 1688] },
+                    { name: "Curva ID: 330", values: [330, 417, 505, 592, 680, 768] },
+                    { name: "Curva ID: 480", values: [480, 567, 655, 742, 830, 918] },
+                    { name: "Curva ID: 583", values: [583, 865, 1146, 1427, 1708, 1900] }
                 ]
             },
             Z2: {
@@ -224,20 +195,20 @@
                 badge: "Z2 (60)",
                 hd: [919, 1012, 1105, 1197, 1290, 1383],
                 defaultCurves: [
-                    { name: "Padrão Z2 (Planilha)", values: [1264, 1398, 1531, 1665, 1798, 1931] },
-                    { name: "Curva Alternativa 1", values: [1497, 1635, 1773, 1911, 2049, 2187] },
-                    { name: "Curva Alternativa 2", values: [1706, 1938, 2169, 2400, 2631, 2862] },
-                    { name: "Curva Alternativa 3", values: [1444, 1714, 1984, 2254, 2524, 2794] },
-                    { name: "Curva Alternativa 4", values: [930, 1017, 1105, 1192, 1280, 1368] },
-                    { name: "Curva Alternativa 5", values: [1080, 1167, 1255, 1342, 1430, 1518] },
-                    { name: "Curva Alternativa 6", values: [1432, 1714, 1995, 2276, 2557, 2800] }
+                    { name: "Curva ID: 1264", values: [1264, 1398, 1531, 1665, 1798, 1931] },
+                    { name: "Curva ID: 1497", values: [1497, 1635, 1773, 1911, 2049, 2187] },
+                    { name: "Curva ID: 1706", values: [1706, 1938, 2169, 2400, 2631, 2862] },
+                    { name: "Curva ID: 1444", values: [1444, 1714, 1984, 2254, 2524, 2794] },
+                    { name: "Curva ID: 930", values: [930, 1017, 1105, 1192, 1280, 1368] },
+                    { name: "Curva ID: 1080", values: [1080, 1167, 1255, 1342, 1430, 1518] },
+                    { name: "Curva ID: 1432", values: [1432, 1714, 1995, 2276, 2557, 2800] }
                 ]
             }
         };
 
         let currentZone = 'Z1';
         let chartInstance = null;
-        let isLoaded = false; // Controle de estado de carregamento
+        let isLoaded = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             initZone();
@@ -246,7 +217,7 @@
 
         function switchTab(zone) {
             currentZone = zone;
-            isLoaded = false; // Reseta ao trocar de aba
+            isLoaded = false;
             if(zone === 'Z1') {
                 document.getElementById('btnTabZ1').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md";
                 document.getElementById('btnTabZ2').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-white";
@@ -265,18 +236,15 @@
             
             populateSelect();
 
-            // Oculta tabela e inputs na inicialização
             document.getElementById('customInputsContainer').classList.add('hidden');
-            document.getElementById('dataTableContainer').classList.add('hidden');
             document.getElementById('legendCustom').classList.add('hidden');
-            document.getElementById('statsGrid').className = "grid grid-cols-2 gap-4";
 
             updateAll();
         }
 
         function populateSelect() {
             const select = document.getElementById('savedCurvesSelect');
-            select.innerHTML = '<option value="" disabled selected>-- Escolha uma Curva --</option>';
+            select.innerHTML = '<option value="" disabled selected>-- Selecione uma Curva --</option>';
             
             zoneData[currentZone].defaultCurves.forEach((item, idx) => {
                 const opt = document.createElement('option');
@@ -289,7 +257,7 @@
             saved.forEach((item, idx) => {
                 const opt = document.createElement('option');
                 opt.value = `saved_${idx}`;
-                opt.textContent = `⭐ [Salva] ${item.name}`;
+                opt.textContent = `⭐ [Salva] ${item.name} (Início: ${item.values[0]})`;
                 select.appendChild(opt);
             });
         }
@@ -307,43 +275,44 @@
             });
         }
 
-        function loadSelectedCurve() {
+        function getSelectedValuesFromDropdown() {
             const select = document.getElementById('savedCurvesSelect');
             const val = select.value;
-            if(!val) {
-                alert('Por favor, selecione uma curva na lista antes de carregar.');
-                return;
-            }
+            if(!val) return null;
 
-            let values = [];
             if(val.startsWith('default_')) {
                 const idx = parseInt(val.split('_')[1]);
-                values = zoneData[currentZone].defaultCurves[idx].values;
+                return zoneData[currentZone].defaultCurves[idx].values;
             } else if(val.startsWith('saved_')) {
                 const idx = parseInt(val.split('_')[1]);
                 const saved = JSON.parse(localStorage.getItem(`molha_curves_${currentZone}`)) || [];
-                values = saved[idx].values;
+                return saved[idx].values;
             }
+            return null;
+        }
 
+        function previewSelectedCurve() {
+            const values = getSelectedValuesFromDropdown();
+            if(!values) {
+                alert('Por favor, selecione uma curva na lista primeiro.');
+                return;
+            }
+            renderCustomInputs(values);
+            document.getElementById('customInputsContainer').classList.remove('hidden');
+        }
+
+        function acceptSelectedCurve() {
+            const values = getSelectedValuesFromDropdown();
+            if(!values) {
+                alert('Por favor, selecione uma curva na lista primeiro.');
+                return;
+            }
             renderCustomInputs(values);
 
-            // Exibe os elementos ao carregar
             isLoaded = true;
             document.getElementById('customInputsContainer').classList.remove('hidden');
-            document.getElementById('dataTableContainer').classList.remove('hidden');
             document.getElementById('legendCustom').classList.remove('hidden');
             document.getElementById('legendCustom').style.display = 'flex';
-            document.getElementById('statsGrid').className = "grid grid-cols-3 gap-4";
-
-            // Adiciona card de média customizada se não existir
-            if(document.getElementById('statCustomCard') === null) {
-                document.getElementById('statsGrid').innerHTML += `
-                    <div id="statCustomCard" class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
-                        <span class="text-xs text-slate-400 block mb-1">Média Ativa/Custom</span>
-                        <span id="statCustom" class="text-xl font-bold text-amber-400">-</span>
-                    </div>
-                `;
-            }
 
             updateAll();
         }
@@ -371,27 +340,9 @@
             const hd = zoneData[currentZone].hd;
             const corrected = hd.map(val => parseFloat((val * (1 + factor / 100)).toFixed(2)));
 
-            const avg = arr => (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1);
-            document.getElementById('statHd').innerText = avg(hd);
-            document.getElementById('statCorr').innerText = avg(corrected);
-
             let custom = [];
             if(isLoaded) {
                 custom = getCurrentCustomValues();
-                document.getElementById('statCustom').innerText = avg(custom);
-                
-                const tbody = document.getElementById('dataTableBody');
-                tbody.innerHTML = '';
-                for(let i=0; i<6; i++) {
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-800/40 transition-colors">
-                            <td class="py-2.5 font-medium text-slate-300">${xValues[i]}</td>
-                            <td class="py-2.5 text-blue-400 font-semibold">${hd[i]}</td>
-                            <td class="py-2.5 text-emerald-400 font-semibold">${corrected[i]}</td>
-                            <td class="py-2.5 text-amber-400 font-semibold">${custom[i]}</td>
-                        </tr>
-                    `;
-                }
             }
 
             updateChart(hd, corrected, isLoaded ? custom : []);
@@ -478,7 +429,7 @@
 
         function openSaveModal() {
             if(!isLoaded) {
-                alert('Carregue uma curva primeiro.');
+                alert('Aceite uma curva primeiro para poder salvá-la.');
                 return;
             }
             document.getElementById('newCurveName').value = '';
