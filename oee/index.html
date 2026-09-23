@@ -64,6 +64,15 @@
                 <button onclick="abrirModal('modal-dados')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
                     <i class="fa-solid fa-gear"></i> Dados Base
                 </button>
+                <button onclick="salvarTurnoAtual()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow" title="Salvar Turno no Histórico">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar
+                </button>
+                <button onclick="abrirModalHistorico()" class="bg-amber-700 hover:bg-amber-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-box-archive"></i> Histórico (<span id="contador-historico">0</span>)
+                </button>
+                <button onclick="abrirModal('modal-calculadora')" class="bg-indigo-700 hover:bg-indigo-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-calculator"></i> Calculadora
+                </button>
                 <button onclick="abrirModalNotasGerais()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
                     <i class="fa-solid fa-note-sticky"></i> Notas (<span id="contador-notas">0</span>)
                 </button>
@@ -121,6 +130,30 @@
             </div>
         </section>
 
+        <!-- TOTALIZADOR DO CONTADOR GERAL DA MÁQUINA -->
+        <div class="bg-white p-5 rounded-xl shadow-sm space-y-3">
+            <div>
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-gauge text-blue-600"></i> Contador Geral da Máquina
+                </h3>
+                <p class="text-xs text-slate-500">Insira a leitura atual do horímetro/contador geral.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                <div class="sm:col-span-2">
+                    <input type="text" id="input-contador-geral" placeholder="Ex: 150.000" oninput="formatarContadorGeral(this)" class="w-full border rounded-lg p-2.5 text-base font-bold text-slate-800">
+                </div>
+                <div>
+                    <button onclick="salvarContadorGeral()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-xs font-bold transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Registrar Leitura
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-between items-center text-xs font-bold text-slate-600 border-t pt-2">
+                <span>Registros Salvos</span>
+                <button onclick="abrirModalListaContadores()" class="text-blue-600 hover:underline">Ver Todos (<span id="qtd-contadores-salvos">0</span>)</button>
+            </div>
+        </div>
+
         <!-- PAINEL DE SELEÇÃO DE CATEGORIA E GRADE -->
         <div class="bg-white p-5 rounded-xl shadow-sm space-y-4">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-3">
@@ -141,6 +174,13 @@
                 </div>
             </div>
 
+            <!-- BOTÃO GRAVAR LOGO ABAIXO DO CAMPO DE CATEGORIAS -->
+            <div class="flex justify-end pt-1">
+                <button onclick="gravarTurnoManual()" class="bg-cyan-700 hover:bg-cyan-800 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Gravar Progresso Atual (Auto-salvamento Ativo)
+                </button>
+            </div>
+
             <!-- GRADE MATRICIAL DE HORÁRIOS -->
             <div class="overflow-x-auto border border-slate-200 rounded-lg p-3 bg-slate-50">
                 <div id="grade-horarios" class="min-w-[1000px] space-y-1">
@@ -150,6 +190,77 @@
         </div>
 
     </main>
+
+    <!-- MODAL DA CALCULADORA INDUSTRIAL -->
+    <div id="modal-calculadora" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-sm w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-indigo-600"></i> Calculadora Industrial
+                </h3>
+                <button onclick="fecharModal('modal-calculadora')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3">
+                <input type="text" id="calc-display" readonly value="0" class="w-full bg-slate-100 border rounded-lg p-3 text-right font-mono text-xl font-bold text-slate-800">
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="calcAppend('7')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">7</button>
+                    <button onclick="calcAppend('8')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">8</button>
+                    <button onclick="calcAppend('9')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">9</button>
+                    <button onclick="calcAppend('/')" class="bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded text-sm font-bold">÷</button>
+                    
+                    <button onclick="calcAppend('4')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">4</button>
+                    <button onclick="calcAppend('5')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">5</button>
+                    <button onclick="calcAppend('6')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">6</button>
+                    <button onclick="calcAppend('*')" class="bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded text-sm font-bold">×</button>
+                    
+                    <button onclick="calcAppend('1')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">1</button>
+                    <button onclick="calcAppend('2')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">2</button>
+                    <button onclick="calcAppend('3')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">3</button>
+                    <button onclick="calcAppend('-')" class="bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded text-sm font-bold">-</button>
+                    
+                    <button onclick="calcClear()" class="bg-rose-500 hover:bg-rose-600 text-white py-2.5 rounded text-sm font-bold">C</button>
+                    <button onclick="calcAppend('0')" class="bg-slate-200 hover:bg-slate-300 py-2.5 rounded text-sm font-bold">0</button>
+                    <button onclick="calcEval()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded text-sm font-bold">=</button>
+                    <button onclick="calcAppend('+')" class="bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded text-sm font-bold">+</button>
+                </div>
+            </div>
+            <div class="flex justify-end pt-2 border-t">
+                <button onclick="fecharModal('modal-calculadora')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-medium">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE HISTÓRICO -->
+    <div id="modal-historico" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-3xl w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-box-archive text-amber-700 mr-2"></i> Histórico de Turnos Salvos</h3>
+                <button onclick="fecharModal('modal-historico')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="lista-historico-container" class="space-y-2 max-h-[60vh] overflow-y-auto">
+                <!-- Gerado dinamicamente -->
+            </div>
+            <div class="flex justify-end pt-2 border-t">
+                <button onclick="fecharModal('modal-historico')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-medium">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE LISTA DE CONTADORES SALVOS -->
+    <div id="modal-lista-contadores" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-xl w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-gauge text-blue-600 mr-2"></i> Leituras do Contador Geral</h3>
+                <button onclick="fecharModal('modal-lista-contadores')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="lista-contadores-container" class="space-y-2 max-h-[60vh] overflow-y-auto">
+                <!-- Gerado dinamicamente -->
+            </div>
+            <div class="flex justify-end pt-2 border-t">
+                <button onclick="fecharModal('modal-lista-contadores')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-medium">Fechar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL DE NOTAS GERAIS (CABEÇALHO) -->
     <div id="modal-notas-gerais" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
@@ -191,7 +302,6 @@
                     </div>
                 </div>
 
-                <!-- QUADRO DE PRODUÇÃO E DESPERDÍCIOS -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border">
                     <div class="bg-white border p-2.5 rounded text-center">
                         <span class="text-[10px] font-bold text-emerald-700 uppercase block">Folhas Boas (Prod)</span>
@@ -207,7 +317,6 @@
                     </div>
                 </div>
 
-                <!-- QUADRO DE VELOCIDADES E MÉDIAS -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
                     <div class="bg-white border p-2 rounded text-center">
                         <span class="text-[9px] font-bold text-blue-700 uppercase block">Vel. Média (Total)</span>
@@ -227,7 +336,6 @@
                     </div>
                 </div>
 
-                <!-- DISTRIBUIÇÃO POR SUBCATEGORIA DE SETUP -->
                 <div>
                     <h4 class="text-xs font-bold text-amber-800 uppercase mb-2">Detalhamento de Setup por Subcategoria</h4>
                     <div id="analise-subcategorias-setup" class="space-y-1 bg-amber-50/50 border border-amber-200 rounded-lg p-3 text-xs">
@@ -260,14 +368,12 @@
                 </div>
             </div>
 
-            <!-- CONTEÚDO IMPRIMÍVEL DO RELATÓRIO -->
             <div id="conteudo-relatorio-impresso" class="space-y-3 text-xs">
                 <div class="text-center border-b pb-2">
                     <h1 class="text-base font-extrabold uppercase">Relatório Consolidado de Produção e OEE</h1>
                     <p class="text-slate-500 text-[10px]">Gerado em <span id="data-relatorio"></span></p>
                 </div>
 
-                <!-- 1. Configurações -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
                     <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">1. Configurações da Operação</h4>
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
@@ -279,7 +385,6 @@
                     </div>
                 </div>
 
-                <!-- 2. Quadros de Indicadores OEE -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
                     <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">2. Indicadores de Desempenho (OEE)</h4>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
@@ -302,7 +407,6 @@
                     </div>
                 </div>
 
-                <!-- 3. Quantidades Produzidas e Desperdícios -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
                     <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">3. Produção, Desperdícios e Velocidades Médias</h4>
                     <div class="grid grid-cols-3 gap-2 text-center mb-2">
@@ -339,7 +443,6 @@
                     </div>
                 </div>
 
-                <!-- 4. Detalhamento de Setup por Subcategorias -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
                     <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">4. Detalhamento de Setup (Subcategorias)</h4>
                     <div id="rep-subcategorias-setup" class="space-y-1">
@@ -347,7 +450,6 @@
                     </div>
                 </div>
 
-                <!-- 5. Quadro de Blocos -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
                     <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">5. Quadro de Blocos de Apontamento (Turno)</h4>
                     <div id="relatorio-grade-horarios" class="space-y-0.5">
@@ -355,7 +457,6 @@
                     </div>
                 </div>
 
-                <!-- 6. Notas e Observações Lançadas -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
                     <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">6. Notas e Observações do Turno</h4>
                     <div id="rep-lista-notas" class="space-y-1">
@@ -363,7 +464,6 @@
                     </div>
                 </div>
 
-                <!-- 7. Gráficos de Análise e Tempos -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid space-y-2">
                     <h4 class="font-bold text-slate-700 uppercase border-b pb-0.5">7. Análise de Tempos por Categoria</h4>
                     <div class="grid grid-cols-3 gap-2 text-center">
@@ -556,7 +656,6 @@
             </div>
             
             <div class="space-y-4">
-                <!-- Seção 1: Subcategorias de Setup -->
                 <div class="bg-slate-50 p-3 rounded-lg border space-y-2">
                     <h4 class="text-xs font-bold text-amber-700 uppercase">Subcategorias de Setup</h4>
                     <div class="flex gap-2">
@@ -568,7 +667,6 @@
                     </div>
                 </div>
 
-                <!-- Seção 2: Outras Categorias de Parada/Planejadas -->
                 <div class="bg-slate-50 p-3 rounded-lg border space-y-2">
                     <h4 class="text-xs font-bold text-slate-700 uppercase">Categorias de Parada / Planejadas</h4>
                     <div class="flex gap-2">
@@ -624,8 +722,11 @@
         let dadosBlocosProducao = {};
         let dadosBlocosSetup = {};
         let notasBlocos = {};
+        let historicoTurnos = [];
+        let contadoresGeraisSalvos = [];
 
         window.onload = function() {
+            carregarEstadoGravar();
             inicializarGrade();
             calcularTempoCiclo();
             renderizarBotoesSelecaoCategorias();
@@ -633,9 +734,242 @@
             renderizarAdminCats();
             renderizarAdminSubcatsSetup();
             atualizarContadorNotas();
+            atualizarContadorHistorico();
+            atualizarContadorRegistrosGerais();
             atualizarKPIs();
         };
 
+        // --- FUNÇÕES DE GRAVAR (AUTO-SALVAMENTO LOCALSTORAGE) ---
+        function gravarAutomatico() {
+            let estadoApp = {
+                dadosBase,
+                categorias,
+                subcategoriasSetup,
+                estadoBlocos,
+                dadosBlocosProducao,
+                dadosBlocosSetup,
+                notasBlocos,
+                historicoTurnos,
+                contadoresGeraisSalvos
+            };
+            localStorage.setItem('oee_auto_gravar', JSON.stringify(estadoApp));
+        }
+
+        function gravarTurnoManual() {
+            gravarAutomatico();
+            alert("Progresso gravado com sucesso! Se você sair e voltar para o aplicativo, continuará preenchendo exatamente daqui.");
+        }
+
+        function carregarEstadoGravar() {
+            let salvo = localStorage.getItem('oee_auto_gravar');
+            if(salvo) {
+                try {
+                    let parsed = JSON.parse(salvo);
+                    dadosBase = parsed.dadosBase || dadosBase;
+                    categorias = parsed.categorias || categorias;
+                    subcategoriasSetup = parsed.subcategoriasSetup || subcategoriasSetup;
+                    estadoBlocos = parsed.estadoBlocos || [];
+                    dadosBlocosProducao = parsed.dadosBlocosProducao || {};
+                    dadosBlocosSetup = parsed.dadosBlocosSetup || {};
+                    notasBlocos = parsed.notasBlocos || {};
+                    historicoTurnos = parsed.historicoTurnos || [];
+                    contadoresGeraisSalvos = parsed.contadoresGeraisSalvos || [];
+
+                    let maqTexto = dadosBase.maquina !== "" ? dadosBase.maquina : "Não Definido";
+                    document.getElementById('header-detalhes').innerText = `Máquina: ${maqTexto} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
+                } catch(e) {
+                    console.error("Erro ao carregar gravação automática", e);
+                }
+            }
+        }
+
+        // --- CALCULADORA INDUSTRIAL ---
+        function calcAppend(val) {
+            let display = document.getElementById('calc-display');
+            if(display.value === '0' || display.value === 'Erro') {
+                display.value = val;
+            } else {
+                display.value += val;
+            }
+        }
+        function calcClear() {
+            document.getElementById('calc-display').value = '0';
+        }
+        function calcEval() {
+            let display = document.getElementById('calc-display');
+            try {
+                display.value = eval(display.value);
+            } catch(e) {
+                display.value = 'Erro';
+            }
+        }
+
+        // --- CONTADOR GERAL COM SEPARADOR DE MILHAR ---
+        function formatarContadorGeral(input) {
+            let valorPuro = input.value.replace(/\D/g, '');
+            if(valorPuro === '') {
+                input.value = '';
+                return;
+            }
+            input.value = Number(valorPuro).toLocaleString('pt-BR');
+        }
+
+        function salvarContadorGeral() {
+            let input = document.getElementById('input-contador-geral');
+            let valor = input.value.trim();
+            if(!valor) {
+                alert("Insira um valor válido para o contador geral.");
+                return;
+            }
+            let dataHora = new Date().toLocaleString('pt-BR');
+            contadoresGeraisSalvos.push({ valor, dataHora });
+            input.value = '';
+            atualizarContadorRegistrosGerais();
+            gravarAutomatico();
+            alert("Leitura do contador geral salva com sucesso!");
+        }
+
+        function atualizarContadorRegistrosGerais() {
+            document.getElementById('qtd-contadores-salvos').innerText = contadoresGeraisSalvos.length;
+        }
+
+        function abrirModalListaContadores() {
+            const container = document.getElementById('lista-contadores-container');
+            container.innerHTML = '';
+            if(contadoresGeraisSalvos.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhum contador registrado.</p>`;
+            } else {
+                contadoresGeraisSalvos.forEach((item, idx) => {
+                    container.innerHTML += `
+                        <div class="bg-slate-50 border p-3 rounded-lg flex justify-between items-center text-xs">
+                            <div>
+                                <span class="font-bold text-slate-700 block text-sm">Leitura: ${item.valor}</span>
+                                <span class="text-slate-400 text-[10px]"><i class="fa-solid fa-clock mr-1"></i> ${item.dataHora}</span>
+                            </div>
+                            <button onclick="removerContadorGeral(${idx})" class="text-red-500 hover:text-red-700 font-bold px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    `;
+                });
+            }
+            abrirModal('modal-lista-contadores');
+        }
+
+        function removerContadorGeral(idx) {
+            contadoresGeraisSalvos.splice(idx, 1);
+            atualizarContadorRegistrosGerais();
+            gravarAutomatico();
+            abrirModalListaContadores();
+        }
+
+        // --- BOTÃO SALVAR (HISTÓRICO COM REGRA OEE_Cliente_Máquina_DDMMAAAA_XX) ---
+        function salvarTurnoAtual() {
+            let cliente = (dadosBase.cliente && dadosBase.cliente !== "Não Definido") ? dadosBase.cliente.replace(/\s+/g, '_') : "ClienteGeral";
+            let maquina = (dadosBase.maquina && dadosBase.maquina !== "") ? dadosBase.maquina.replace(/\s+/g, '_') : "MaquinaGeral";
+            
+            let agora = new Date();
+            let dd = String(agora.getDate()).padStart(2, '0');
+            let mm = String(agora.getMonth() + 1).padStart(2, '0');
+            let yyyy = agora.getFullYear();
+            let dataStr = `${dd}${mm}${yyyy}`;
+
+            let baseName = `OEE_${cliente}_${maquina}_${dataStr}`;
+
+            let contadorSufixo = 1;
+            historicoTurnos.forEach(item => {
+                if(item.nomeArquivo.startsWith(baseName)) {
+                    let partes = item.nomeArquivo.split('_');
+                    let ultimoTermo = partes[partes.length - 1];
+                    let num = parseInt(ultimoTermo);
+                    if(!isNaN(num) && num >= contadorSufixo) {
+                        contadorSufixo = num + 1;
+                    }
+                }
+            });
+
+            let sufixoStr = String(contadorSufixo).padStart(2, '0');
+            let nomeArquivoFinal = `${baseName}_${sufixoStr}`;
+
+            let snapshot = {
+                nomeArquivo: nomeArquivoFinal,
+                dataSalvo: agora.toLocaleString('pt-BR'),
+                dadosBase: JSON.parse(JSON.stringify(dadosBase)),
+                estadoBlocos: JSON.parse(JSON.stringify(estadoBlocos)),
+                dadosBlocosProducao: JSON.parse(JSON.stringify(dadosBlocosProducao)),
+                dadosBlocosSetup: JSON.parse(JSON.stringify(dadosBlocosSetup)),
+                notasBlocos: JSON.parse(JSON.stringify(notasBlocos))
+            };
+
+            historicoTurnos.push(snapshot);
+            atualizarContadorHistorico();
+            gravarAutomatico();
+            alert(`Turno salvo com sucesso sob o nome:\n${nomeArquivoFinal}`);
+        }
+
+        function atualizarContadorHistorico() {
+            document.getElementById('contador-historico').innerText = historicoTurnos.length;
+        }
+
+        function abrirModalHistorico() {
+            const container = document.getElementById('lista-historico-container');
+            container.innerHTML = '';
+            if(historicoTurnos.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhum turno salvo no histórico.</p>`;
+            } else {
+                historicoTurnos.forEach((item, idx) => {
+                    container.innerHTML += `
+                        <div class="bg-slate-50 border p-3 rounded-lg flex justify-between items-center text-xs">
+                            <div>
+                                <span class="font-bold text-blue-700 block text-sm"><i class="fa-solid fa-file-lines mr-1"></i> ${item.nomeArquivo}</span>
+                                <span class="text-slate-500 text-[10px]">Salvo em: ${item.dataSalvo} | Máquina: ${item.dadosBase.maquina || 'Não Def.'} | Cliente: ${item.dadosBase.cliente}</span>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="carregarTurnoHistorico(${idx})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded font-bold">Carregar</button>
+                                <button onclick="deletarTurnoHistorico(${idx})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded font-bold"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            abrirModal('modal-historico');
+        }
+
+        function carregarTurnoHistorico(idx) {
+            let item = historicoTurnos[idx];
+            if(item) {
+                dadosBase = JSON.parse(JSON.stringify(item.dadosBase));
+                estadoBlocos = JSON.parse(JSON.stringify(item.estadoBlocos));
+                dadosBlocosProducao = JSON.parse(JSON.stringify(item.dadosBlocosProducao));
+                dadosBlocosSetup = JSON.parse(JSON.stringify(item.dadosBlocosSetup));
+                notasBlocos = JSON.parse(JSON.stringify(item.notasBlocos));
+
+                document.getElementById('cfg-maquina').value = dadosBase.maquina || "";
+                document.getElementById('cfg-cliente').value = dadosBase.cliente;
+                document.getElementById('cfg-produto').value = dadosBase.produto;
+                document.getElementById('cfg-operador').value = dadosBase.operador;
+                document.getElementById('cfg-velocidade').value = dadosBase.velocidadeHora;
+                document.getElementById('cfg-inicio').value = dadosBase.horaInicio || "08:00";
+                document.getElementById('cfg-fim').value = dadosBase.horaFim || "18:00";
+
+                let maqTexto = dadosBase.maquina !== "" ? dadosBase.maquina : "Não Definido";
+                document.getElementById('header-detalhes').innerText = `Máquina: ${maqTexto} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
+
+                calcularTempoCiclo();
+                renderizarGradeHorarios();
+                atualizarContadorNotas();
+                atualizarKPIs();
+                fecharModal('modal-historico');
+                alert(`Turno "${item.nomeArquivo}" carregado com sucesso!`);
+            }
+        }
+
+        function deletarTurnoHistorico(idx) {
+            historicoTurnos.splice(idx, 1);
+            atualizarContadorHistorico();
+            gravarAutomatico();
+            abrirModalHistorico();
+        }
+
+        // --- SISTEMA BASE OEE ---
         function inicializarGrade() {
             let totalB = calcularTotalBlocos();
             if(estadoBlocos.length !== totalB) {
@@ -684,6 +1018,7 @@
             fecharModal('modal-dados');
             renderizarGradeHorarios();
             atualizarKPIs();
+            gravarAutomatico();
         }
 
         function selecionarCategoria(nome) {
@@ -738,6 +1073,7 @@
                 document.getElementById('nova-cat-nome').value = '';
                 renderizarBotoesSelecaoCategorias();
                 renderizarAdminCats();
+                gravarAutomatico();
             }
         }
 
@@ -746,6 +1082,7 @@
             if(categoriaAtiva === nome) categoriaAtiva = "Produzindo";
             renderizarBotoesSelecaoCategorias();
             renderizarAdminCats();
+            gravarAutomatico();
         }
 
         function adicionarSubcategoriaSetup() {
@@ -754,6 +1091,7 @@
                 subcategoriasSetup.push(nome);
                 document.getElementById('nova-subcat-setup').value = '';
                 renderizarAdminSubcatsSetup();
+                gravarAutomatico();
             }
         }
 
@@ -763,12 +1101,14 @@
             if(novo && novo.trim() !== "" && !subcategoriasSetup.includes(novo.trim())) {
                 subcategoriasSetup[idx] = novo.trim();
                 renderizarAdminSubcatsSetup();
+                gravarAutomatico();
             }
         }
 
         function removerSubcatSetup(idx) {
             subcategoriasSetup.splice(idx, 1);
             renderizarAdminSubcatsSetup();
+            gravarAutomatico();
         }
 
         function renderizarGradeHorarios() {
@@ -845,6 +1185,7 @@
                             }
                             renderizarGradeHorarios();
                             atualizarKPIs();
+                            gravarAutomatico();
                         }
                     };
 
@@ -886,6 +1227,7 @@
             renderizarGradeHorarios();
             atualizarContadorNotas();
             atualizarKPIs();
+            gravarAutomatico();
         }
 
         function abrirModalBlocoSetup(idx, hora, min) {
@@ -920,6 +1262,7 @@
             renderizarGradeHorarios();
             atualizarContadorNotas();
             atualizarKPIs();
+            gravarAutomatico();
         }
 
         function abrirModalBlocoGenerico(idx, catNome, hora, min) {
@@ -941,6 +1284,7 @@
             renderizarGradeHorarios();
             atualizarContadorNotas();
             atualizarKPIs();
+            gravarAutomatico();
         }
 
         function deletarBlocoGenerico(tipoModal) {
@@ -961,6 +1305,7 @@
             renderizarGradeHorarios();
             atualizarContadorNotas();
             atualizarKPIs();
+            gravarAutomatico();
         }
 
         function atualizarContadorNotas() {
@@ -1107,7 +1452,6 @@
             document.getElementById('analise-desp-medio-setup').innerText = `${stats.despMedioSetup.toLocaleString()} folhas`;
             document.getElementById('analise-desp-medio-prod').innerText = `${stats.despMedioProd.toLocaleString()} folhas`;
 
-            // Preencher subcategorias de setup na análise
             const containerSub = document.getElementById('analise-subcategorias-setup');
             containerSub.innerHTML = '';
             let subChaves = Object.keys(stats.contagemSubcatsSetup);
@@ -1213,7 +1557,6 @@
             document.getElementById('rep-min-paradas').innerText = `${minutosParadas} min`;
             document.getElementById('rep-min-planejadas').innerText = `${minutosPlanejadas} min`;
 
-            // Preencher relatório de subcategorias de setup
             const containerRepSub = document.getElementById('rep-subcategorias-setup');
             containerRepSub.innerHTML = '';
             let subKeys = Object.keys(stats.contagemSubcatsSetup);
@@ -1227,7 +1570,6 @@
                 });
             }
 
-            // Preencher relatório de notas
             const containerRepNotas = document.getElementById('rep-lista-notas');
             containerRepNotas.innerHTML = '';
             let notaChaves = Object.keys(notasBlocos).filter(k => notasBlocos[k] && notasBlocos[k].trim() !== "");
@@ -1324,7 +1666,9 @@
                 dadosBlocosProducao: dadosBlocosProducao,
                 dadosBlocosSetup: dadosBlocosSetup,
                 notasBlocos: notasBlocos,
-                versao: "2.3",
+                historicoTurnos: historicoTurnos,
+                contadoresGeraisSalvos: contadoresGeraisSalvos,
+                versao: "2.5",
                 dataBackup: new Date().toISOString()
             };
 
@@ -1354,6 +1698,8 @@
                         dadosBlocosProducao = conteudo.dadosBlocosProducao || dadosBlocosProducao;
                         dadosBlocosSetup = conteudo.dadosBlocosSetup || dadosBlocosSetup;
                         notasBlocos = conteudo.notasBlocos || {};
+                        historicoTurnos = conteudo.historicoTurnos || [];
+                        contadoresGeraisSalvos = conteudo.contadoresGeraisSalvos || [];
 
                         document.getElementById('cfg-maquina').value = dadosBase.maquina || "";
                         document.getElementById('cfg-cliente').value = dadosBase.cliente;
@@ -1372,7 +1718,10 @@
                         renderizarAdminCats();
                         renderizarAdminSubcatsSetup();
                         atualizarContadorNotas();
+                        atualizarContadorHistorico();
+                        atualizarContadorRegistrosGerais();
                         atualizarKPIs();
+                        gravarAutomatico();
 
                         alert("Backup carregado com sucesso!");
                     } else {
