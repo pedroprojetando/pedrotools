@@ -57,12 +57,15 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wide">OEE - DIÁRIO DE BORDO</h1>
-                    <p class="text-xs text-slate-400" id="header-detalhes">Máquina: XL106 | Cliente: Não Definido | Operador: Não Definido</p>
+                    <p class="text-xs text-slate-400" id="header-detalhes">Máquina: Não Definido | Cliente: Não Definido | Operador: Não Definido</p>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
                 <button onclick="abrirModal('modal-dados')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
                     <i class="fa-solid fa-gear"></i> Dados Base
+                </button>
+                <button onclick="abrirModalNotasGerais()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-note-sticky"></i> Notas (<span id="contador-notas">0</span>)
                 </button>
                 <button onclick="abrirModalAnalise()" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
                     <i class="fa-solid fa-chart-column"></i> Análise
@@ -123,7 +126,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-3">
                 <div>
                     <h2 class="text-md font-bold text-slate-800">Grade de Apontamento por Turno (5 min por bloco)</h2>
-                    <p class="text-xs text-slate-500">Selecione uma categoria e clique nos quadrados para marcar. Clique novamente em Produção/Setup para editar, ou nas demais para desmarcar.</p>
+                    <p class="text-xs text-slate-500">1º Clique: Marca o quadrado. 2º Clique (em cima do quadrado marcado): Abre a edição, notas ou exclusão.</p>
                 </div>
                 <div class="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border">
                     Categoria Selecionada: <span id="label-categoria-ativa" class="text-blue-600 font-bold">Produzindo</span>
@@ -147,6 +150,22 @@
         </div>
 
     </main>
+
+    <!-- MODAL DE NOTAS GERAIS (CABEÇALHO) -->
+    <div id="modal-notas-gerais" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-note-sticky text-indigo-600 mr-2"></i> Lista de Notas Lançadas no Turno</h3>
+                <button onclick="fecharModal('modal-notas-gerais')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="lista-notas-gerais-container" class="space-y-2 max-h-[60vh] overflow-y-auto">
+                <!-- Gerado dinamicamente -->
+            </div>
+            <div class="flex justify-end pt-2 border-t">
+                <button onclick="fecharModal('modal-notas-gerais')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-medium">Fechar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL DE ANÁLISE -->
     <div id="modal-analise" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
@@ -208,6 +227,14 @@
                     </div>
                 </div>
 
+                <!-- DISTRIBUIÇÃO POR SUBCATEGORIA DE SETUP -->
+                <div>
+                    <h4 class="text-xs font-bold text-amber-800 uppercase mb-2">Detalhamento de Setup por Subcategoria</h4>
+                    <div id="analise-subcategorias-setup" class="space-y-1 bg-amber-50/50 border border-amber-200 rounded-lg p-3 text-xs">
+                        <!-- Gerado dinamicamente -->
+                    </div>
+                </div>
+
                 <div>
                     <h4 class="text-xs font-bold text-slate-700 uppercase mb-2">Distribuição de Tempo por Categoria (Gráfico em Barras)</h4>
                     <div id="grafico-barras-analise" class="space-y-2 bg-slate-50 border rounded-lg p-3">
@@ -244,7 +271,7 @@
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
                     <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">1. Configurações da Operação</h4>
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
-                        <div><b>Máquina:</b> <span id="rep-maquina">XL106</span></div>
+                        <div><b>Máquina:</b> <span id="rep-maquina">Não Definido</span></div>
                         <div><b>Cliente:</b> <span id="rep-cliente">-</span></div>
                         <div><b>Produto:</b> <span id="rep-produto">-</span></div>
                         <div><b>Operador:</b> <span id="rep-operador">-</span></div>
@@ -312,17 +339,33 @@
                     </div>
                 </div>
 
-                <!-- 4. Quadro de Blocos -->
+                <!-- 4. Detalhamento de Setup por Subcategorias -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
-                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">4. Quadro de Blocos de Apontamento (Turno)</h4>
+                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">4. Detalhamento de Setup (Subcategorias)</h4>
+                    <div id="rep-subcategorias-setup" class="space-y-1">
+                        <!-- Gerado via Script -->
+                    </div>
+                </div>
+
+                <!-- 5. Quadro de Blocos -->
+                <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
+                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">5. Quadro de Blocos de Apontamento (Turno)</h4>
                     <div id="relatorio-grade-horarios" class="space-y-0.5">
                         <!-- Gerado via Script -->
                     </div>
                 </div>
 
-                <!-- 5. Gráficos de Análise e Tempos -->
+                <!-- 6. Notas e Observações Lançadas -->
+                <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
+                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">6. Notas e Observações do Turno</h4>
+                    <div id="rep-lista-notas" class="space-y-1">
+                        <!-- Gerado via Script -->
+                    </div>
+                </div>
+
+                <!-- 7. Gráficos de Análise e Tempos -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid space-y-2">
-                    <h4 class="font-bold text-slate-700 uppercase border-b pb-0.5">5. Análise de Tempos por Categoria</h4>
+                    <h4 class="font-bold text-slate-700 uppercase border-b pb-0.5">7. Análise de Tempos por Categoria</h4>
                     <div class="grid grid-cols-3 gap-2 text-center">
                         <div class="bg-emerald-100 border border-emerald-300 p-1.5 rounded">
                             <span class="font-bold text-emerald-800 uppercase block text-[9px]">Produção</span>
@@ -357,7 +400,7 @@
     <div id="modal-bloco-producao" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-box-open text-emerald-600 mr-2"></i> Apontamento de Detalhes da Produção</h3>
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-box-open text-emerald-600 mr-2"></i> Apontamento de Produção</h3>
                 <button onclick="fecharModal('modal-bloco-producao')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <input type="hidden" id="bloco-index-ativo">
@@ -373,10 +416,14 @@
                         <input type="number" id="bloco-input-refugo" value="0" class="w-full border rounded-lg p-2 text-sm">
                     </div>
                 </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nota / Observação do Bloco</label>
+                    <textarea id="bloco-input-nota" rows="2" placeholder="Digite alguma observação..." class="w-full border rounded-lg p-2 text-sm"></textarea>
+                </div>
             </div>
             <div class="flex justify-between pt-3 border-t">
-                <button onclick="desmarcarBloco('producao')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
-                    <i class="fa-solid fa-trash mr-1"></i> Desmarcar Bloco
+                <button onclick="deletarBlocoGenerico('producao')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
+                    <i class="fa-solid fa-trash mr-1"></i> Deletar Bloco
                 </button>
                 <div class="space-x-2">
                     <button onclick="fecharModal('modal-bloco-producao')" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-lg text-xs font-medium">Cancelar</button>
@@ -390,24 +437,61 @@
     <div id="modal-bloco-setup" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-wrench text-amber-600 mr-2"></i> Apontamento de Desperdício de Setup</h3>
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-wrench text-amber-600 mr-2"></i> Apontamento de Setup</h3>
                 <button onclick="fecharModal('modal-bloco-setup')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <input type="hidden" id="setup-index-ativo">
             <div class="space-y-3">
                 <p id="setup-info-hora" class="text-xs font-bold text-slate-500">Horário do Bloco:</p>
                 <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Subcategoria de Setup</label>
+                    <select id="setup-select-subcat" class="w-full border rounded-lg p-2 text-sm">
+                        <!-- Preenchido dinamicamente -->
+                    </select>
+                </div>
+                <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Desperdício de Setup (Folhas)</label>
                     <input type="number" id="setup-input-desperdicio" value="0" class="w-full border rounded-lg p-2 text-sm">
                 </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nota / Observação do Bloco</label>
+                    <textarea id="setup-input-nota" rows="2" placeholder="Digite alguma observação..." class="w-full border rounded-lg p-2 text-sm"></textarea>
+                </div>
             </div>
             <div class="flex justify-between pt-3 border-t">
-                <button onclick="desmarcarBloco('setup')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
-                    <i class="fa-solid fa-trash mr-1"></i> Desmarcar Bloco
+                <button onclick="deletarBlocoGenerico('setup')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
+                    <i class="fa-solid fa-trash mr-1"></i> Deletar Bloco
                 </button>
                 <div class="space-x-2">
                     <button onclick="fecharModal('modal-bloco-setup')" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-lg text-xs font-medium">Cancelar</button>
                     <button onclick="salvarBlocoSetup()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DADOS DO BLOCO GENÉRICO (OUTRAS CATEGORIAS) -->
+    <div id="modal-bloco-generico" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800" id="generico-titulo-modal"><i class="fa-solid fa-circle-info text-blue-600 mr-2"></i> Detalhes do Bloco</h3>
+                <button onclick="fecharModal('modal-bloco-generico')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <input type="hidden" id="generico-index-ativo">
+            <div class="space-y-3">
+                <p id="generico-info-hora" class="text-xs font-bold text-slate-500">Horário do Bloco:</p>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nota / Observação do Bloco</label>
+                    <textarea id="generico-input-nota" rows="3" placeholder="Digite alguma observação..." class="w-full border rounded-lg p-2 text-sm"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-between pt-3 border-t">
+                <button onclick="deletarBlocoGenerico('generico')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
+                    <i class="fa-solid fa-trash mr-1"></i> Deletar Bloco
+                </button>
+                <div class="space-x-2">
+                    <button onclick="fecharModal('modal-bloco-generico')" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-lg text-xs font-medium">Cancelar</button>
+                    <button onclick="salvarBlocoGenerico()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold">Salvar</button>
                 </div>
             </div>
         </div>
@@ -423,7 +507,7 @@
             <div class="space-y-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Linha / Máquina</label>
-                    <input type="text" id="cfg-maquina" value="XL106" class="w-full border rounded-lg p-2 text-sm">
+                    <input type="text" id="cfg-maquina" placeholder="Ex: XL106 (Opcional)" class="w-full border rounded-lg p-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Cliente</label>
@@ -465,24 +549,42 @@
 
     <!-- MODAL DE ADMINISTRAÇÃO -->
     <div id="modal-admin" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl space-y-4">
+        <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-slate-800">Administração de Categorias</h3>
+                <h3 class="font-bold text-lg text-slate-800">Administração de Categorias e Setup</h3>
                 <button onclick="fecharModal('modal-admin')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <div class="space-y-3">
-                <div class="flex gap-2">
-                    <input type="text" id="nova-cat-nome" placeholder="Nome da nova categoria/motivo" class="flex-1 border rounded p-2 text-xs">
-                    <select id="nova-cat-tipo" class="border rounded p-2 text-xs">
-                        <option value="Programacao">Planejada</option>
-                        <option value="Disponibilidade">Parada (Disp.)</option>
-                    </select>
-                    <button onclick="adicionarNovaCategoria()" class="bg-slate-800 text-white px-4 py-2 rounded text-xs font-medium hover:bg-slate-900">Adicionar</button>
+            
+            <div class="space-y-4">
+                <!-- Seção 1: Subcategorias de Setup -->
+                <div class="bg-slate-50 p-3 rounded-lg border space-y-2">
+                    <h4 class="text-xs font-bold text-amber-700 uppercase">Subcategorias de Setup</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="nova-subcat-setup" placeholder="Nova subcategoria (ex: Acerto de Cor)" class="flex-1 border rounded p-2 text-xs">
+                        <button onclick="adicionarSubcategoriaSetup()" class="bg-amber-600 text-white px-3 py-2 rounded text-xs font-medium hover:bg-amber-700">Adicionar</button>
+                    </div>
+                    <div class="max-h-32 overflow-y-auto border rounded p-2 text-xs space-y-1 bg-white" id="lista-admin-subcats">
+                        <!-- Gerado via script -->
+                    </div>
                 </div>
-                <div class="max-h-48 overflow-y-auto border rounded p-2 text-xs space-y-1 bg-slate-50" id="lista-admin-cats">
-                    <!-- Gerado via script -->
+
+                <!-- Seção 2: Outras Categorias de Parada/Planejadas -->
+                <div class="bg-slate-50 p-3 rounded-lg border space-y-2">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase">Categorias de Parada / Planejadas</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="nova-cat-nome" placeholder="Nome da categoria" class="flex-1 border rounded p-2 text-xs">
+                        <select id="nova-cat-tipo" class="border rounded p-2 text-xs">
+                            <option value="Programacao">Planejada</option>
+                            <option value="Disponibilidade">Parada (Disp.)</option>
+                        </select>
+                        <button onclick="adicionarNovaCategoria()" class="bg-slate-800 text-white px-3 py-2 rounded text-xs font-medium hover:bg-slate-900">Adicionar</button>
+                    </div>
+                    <div class="max-h-32 overflow-y-auto border rounded p-2 text-xs space-y-1 bg-white" id="lista-admin-cats">
+                        <!-- Gerado via script -->
+                    </div>
                 </div>
             </div>
+
             <div class="flex justify-end pt-2 border-t">
                 <button onclick="fecharModal('modal-admin')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Concluído</button>
             </div>
@@ -492,7 +594,7 @@
     <!-- SCRIPT DO SISTEMA -->
     <script>
         let dadosBase = { 
-            maquina: "XL106", 
+            maquina: "", 
             cliente: "Não Definido", 
             produto: "Geral", 
             operador: "Não Definido", 
@@ -503,9 +605,9 @@
 
         let categorias = [
             { nome: "Produzindo", tipo: "Produzindo", cor: "bg-emerald-500 text-white border-emerald-600" },
+            { nome: "Setup", tipo: "Disponibilidade", cor: "bg-amber-500 text-white border-amber-600" },
             { nome: "Intervalo", tipo: "Programacao", cor: "bg-cyan-500 text-white border-cyan-600" },
             { nome: "Manutenção Programada", tipo: "Programacao", cor: "bg-blue-500 text-white border-blue-600" },
-            { nome: "Setup", tipo: "Disponibilidade", cor: "bg-amber-500 text-white border-amber-600" },
             { nome: "Troca de Chapa", tipo: "Disponibilidade", cor: "bg-orange-500 text-white border-orange-600" },
             { nome: "Verniz", tipo: "Disponibilidade", cor: "bg-purple-500 text-white border-purple-600" },
             { nome: "Lavagem Blanqueta", tipo: "Disponibilidade", cor: "bg-rose-500 text-white border-rose-600" },
@@ -515,10 +617,13 @@
             { nome: "Aprovação", tipo: "Disponibilidade", cor: "bg-indigo-500 text-white border-indigo-600" }
         ];
 
+        let subcategoriasSetup = ["Lavagem de Rolaria", "Verniz", "Tombo"];
+
         let categoriaAtiva = "Produzindo";
         let estadoBlocos = [];
         let dadosBlocosProducao = {};
         let dadosBlocosSetup = {};
+        let notasBlocos = {};
 
         window.onload = function() {
             inicializarGrade();
@@ -526,6 +631,8 @@
             renderizarBotoesSelecaoCategorias();
             renderizarGradeHorarios();
             renderizarAdminCats();
+            renderizarAdminSubcatsSetup();
+            atualizarContadorNotas();
             atualizarKPIs();
         };
 
@@ -547,6 +654,7 @@
         function abrirModal(id) { 
             if(id === 'modal-dados') {
                 calcularTempoCiclo();
+                document.getElementById('cfg-maquina').value = dadosBase.maquina;
                 document.getElementById('cfg-inicio').value = dadosBase.horaInicio;
                 document.getElementById('cfg-fim').value = dadosBase.horaFim;
             }
@@ -561,15 +669,16 @@
         }
 
         function salvarDadosBase() {
-            dadosBase.maquina = document.getElementById('cfg-maquina').value || "XL106";
-            dadosBase.cliente = document.getElementById('cfg-cliente').value || "Não Definido";
-            dadosBase.produto = document.getElementById('cfg-produto').value || "Geral";
-            dadosBase.operador = document.getElementById('cfg-operador').value || "Não Definido";
+            dadosBase.maquina = document.getElementById('cfg-maquina').value.trim();
+            dadosBase.cliente = document.getElementById('cfg-cliente').value.trim() || "Não Definido";
+            dadosBase.produto = document.getElementById('cfg-produto').value.trim() || "Geral";
+            dadosBase.operador = document.getElementById('cfg-operador').value.trim() || "Não Definido";
             dadosBase.velocidadeHora = parseFloat(document.getElementById('cfg-velocidade').value) || 18000;
             dadosBase.horaInicio = document.getElementById('cfg-inicio').value || "08:00";
             dadosBase.horaFim = document.getElementById('cfg-fim').value || "18:00";
 
-            document.getElementById('header-detalhes').innerText = `Máquina: ${dadosBase.maquina} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
+            let maqTexto = dadosBase.maquina !== "" ? dadosBase.maquina : "Não Definido";
+            document.getElementById('header-detalhes').innerText = `Máquina: ${maqTexto} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
             
             inicializarGrade();
             fecharModal('modal-dados');
@@ -586,7 +695,12 @@
         function renderizarBotoesSelecaoCategorias() {
             const container = document.getElementById('botoes-secao-categorias');
             container.innerHTML = '';
-            categorias.forEach(cat => {
+            
+            let fixos = categorias.filter(c => c.nome === "Produzindo" || c.nome === "Setup");
+            let outros = categorias.filter(c => c.nome !== "Produzindo" && c.nome !== "Setup");
+            let ordenadas = [...fixos, ...outros];
+
+            ordenadas.forEach(cat => {
                 let btn = document.createElement('button');
                 let isAtivo = categoriaAtiva === cat.nome;
                 let ring = isAtivo ? "ring-2 ring-slate-900 scale-105 font-extrabold shadow-md" : "opacity-80 hover:opacity-100";
@@ -600,16 +714,24 @@
         function renderizarAdminCats() {
             const lista = document.getElementById('lista-admin-cats');
             lista.innerHTML = '';
-            categorias.filter(c => c.tipo !== 'Produzindo').forEach((cat, idx) => {
-                lista.innerHTML += `<div class="flex justify-between items-center p-1 bg-white rounded border"><span><b>${cat.nome}</b> (${cat.tipo})</span> <button onclick="removerCat('${cat.nome}')" class="text-red-500 font-bold px-1">&times;</button></div>`;
+            categorias.filter(c => c.nome !== 'Produzindo' && c.nome !== 'Setup').forEach((cat, idx) => {
+                lista.innerHTML += `<div class="flex justify-between items-center p-1.5 bg-slate-50 rounded border"><span><b>${cat.nome}</b> (${cat.tipo})</span> <button onclick="removerCat('${cat.nome}')" class="text-red-500 font-bold px-1 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></div>`;
+            });
+        }
+
+        function renderizarAdminSubcatsSetup() {
+            const lista = document.getElementById('lista-admin-subcats');
+            lista.innerHTML = '';
+            subcategoriasSetup.forEach((sub, idx) => {
+                lista.innerHTML += `<div class="flex justify-between items-center p-1.5 bg-slate-50 rounded border"><span><b>${sub}</b></span> <div class="space-x-1"><button onclick="editarSubcatSetup(${idx})" class="text-blue-500 font-bold px-1 hover:text-blue-700" title="Editar"><i class="fa-solid fa-pen"></i></button><button onclick="removerSubcatSetup(${idx})" class="text-red-500 font-bold px-1 hover:text-red-700" title="Excluir"><i class="fa-solid fa-trash"></i></button></div></div>`;
             });
         }
 
         function adicionarNovaCategoria() {
             const nome = document.getElementById('nova-cat-nome').value.trim();
             const tipo = document.getElementById('nova-cat-tipo').value;
-            if(nome) {
-                const cores = ["bg-pink-500 text-white border-pink-600", "bg-sky-500 text-white border-sky-600", "bg-violet-500 text-white border-violet-600"];
+            if(nome && !categorias.some(c => c.nome === nome)) {
+                const cores = ["bg-pink-500 text-white border-pink-600", "bg-sky-500 text-white border-sky-600", "bg-violet-500 text-white border-violet-600", "bg-indigo-500 text-white border-indigo-600"];
                 const cor = cores[categorias.length % cores.length];
                 
                 categorias.push({ nome, tipo, cor });
@@ -624,6 +746,29 @@
             if(categoriaAtiva === nome) categoriaAtiva = "Produzindo";
             renderizarBotoesSelecaoCategorias();
             renderizarAdminCats();
+        }
+
+        function adicionarSubcategoriaSetup() {
+            const nome = document.getElementById('nova-subcat-setup').value.trim();
+            if(nome && !subcategoriasSetup.includes(nome)) {
+                subcategoriasSetup.push(nome);
+                document.getElementById('nova-subcat-setup').value = '';
+                renderizarAdminSubcatsSetup();
+            }
+        }
+
+        function editarSubcatSetup(idx) {
+            let atual = subcategoriasSetup[idx];
+            let novo = prompt("Editar subcategoria de Setup:", atual);
+            if(novo && novo.trim() !== "" && !subcategoriasSetup.includes(novo.trim())) {
+                subcategoriasSetup[idx] = novo.trim();
+                renderizarAdminSubcatsSetup();
+            }
+        }
+
+        function removerSubcatSetup(idx) {
+            subcategoriasSetup.splice(idx, 1);
+            renderizarAdminSubcatsSetup();
         }
 
         function renderizarGradeHorarios() {
@@ -664,15 +809,20 @@
                     let celula = document.createElement('div');
                     
                     if(catObj) {
+                        let temNota = notasBlocos[atualIdx] && notasBlocos[atualIdx].trim() !== "";
+                        let iconeNota = temNota ? ' <i class="fa-solid fa-note-sticky text-[6px] text-yellow-300"></i>' : '';
                         celula.className = `grid-cell flex-1 rounded border flex items-center justify-center cursor-pointer font-bold shadow-2xs ${catObj.cor}`;
                         let infoExtra = '';
                         if(catNome === 'Produzindo' && dadosBlocosProducao[atualIdx]) {
                             infoExtra = ` | Bons: ${dadosBlocosProducao[atualIdx].boas}`;
                         } else if(catNome === 'Setup' && dadosBlocosSetup[atualIdx]) {
-                            infoExtra = ` | Desp. Setup: ${dadosBlocosSetup[atualIdx].desperdicio}`;
+                            let subInfo = dadosBlocosSetup[atualIdx].subcat ? dadosBlocosSetup[atualIdx].subcat : "Não Definida";
+                            infoExtra = ` | Setup (${subInfo}): ${dadosBlocosSetup[atualIdx].desperdicio}`;
                         }
+                        if(temNota) infoExtra += ` | Nota: ${notasBlocos[atualIdx]}`;
+                        
                         celula.title = `${horaBlocoStr}:${minutoStr} - ${catNome}${infoExtra}`;
-                        celula.innerHTML = `<span>${minutoNum}</span>`;
+                        celula.innerHTML = `<span>${minutoNum}${iconeNota}</span>`;
                     } else {
                         celula.className = `grid-cell vazio flex-1 rounded border flex items-center justify-center cursor-pointer font-bold`;
                         celula.title = `${horaBlocoStr}:${minutoStr} - Vazio (Clique para preencher)`;
@@ -680,24 +830,21 @@
                     }
                     
                     celula.onclick = () => {
-                        if (catNome === 'Produzindo') {
-                            abrirModalBlocoProducao(atualIdx, horaBlocoStr, minutoStr);
-                        } else if (catNome === 'Setup') {
-                            abrirModalBlocoSetup(atualIdx, horaBlocoStr, minutoStr);
-                        } else {
-                            if (catNome !== null) {
-                                estadoBlocos[atualIdx] = null;
-                                delete dadosBlocosProducao[atualIdx];
-                                delete dadosBlocosSetup[atualIdx];
-                                renderizarGradeHorarios();
-                                atualizarKPIs();
+                        if (catNome !== null) {
+                            if (catNome === 'Produzindo') {
+                                abrirModalBlocoProducao(atualIdx, horaBlocoStr, minutoStr);
+                            } else if (catNome === 'Setup') {
+                                abrirModalBlocoSetup(atualIdx, horaBlocoStr, minutoStr);
                             } else {
-                                estadoBlocos[atualIdx] = categoriaAtiva;
-                                delete dadosBlocosProducao[atualIdx];
-                                delete dadosBlocosSetup[atualIdx];
-                                renderizarGradeHorarios();
-                                atualizarKPIs();
+                                abrirModalBlocoGenerico(atualIdx, catNome, horaBlocoStr, minutoStr);
                             }
+                        } else {
+                            estadoBlocos[atualIdx] = categoriaAtiva;
+                            if (categoriaAtiva === 'Setup' && !dadosBlocosSetup[atualIdx]) {
+                                dadosBlocosSetup[atualIdx] = { subcat: "", desperdicio: 0 };
+                            }
+                            renderizarGradeHorarios();
+                            atualizarKPIs();
                         }
                     };
 
@@ -720,6 +867,7 @@
             let prod = dadosBlocosProducao[idx] || { boas: 0, refugo: 0 };
             document.getElementById('bloco-input-boas').value = prod.boas;
             document.getElementById('bloco-input-refugo').value = prod.refugo;
+            document.getElementById('bloco-input-nota').value = notasBlocos[idx] || "";
             abrirModal('modal-bloco-producao');
         }
 
@@ -727,44 +875,136 @@
             let idx = parseInt(document.getElementById('bloco-index-ativo').value);
             let boas = parseFloat(document.getElementById('bloco-input-boas').value) || 0;
             let refugo = parseFloat(document.getElementById('bloco-input-refugo').value) || 0;
+            let nota = document.getElementById('bloco-input-nota').value.trim();
 
             estadoBlocos[idx] = 'Produzindo';
             dadosBlocosProducao[idx] = { boas, refugo };
+            if(nota !== "") notasBlocos[idx] = nota;
+            else delete notasBlocos[idx];
 
             fecharModal('modal-bloco-producao');
             renderizarGradeHorarios();
+            atualizarContadorNotas();
             atualizarKPIs();
         }
 
         function abrirModalBlocoSetup(idx, hora, min) {
             document.getElementById('setup-index-ativo').value = idx;
             document.getElementById('setup-info-hora').innerText = `Horário do Bloco: ${hora}:${min}`;
-            let setupInfo = dadosBlocosSetup[idx] || { desperdicio: 0 };
+            
+            const sel = document.getElementById('setup-select-subcat');
+            sel.innerHTML = '<option value="">Selecione uma subcategoria...</option>';
+            subcategoriasSetup.forEach(sub => {
+                sel.innerHTML += `<option value="${sub}">${sub}</option>`;
+            });
+
+            let setupInfo = dadosBlocosSetup[idx] || { subcat: "", desperdicio: 0 };
+            sel.value = setupInfo.subcat || "";
             document.getElementById('setup-input-desperdicio').value = setupInfo.desperdicio;
+            document.getElementById('setup-input-nota').value = notasBlocos[idx] || "";
             abrirModal('modal-bloco-setup');
         }
 
         function salvarBlocoSetup() {
             let idx = parseInt(document.getElementById('setup-index-ativo').value);
+            let subcat = document.getElementById('setup-select-subcat').value;
             let desperdicio = parseFloat(document.getElementById('setup-input-desperdicio').value) || 0;
+            let nota = document.getElementById('setup-input-nota').value.trim();
 
             estadoBlocos[idx] = 'Setup';
-            dadosBlocosSetup[idx] = { desperdicio };
+            dadosBlocosSetup[idx] = { subcat, desperdicio };
+            if(nota !== "") notasBlocos[idx] = nota;
+            else delete notasBlocos[idx];
 
             fecharModal('modal-bloco-setup');
             renderizarGradeHorarios();
+            atualizarContadorNotas();
             atualizarKPIs();
         }
 
-        function desmarcarBloco(tipo) {
-            let idx = parseInt(tipo === 'producao' ? document.getElementById('bloco-index-ativo').value : document.getElementById('setup-index-ativo').value);
+        function abrirModalBlocoGenerico(idx, catNome, hora, min) {
+            document.getElementById('generico-index-ativo').value = idx;
+            document.getElementById('generico-titulo-modal').innerHTML = `<i class="fa-solid fa-circle-info text-blue-600 mr-2"></i> Detalhes: ${catNome}`;
+            document.getElementById('generico-info-hora').innerText = `Horário do Bloco: ${hora}:${min}`;
+            document.getElementById('generico-input-nota').value = notasBlocos[idx] || "";
+            abrirModal('modal-bloco-generico');
+        }
+
+        function salvarBlocoGenerico() {
+            let idx = parseInt(document.getElementById('generico-index-ativo').value);
+            let nota = document.getElementById('generico-input-nota').value.trim();
+
+            if(nota !== "") notasBlocos[idx] = nota;
+            else delete notasBlocos[idx];
+
+            fecharModal('modal-bloco-generico');
+            renderizarGradeHorarios();
+            atualizarContadorNotas();
+            atualizarKPIs();
+        }
+
+        function deletarBlocoGenerico(tipoModal) {
+            let idx;
+            if(tipoModal === 'producao') idx = parseInt(document.getElementById('bloco-index-ativo').value);
+            else if(tipoModal === 'setup') idx = parseInt(document.getElementById('setup-index-ativo').value);
+            else idx = parseInt(document.getElementById('generico-index-ativo').value);
+
             estadoBlocos[idx] = null;
             delete dadosBlocosProducao[idx];
             delete dadosBlocosSetup[idx];
+            delete notasBlocos[idx];
 
-            fecharModal(tipo === 'producao' ? 'modal-bloco-producao' : 'modal-bloco-setup');
+            fecharModal('modal-bloco-producao');
+            fecharModal('modal-bloco-setup');
+            fecharModal('modal-bloco-generico');
+
             renderizarGradeHorarios();
+            atualizarContadorNotas();
             atualizarKPIs();
+        }
+
+        function atualizarContadorNotas() {
+            let qtd = Object.keys(notasBlocos).filter(k => notasBlocos[k] && notasBlocos[k].trim() !== "").length;
+            document.getElementById('contador-notas').innerText = qtd;
+        }
+
+        function abrirModalNotasGerais() {
+            const container = document.getElementById('lista-notas-gerais-container');
+            container.innerHTML = '';
+
+            let chaves = Object.keys(notasBlocos).filter(k => notasBlocos[k] && notasBlocos[k].trim() !== "");
+            
+            if(chaves.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Nenhuma nota lançada no turno até o momento.</p>`;
+            } else {
+                chaves.sort((a,b) => parseInt(a) - parseInt(b)).forEach(idx => {
+                    let horaStr = obterHoraBloco(idx);
+                    let cat = estadoBlocos[idx] || "Desconhecido";
+                    let notaTexto = notasBlocos[idx];
+
+                    let card = document.createElement('div');
+                    card.className = "bg-slate-50 border p-3 rounded-lg space-y-1 text-xs";
+                    card.innerHTML = `
+                        <div class="flex justify-between font-bold text-slate-700">
+                            <span><i class="fa-solid fa-clock mr-1 text-indigo-600"></i> Horário: ${horaStr}</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px]">${cat}</span>
+                        </div>
+                        <p class="text-slate-600 italic mt-1 bg-white p-2 rounded border">"${notaTexto}"</p>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            abrirModal('modal-notas-gerais');
+        }
+
+        function obterHoraBloco(idx) {
+            let [hIni, mIni] = dadosBase.horaInicio.split(':').map(Number);
+            let totalMins = parseInt(idx) * 5;
+            let hTotal = hIni + Math.floor(totalMins / 60);
+            let mTotal = mIni + (totalMins % 60);
+            if(mTotal >= 60) { hTotal += Math.floor(mTotal/60); mTotal = mTotal % 60; }
+            return String(hTotal).padStart(2,'0') + ":" + String(mTotal).padStart(2,'0');
         }
 
         function calcularEstatisticasAvancadas() {
@@ -775,6 +1015,8 @@
             let totalDesperdicioSetup = 0;
             let blocosComDespProd = 0;
             let blocosComDespSetup = 0;
+
+            let contagemSubcatsSetup = {};
 
             estadoBlocos.forEach((catNome, idx) => {
                 if(catNome === 'Produzindo') {
@@ -788,8 +1030,13 @@
                 } else if(catNome === 'Setup') {
                     if(dadosBlocosSetup[idx]) {
                         let desp = dadosBlocosSetup[idx].desperdicio;
+                        let sub = dadosBlocosSetup[idx].subcat || "Não Definida";
                         totalDesperdicioSetup += desp;
                         if(desp > 0) blocosComDespSetup++;
+
+                        contagemSubcatsSetup[sub] = contagemSubcatsSetup[sub] || { blocos: 0, desperdicio: 0 };
+                        contagemSubcatsSetup[sub].blocos++;
+                        contagemSubcatsSetup[sub].desperdicio += desp;
                     }
                 }
             });
@@ -807,7 +1054,8 @@
                 velMediaTotal: Math.round(velMediaTotal),
                 velMediaProd: Math.round(velMediaProd),
                 despMedioSetup: Math.round(despMedioSetup),
-                despMedioProd: Math.round(despMedioProd)
+                despMedioProd: Math.round(despMedioProd),
+                contagemSubcatsSetup
             };
         }
 
@@ -859,6 +1107,20 @@
             document.getElementById('analise-desp-medio-setup').innerText = `${stats.despMedioSetup.toLocaleString()} folhas`;
             document.getElementById('analise-desp-medio-prod').innerText = `${stats.despMedioProd.toLocaleString()} folhas`;
 
+            // Preencher subcategorias de setup na análise
+            const containerSub = document.getElementById('analise-subcategorias-setup');
+            containerSub.innerHTML = '';
+            let subChaves = Object.keys(stats.contagemSubcatsSetup);
+            if(subChaves.length === 0) {
+                containerSub.innerHTML = `<p class="text-slate-500 italic">Nenhum setup com subcategoria apontado.</p>`;
+            } else {
+                subChaves.forEach(sub => {
+                    let info = stats.contagemSubcatsSetup[sub];
+                    let mins = info.blocos * 5;
+                    containerSub.innerHTML += `<div class="flex justify-between items-center bg-white p-1.5 rounded border"><span><b>${sub}</b>: ${info.blocos} blocos (${mins} min)</span> <span class="text-amber-800 font-bold">Desp: ${info.desperdicio.toLocaleString()} fls</span></div>`;
+                });
+            }
+
             const containerBarras = document.getElementById('grafico-barras-analise');
             containerBarras.innerHTML = '';
 
@@ -892,7 +1154,8 @@
 
         function abrirModalRelatorio() {
             document.getElementById('data-relatorio').innerText = new Date().toLocaleString('pt-BR');
-            document.getElementById('rep-maquina').innerText = dadosBase.maquina;
+            let maqTexto = dadosBase.maquina !== "" ? dadosBase.maquina : "Não Definido";
+            document.getElementById('rep-maquina').innerText = maqTexto;
             document.getElementById('rep-cliente').innerText = dadosBase.cliente;
             document.getElementById('rep-produto').innerText = dadosBase.produto;
             document.getElementById('rep-operador').innerText = dadosBase.operador;
@@ -949,6 +1212,35 @@
             document.getElementById('rep-min-prod').innerText = `${minutosProd} min`;
             document.getElementById('rep-min-paradas').innerText = `${minutosParadas} min`;
             document.getElementById('rep-min-planejadas').innerText = `${minutosPlanejadas} min`;
+
+            // Preencher relatório de subcategorias de setup
+            const containerRepSub = document.getElementById('rep-subcategorias-setup');
+            containerRepSub.innerHTML = '';
+            let subKeys = Object.keys(stats.contagemSubcatsSetup);
+            if(subKeys.length === 0) {
+                containerRepSub.innerHTML = `<p class="text-[10px] text-slate-500 italic">Nenhum setup com subcategoria registrado.</p>`;
+            } else {
+                subKeys.forEach(sub => {
+                    let info = stats.contagemSubcatsSetup[sub];
+                    let mins = info.blocos * 5;
+                    containerRepSub.innerHTML += `<div class="flex justify-between items-center bg-white p-1 rounded border text-[10px]"><span><b>${sub}</b>: ${info.blocos} blocos (${mins} min)</span> <span class="font-bold text-amber-800">Desp: ${info.desperdicio.toLocaleString()} fls</span></div>`;
+                });
+            }
+
+            // Preencher relatório de notas
+            const containerRepNotas = document.getElementById('rep-lista-notas');
+            containerRepNotas.innerHTML = '';
+            let notaChaves = Object.keys(notasBlocos).filter(k => notasBlocos[k] && notasBlocos[k].trim() !== "");
+            if(notaChaves.length === 0) {
+                containerRepNotas.innerHTML = `<p class="text-[10px] text-slate-400 italic">Nenhuma nota registrada no turno.</p>`;
+            } else {
+                notaChaves.sort((a,b) => parseInt(a) - parseInt(b)).forEach(idx => {
+                    let horaStr = obterHoraBloco(idx);
+                    let cat = estadoBlocos[idx] || "";
+                    let texto = notasBlocos[idx];
+                    containerRepNotas.innerHTML += `<div class="bg-white p-1.5 rounded border text-[10px]"><b>${horaStr} [${cat}]</b>: "${texto}"</div>`;
+                });
+            }
 
             const containerRepGrade = document.getElementById('relatorio-grade-horarios');
             containerRepGrade.innerHTML = '';
@@ -1027,17 +1319,20 @@
             let dadosBackup = {
                 dadosBase: dadosBase,
                 categorias: categorias,
+                subcategoriasSetup: subcategoriasSetup,
                 estadoBlocos: estadoBlocos,
                 dadosBlocosProducao: dadosBlocosProducao,
                 dadosBlocosSetup: dadosBlocosSetup,
-                versao: "1.8",
+                notasBlocos: notasBlocos,
+                versao: "2.3",
                 dataBackup: new Date().toISOString()
             };
 
             let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dadosBackup, null, 2));
             let downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `oee_backup_${dadosBase.maquina}_${new Date().toISOString().slice(0,10)}.json`);
+            let maqNome = dadosBase.maquina ? dadosBase.maquina : "geral";
+            downloadAnchor.setAttribute("download", `oee_backup_${maqNome}_${new Date().toISOString().slice(0,10)}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -1054,11 +1349,13 @@
                     if (conteudo && conteudo.estadoBlocos && conteudo.categorias) {
                         dadosBase = conteudo.dadosBase || dadosBase;
                         categorias = conteudo.categorias || categorias;
+                        subcategoriasSetup = conteudo.subcategoriasSetup || subcategoriasSetup;
                         estadoBlocos = conteudo.estadoBlocos || estadoBlocos;
                         dadosBlocosProducao = conteudo.dadosBlocosProducao || dadosBlocosProducao;
                         dadosBlocosSetup = conteudo.dadosBlocosSetup || dadosBlocosSetup;
+                        notasBlocos = conteudo.notasBlocos || {};
 
-                        document.getElementById('cfg-maquina').value = dadosBase.maquina;
+                        document.getElementById('cfg-maquina').value = dadosBase.maquina || "";
                         document.getElementById('cfg-cliente').value = dadosBase.cliente;
                         document.getElementById('cfg-produto').value = dadosBase.produto;
                         document.getElementById('cfg-operador').value = dadosBase.operador;
@@ -1066,12 +1363,15 @@
                         document.getElementById('cfg-inicio').value = dadosBase.horaInicio || "08:00";
                         document.getElementById('cfg-fim').value = dadosBase.horaFim || "18:00";
                         
-                        document.getElementById('header-detalhes').innerText = `Máquina: ${dadosBase.maquina} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
+                        let maqTexto = dadosBase.maquina !== "" ? dadosBase.maquina : "Não Definido";
+                        document.getElementById('header-detalhes').innerText = `Máquina: ${maqTexto} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
 
                         calcularTempoCiclo();
                         renderizarBotoesSelecaoCategorias();
                         renderizarGradeHorarios();
                         renderizarAdminCats();
+                        renderizarAdminSubcatsSetup();
+                        atualizarContadorNotas();
                         atualizarKPIs();
 
                         alert("Backup carregado com sucesso!");
