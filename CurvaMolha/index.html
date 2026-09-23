@@ -90,16 +90,19 @@
                     <select id="selectZ1" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-blue-500">
                         <!-- Preenchido via JS -->
                     </select>
-                    <!-- Ícones Compactos -->
-                    <div class="flex gap-2">
+                    <!-- 4 Botões em Ícones Compactos: Exibir, Aceitar, Editar, Deletar -->
+                    <div class="flex gap-1.5">
                         <button onclick="previewCurve('Z1')" title="Exibir" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-lg border border-slate-700 flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-eye text-blue-400 text-sm"></i>
+                            <i class="fa-solid fa-eye text-blue-400 text-xs"></i>
                         </button>
                         <button onclick="acceptCurve('Z1')" title="Aceitar" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg shadow-md flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-check text-sm"></i>
+                            <i class="fa-solid fa-check text-xs"></i>
                         </button>
                         <button onclick="editSelectedCurve('Z1')" title="Editar" class="flex-1 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 py-2 rounded-lg border border-amber-600/30 flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-pen text-sm"></i>
+                            <i class="fa-solid fa-pen text-xs"></i>
+                        </button>
+                        <button onclick="deleteSelectedCurve('Z1')" title="Deletar" class="flex-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 py-2 rounded-lg border border-rose-600/30 flex items-center justify-center transition-colors">
+                            <i class="fa-solid fa-trash text-xs"></i>
                         </button>
                     </div>
                 </div>
@@ -116,16 +119,19 @@
                     <select id="selectZ2" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white mb-3 focus:outline-none focus:border-indigo-500">
                         <!-- Preenchido via JS -->
                     </select>
-                    <!-- Ícones Compactos -->
-                    <div class="flex gap-2">
+                    <!-- 4 Botões em Ícones Compactos: Exibir, Aceitar, Editar, Deletar -->
+                    <div class="flex gap-1.5">
                         <button onclick="previewCurve('Z2')" title="Exibir" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-lg border border-slate-700 flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-eye text-indigo-400 text-sm"></i>
+                            <i class="fa-solid fa-eye text-indigo-400 text-xs"></i>
                         </button>
                         <button onclick="acceptCurve('Z2')" title="Aceitar" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg shadow-md flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-check text-sm"></i>
+                            <i class="fa-solid fa-check text-xs"></i>
                         </button>
                         <button onclick="editSelectedCurve('Z2')" title="Editar" class="flex-1 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 py-2 rounded-lg border border-amber-600/30 flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-pen text-sm"></i>
+                            <i class="fa-solid fa-pen text-xs"></i>
+                        </button>
+                        <button onclick="deleteSelectedCurve('Z2')" title="Deletar" class="flex-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 py-2 rounded-lg border border-rose-600/30 flex items-center justify-center transition-colors">
+                            <i class="fa-solid fa-trash text-xs"></i>
                         </button>
                     </div>
                 </div>
@@ -185,7 +191,7 @@
 
     </main>
 
-    <!-- MODAL PARA CRIAR / EDITAR / DELETAR CURVA -->
+    <!-- MODAL PARA CRIAR / EDITAR CURVA -->
     <div id="newCurveModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
             
@@ -229,16 +235,10 @@
                 </div>
             </div>
 
-            <!-- RODAPÉ DO MODAL COM O BOTÃO DE LIXEIRA EXPLICITO AO EDITAR -->
-            <div class="flex justify-between items-center pt-3 border-t border-slate-800">
-                <!-- Botão Deletar (Lixeira) - Aparece apenas ao editar uma curva salva -->
-                <button id="modalDeleteBtn" onclick="deleteCurrentEditingCurve()" style="display: none;" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors border border-rose-600/30 flex items-center gap-1.5">
-                    <i class="fa-solid fa-trash"></i> Deletar
-                </button>
-                <div class="flex gap-2 ml-auto">
-                    <button onclick="closeNewCurveModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
-                    <button onclick="saveCustomCurve()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/25">Salvar Curva</button>
-                </div>
+            <!-- RODAPÉ DO MODAL -->
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                <button onclick="closeNewCurveModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
+                <button onclick="saveCustomCurve()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/25">Salvar Curva</button>
             </div>
         </div>
     </div>
@@ -508,13 +508,12 @@
             chartInstance.update();
         }
 
-        // Funções do Modal (Criar / Editar / Deletar)
+        // Funções do Modal (Criar / Editar)
         function openNewCurveModal(zone) {
             appState.activeZoneModal = zone;
             appState[zone].editingIndex = null;
             document.getElementById('modalZoneName').innerText = zone;
             document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-circle-plus text-blue-500"></i> Criar Nova Curva para <span id="modalZoneName">${zone}</span>`;
-            document.getElementById('modalDeleteBtn').style.display = 'none'; // Oculta lixeira ao criar nova
             for(let i=0; i<6; i++) {
                 document.getElementById(`modalVal_${i}`).value = '';
             }
@@ -531,7 +530,7 @@
 
             const [type, idxStr] = val.split('_');
             if(type !== 'saved') {
-                alert('Apenas curvas salvas customizadas podem ser editadas. As curvas padrão do sistema não podem ser modificadas ou excluídas.');
+                alert('Apenas curvas salvas customizadas podem ser editadas. As curvas padrão do sistema não podem ser modificadas.');
                 return;
             }
 
@@ -544,22 +543,32 @@
 
             document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Editar Curva Salva (${zone})`;
             document.getElementById('modalZoneName').innerText = zone;
-            document.getElementById('modalDeleteBtn').style.display = 'flex'; // MOSTRA O BOTÃO DELETAR NO RODAPÉ AO EDITAR
             for(let i=0; i<6; i++) {
                 document.getElementById(`modalVal_${i}`).value = curve.values[i];
             }
             document.getElementById('newCurveModal').classList.remove('hidden');
         }
 
-        function deleteCurrentEditingCurve() {
-            const zone = appState.activeZoneModal;
-            const idx = appState[zone].editingIndex;
+        // Função de Deleção Externa (acionada direto pelo botão de lixeira)
+        function deleteSelectedCurve(zone) {
+            const select = document.getElementById(`select${zone}`);
+            const val = select.value;
+            if(!val) {
+                alert(`Selecione uma curva salva em ${zone} para deletar.`);
+                return;
+            }
 
-            if(idx !== null && confirm('Tem certeza que deseja excluir esta curva permanentemente?')) {
+            const [type, idxStr] = val.split('_');
+            if(type !== 'saved') {
+                alert('Apenas curvas salvas customizadas podem ser deletadas. As curvas padrão do sistema são protegidas.');
+                return;
+            }
+
+            if(confirm('Tem certeza que deseja excluir esta curva permanentemente?')) {
+                const idx = parseInt(idxStr);
                 const saved = JSON.parse(localStorage.getItem(`molha_curves_${zone}`)) || [];
                 saved.splice(idx, 1);
                 localStorage.setItem(`molha_curves_${zone}`, JSON.stringify(saved));
-                closeNewCurveModal();
                 populateSelectsSorted();
                 alert('Curva deletada com sucesso!');
             }
@@ -605,7 +614,7 @@
                 Z1_saved: JSON.parse(localStorage.getItem('molha_curves_Z1')) || [],
                 Z2_saved: JSON.parse(localStorage.getItem('molha_curves_Z2')) || [],
                 appState: appState,
-                version: "2.6",
+                version: "2.7",
                 date: new Date().toISOString()
             };
 
