@@ -143,7 +143,7 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
                 <div class="sm:col-span-2">
-                    <input type="text" id="input-contador-geral" placeholder="Ex: 150.000" oninput="formatarContadorGeral(this)" class="w-full border rounded-lg p-2.5 text-base font-bold text-slate-800">
+                    <input type="text" id="input-contador-geral" placeholder="Ex: 150.000" oninput="formatarCampoMilhar(this)" class="w-full border rounded-lg p-2.5 text-base font-bold text-slate-800">
                 </div>
                 <div>
                     <button onclick="salvarContadorGeral()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-xs font-bold transition">
@@ -509,6 +509,19 @@
             <input type="hidden" id="bloco-index-ativo">
             <div class="space-y-3">
                 <p id="bloco-info-hora" class="text-xs font-bold text-slate-500">Horário do Bloco:</p>
+                
+                <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg space-y-2">
+                    <label class="block text-xs font-bold text-blue-900 uppercase"><i class="fa-solid fa-gauge mr-1"></i> Totalizador Atual (Leitura do Contador)</label>
+                    <input type="text" id="bloco-input-totalizador" placeholder="Ex: 152.500" oninput="formatarCampoMilhar(this); calcularDiferencaTotalizador('producao')" class="w-full border rounded-lg p-2 text-sm bg-white font-bold text-blue-900">
+                    <div class="flex justify-between items-center text-[11px] text-slate-600">
+                        <span>Anterior: <b id="bloco-val-anterior">0</b></span>
+                        <span>Diferença Calculada: <b id="bloco-val-diferenca" class="text-blue-700 text-xs">0</b> fls</span>
+                    </div>
+                    <button type="button" onclick="aplicarDiferencaProducao()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded text-xs font-bold transition">
+                        <i class="fa-solid fa-arrow-down mr-1"></i> Usar Diferença nas Folhas Boas
+                    </button>
+                </div>
+
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Folhas Boas</label>
@@ -552,6 +565,19 @@
                         <!-- Preenchido dinamicamente -->
                     </select>
                 </div>
+
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg space-y-2">
+                    <label class="block text-xs font-bold text-amber-900 uppercase"><i class="fa-solid fa-gauge mr-1"></i> Totalizador Atual (Leitura do Contador)</label>
+                    <input type="text" id="setup-input-totalizador" placeholder="Ex: 152.500" oninput="formatarCampoMilhar(this); calcularDiferencaTotalizador('setup')" class="w-full border rounded-lg p-2 text-sm bg-white font-bold text-amber-900">
+                    <div class="flex justify-between items-center text-[11px] text-slate-600">
+                        <span>Anterior: <b id="setup-val-anterior">0</b></span>
+                        <span>Diferença Calculada: <b id="setup-val-diferenca" class="text-amber-800 text-xs">0</b> fls</span>
+                    </div>
+                    <button type="button" onclick="aplicarDiferencaSetup()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-1.5 rounded text-xs font-bold transition">
+                        <i class="fa-solid fa-arrow-down mr-1"></i> Usar Diferença no Desperdício de Setup
+                    </button>
+                </div>
+
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Desperdício de Setup (Folhas)</label>
                     <input type="number" id="setup-input-desperdicio" value="0" class="w-full border rounded-lg p-2 text-sm">
@@ -742,6 +768,30 @@
             atualizarKPIs();
         };
 
+        // --- BUSCA O ÚLTIMO TOTALIZADOR ANTERIOR ---
+        function obterUltimoTotalizador(indiceAtual) {
+            // 1. Procurar nos contadores gerais salvos
+            if (contadoresGeraisSalvos.length > 0) {
+                let ultimoGeral = contadoresGeraisSalvos[contadoresGeraisSalvos.length - 1].valor;
+                let num = parseInt(ultimoGeral.replace(/\D/g, ''));
+                if(!isNaN(num)) return num;
+            }
+
+            // 2. Procurar nos blocos anteriores de produção ou setup que tenham totalizador
+            for (let i = indiceAtual - 1; i >= 0; i--) {
+                if (dadosBlocosProducao[i] && dadosBlocosProducao[i].totalizador) {
+                    let num = parseInt(String(dadosBlocosProducao[i].totalizador).replace(/\D/g, ''));
+                    if(!isNaN(num)) return num;
+                }
+                if (dadosBlocosSetup[i] && dadosBlocosSetup[i].totalizador) {
+                    let num = parseInt(String(dadosBlocosSetup[i].totalizador).replace(/\D/g, ''));
+                    if(!isNaN(num)) return num;
+                }
+            }
+
+            return 0; // Se não houver nenhum anterior
+        }
+
         // --- FUNÇÃO DO BOTÃO NOVO ---
         function clicarNovoTurno() {
             let querSalvar = confirm("Salvar antes de criar um novo?");
@@ -749,11 +799,11 @@
                 salvarTurnoAtual();
             }
             
-            // Limpar dados para nova análise
             estadoBlocos = [];
             dadosBlocosProducao = {};
             dadosBlocosSetup = {};
             notasBlocos = {};
+            contadoresGeraisSalvos = [];
             dadosBase = { 
                 maquina: "", 
                 cliente: "Não Definido", 
@@ -768,6 +818,7 @@
             inicializarGrade();
             renderizarGradeHorarios();
             atualizarContadorNotas();
+            atualizarContadorRegistrosGerais();
             atualizarKPIs();
             gravarAutomatico();
             alert("Nova análise iniciada com sucesso!");
@@ -839,7 +890,7 @@
         }
 
         // --- CONTADOR GERAL COM SEPARADOR DE MILHAR ---
-        function formatarContadorGeral(input) {
+        function formatarCampoMilhar(input) {
             let valorPuro = input.value.replace(/\D/g, '');
             if(valorPuro === '') {
                 input.value = '';
@@ -930,7 +981,8 @@
                 estadoBlocos: JSON.parse(JSON.stringify(estadoBlocos)),
                 dadosBlocosProducao: JSON.parse(JSON.stringify(dadosBlocosProducao)),
                 dadosBlocosSetup: JSON.parse(JSON.stringify(dadosBlocosSetup)),
-                notasBlocos: JSON.parse(JSON.stringify(notasBlocos))
+                notasBlocos: JSON.parse(JSON.stringify(notasBlocos)),
+                contadoresGeraisSalvos: JSON.parse(JSON.stringify(contadoresGeraisSalvos))
             };
 
             historicoTurnos.push(snapshot);
@@ -975,6 +1027,7 @@
                 dadosBlocosProducao = JSON.parse(JSON.stringify(item.dadosBlocosProducao));
                 dadosBlocosSetup = JSON.parse(JSON.stringify(item.dadosBlocosSetup));
                 notasBlocos = JSON.parse(JSON.stringify(item.notasBlocos));
+                contadoresGeraisSalvos = item.contadoresGeraisSalvos ? JSON.parse(JSON.stringify(item.contadoresGeraisSalvos)) : [];
 
                 document.getElementById('cfg-maquina').value = dadosBase.maquina || "";
                 document.getElementById('cfg-cliente').value = dadosBase.cliente;
@@ -990,6 +1043,7 @@
                 calcularTempoCiclo();
                 renderizarGradeHorarios();
                 atualizarContadorNotas();
+                atualizarContadorRegistrosGerais();
                 atualizarKPIs();
                 fecharModal('modal-historico');
                 alert(`Turno "${item.nomeArquivo}" carregado com sucesso!`);
@@ -1215,7 +1269,7 @@
                         } else {
                             estadoBlocos[atualIdx] = categoriaAtiva;
                             if (categoriaAtiva === 'Setup' && !dadosBlocosSetup[atualIdx]) {
-                                dadosBlocosSetup[atualIdx] = { subcat: "", desperdicio: 0 };
+                                dadosBlocosSetup[atualIdx] = { subcat: "", desperdicio: 0, totalizador: "" };
                             }
                             renderizarGradeHorarios();
                             atualizarKPIs();
@@ -1236,24 +1290,58 @@
             }
         }
 
+        // --- CÁLCULO DE DIFERENÇA DO TOTALIZADOR ---
+        function calcularDiferencaTotalizador(tipo) {
+            let inputId = tipo === 'producao' ? 'bloco-input-totalizador' : 'setup-input-totalizador';
+            let diffId = tipo === 'producao' ? 'bloco-val-diferenca' : 'setup-val-diferenca';
+            
+            let valStr = document.getElementById(inputId).value.replace(/\D/g, '');
+            let atual = parseInt(valStr) || 0;
+            
+            let idx = parseInt(document.getElementById(tipo === 'producao' ? 'bloco-index-ativo' : 'setup-index-ativo').value);
+            let anterior = obterUltimoTotalizador(idx);
+            
+            let diff = atual >= anterior ? (atual - anterior) : 0;
+            document.getElementById(diffId).innerText = diff.toLocaleString('pt-BR');
+            return diff;
+        }
+
+        function aplicarDiferencaProducao() {
+            let diff = calcularDiferencaTotalizador('producao');
+            document.getElementById('bloco-input-boas').value = diff;
+        }
+
+        function aplicarDiferencaSetup() {
+            let diff = calcularDiferencaTotalizador('setup');
+            document.getElementById('setup-input-desperdicio').value = diff;
+        }
+
         function abrirModalBlocoProducao(idx, hora, min) {
             document.getElementById('bloco-index-ativo').value = idx;
             document.getElementById('bloco-info-hora').innerText = `Horário do Bloco: ${hora}:${min}`;
-            let prod = dadosBlocosProducao[idx] || { boas: 0, refugo: 0 };
+            
+            let prod = dadosBlocosProducao[idx] || { boas: 0, refugo: 0, totalizador: "" };
+            let anterior = obterUltimoTotalizador(idx);
+            
+            document.getElementById('bloco-val-anterior').innerText = anterior.toLocaleString('pt-BR');
+            document.getElementById('bloco-input-totalizador').value = prod.totalizador || "";
             document.getElementById('bloco-input-boas').value = prod.boas;
             document.getElementById('bloco-input-refugo').value = prod.refugo;
             document.getElementById('bloco-input-nota').value = notasBlocos[idx] || "";
+            
+            calcularDiferencaTotalizador('producao');
             abrirModal('modal-bloco-producao');
         }
 
         function salvarBlocoProducao() {
             let idx = parseInt(document.getElementById('bloco-index-ativo').value);
+            let totalizador = document.getElementById('bloco-input-totalizador').value.trim();
             let boas = parseFloat(document.getElementById('bloco-input-boas').value) || 0;
             let refugo = parseFloat(document.getElementById('bloco-input-refugo').value) || 0;
             let nota = document.getElementById('bloco-input-nota').value.trim();
 
             estadoBlocos[idx] = 'Produzindo';
-            dadosBlocosProducao[idx] = { boas, refugo };
+            dadosBlocosProducao[idx] = { totalizador, boas, refugo };
             if(nota !== "") notasBlocos[idx] = nota;
             else delete notasBlocos[idx];
 
@@ -1274,21 +1362,28 @@
                 sel.innerHTML += `<option value="${sub}">${sub}</option>`;
             });
 
-            let setupInfo = dadosBlocosSetup[idx] || { subcat: "", desperdicio: 0 };
+            let setupInfo = dadosBlocosSetup[idx] || { subcat: "", desperdicio: 0, totalizador: "" };
+            let anterior = obterUltimoTotalizador(idx);
+
             sel.value = setupInfo.subcat || "";
+            document.getElementById('setup-val-anterior').innerText = anterior.toLocaleString('pt-BR');
+            document.getElementById('setup-input-totalizador').value = setupInfo.totalizador || "";
             document.getElementById('setup-input-desperdicio').value = setupInfo.desperdicio;
             document.getElementById('setup-input-nota').value = notasBlocos[idx] || "";
+
+            calcularDiferencaTotalizador('setup');
             abrirModal('modal-bloco-setup');
         }
 
         function salvarBlocoSetup() {
             let idx = parseInt(document.getElementById('setup-index-ativo').value);
             let subcat = document.getElementById('setup-select-subcat').value;
+            let totalizador = document.getElementById('setup-input-totalizador').value.trim();
             let desperdicio = parseFloat(document.getElementById('setup-input-desperdicio').value) || 0;
             let nota = document.getElementById('setup-input-nota').value.trim();
 
             estadoBlocos[idx] = 'Setup';
-            dadosBlocosSetup[idx] = { subcat, desperdicio };
+            dadosBlocosSetup[idx] = { subcat, totalizador, desperdicio };
             if(nota !== "") notasBlocos[idx] = nota;
             else delete notasBlocos[idx];
 
@@ -1702,7 +1797,7 @@
                 notasBlocos: notasBlocos,
                 historicoTurnos: historicoTurnos,
                 contadoresGeraisSalvos: contadoresGeraisSalvos,
-                versao: "2.6",
+                versao: "2.7",
                 dataBackup: new Date().toISOString()
             };
 
