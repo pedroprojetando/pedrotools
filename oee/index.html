@@ -22,7 +22,6 @@
             background-color: #e2e8f0;
         }
 
-        /* CONFIGURAÇÕES DE IMPRESSÃO PARA DIMENSIONAR EXATAMENTE EM 1 PÁGINA */
         @media print {
             body {
                 background-color: white !important;
@@ -124,7 +123,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-3">
                 <div>
                     <h2 class="text-md font-bold text-slate-800">Grade de Apontamento por Turno (5 min por bloco)</h2>
-                    <p class="text-xs text-slate-500">Selecione uma categoria e clique nos quadrados. Clique novamente em quadrados de produção para inserir detalhes.</p>
+                    <p class="text-xs text-slate-500">Selecione uma categoria e clique nos quadrados para marcar. Clique novamente em Produção/Setup para editar, ou nas demais para desmarcar.</p>
                 </div>
                 <div class="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border">
                     Categoria Selecionada: <span id="label-categoria-ativa" class="text-blue-600 font-bold">Produzindo</span>
@@ -148,6 +147,80 @@
         </div>
 
     </main>
+
+    <!-- MODAL DE ANÁLISE -->
+    <div id="modal-analise" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-chart-column text-purple-600 mr-2"></i> Relatório de Análise de Tempo e Desperdícios</h3>
+                <button onclick="fecharModal('modal-analise')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-center">
+                        <span class="text-[11px] font-bold text-emerald-700 uppercase">Tempo em Produção</span>
+                        <h4 id="analise-tempo-prod" class="text-xl font-extrabold text-emerald-800 mt-1">0 min</h4>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-center">
+                        <span class="text-[11px] font-bold text-amber-700 uppercase">Total de Paradas</span>
+                        <h4 id="analise-tempo-paradas" class="text-xl font-extrabold text-amber-800 mt-1">0 min</h4>
+                    </div>
+                    <div class="bg-cyan-50 border border-cyan-200 p-3 rounded-lg text-center col-span-2 sm:col-span-1">
+                        <span class="text-[11px] font-bold text-cyan-700 uppercase">Planejadas / Intervalos</span>
+                        <h4 id="analise-tempo-planejadas" class="text-xl font-extrabold text-cyan-800 mt-1">0 min</h4>
+                    </div>
+                </div>
+
+                <!-- QUADRO DE PRODUÇÃO E DESPERDÍCIOS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border">
+                    <div class="bg-white border p-2.5 rounded text-center">
+                        <span class="text-[10px] font-bold text-emerald-700 uppercase block">Folhas Boas (Prod)</span>
+                        <span id="analise-total-boas" class="text-lg font-extrabold text-emerald-900">0</span>
+                    </div>
+                    <div class="bg-white border p-2.5 rounded text-center">
+                        <span class="text-[10px] font-bold text-amber-700 uppercase block">Desperdício de Setup</span>
+                        <span id="analise-total-desp-setup" class="text-lg font-extrabold text-amber-900">0</span>
+                    </div>
+                    <div class="bg-white border p-2.5 rounded text-center">
+                        <span class="text-[10px] font-bold text-rose-700 uppercase block">Desperdício de Produção</span>
+                        <span id="analise-total-desp-prod" class="text-lg font-extrabold text-rose-900">0</span>
+                    </div>
+                </div>
+
+                <!-- QUADRO DE VELOCIDADES E MÉDIAS -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                    <div class="bg-white border p-2 rounded text-center">
+                        <span class="text-[9px] font-bold text-blue-700 uppercase block">Vel. Média (Total)</span>
+                        <span id="analise-vel-media-total" class="text-xs font-extrabold text-blue-900">0 imp/h</span>
+                    </div>
+                    <div class="bg-white border p-2 rounded text-center">
+                        <span class="text-[9px] font-bold text-blue-700 uppercase block">Vel. Média (Prod)</span>
+                        <span id="analise-vel-media-prod" class="text-xs font-extrabold text-blue-900">0 imp/h</span>
+                    </div>
+                    <div class="bg-white border p-2 rounded text-center">
+                        <span class="text-[9px] font-bold text-amber-700 uppercase block">Desp. Médio Setup</span>
+                        <span id="analise-desp-medio-setup" class="text-xs font-extrabold text-amber-900">0 folhas</span>
+                    </div>
+                    <div class="bg-white border p-2 rounded text-center">
+                        <span class="text-[9px] font-bold text-rose-700 uppercase block">Desp. Médio Prod</span>
+                        <span id="analise-desp-medio-prod" class="text-xs font-extrabold text-rose-900">0 folhas</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-slate-700 uppercase mb-2">Distribuição de Tempo por Categoria (Gráfico em Barras)</h4>
+                    <div id="grafico-barras-analise" class="space-y-2 bg-slate-50 border rounded-lg p-3">
+                        <!-- Gerado dinamicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t">
+                <button onclick="fecharModal('modal-analise')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium">Fechar Relatório</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL DE RELATÓRIO PARA IMPRESSÃO -->
     <div id="modal-relatorio" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
@@ -175,7 +248,7 @@
                         <div><b>Cliente:</b> <span id="rep-cliente">-</span></div>
                         <div><b>Produto:</b> <span id="rep-produto">-</span></div>
                         <div><b>Operador:</b> <span id="rep-operador">-</span></div>
-                        <div><b>Velocidade:</b> <span id="rep-velocidade">12000</span> imp/h</div>
+                        <div><b>Horário:</b> <span id="rep-horario">08:00 - 18:00</span></div>
                     </div>
                 </div>
 
@@ -202,17 +275,54 @@
                     </div>
                 </div>
 
-                <!-- 3. Quadro de Blocos -->
+                <!-- 3. Quantidades Produzidas e Desperdícios -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
-                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">3. Quadro de Blocos de Apontamento (Turno)</h4>
+                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">3. Produção, Desperdícios e Velocidades Médias</h4>
+                    <div class="grid grid-cols-3 gap-2 text-center mb-2">
+                        <div class="bg-white border p-2 rounded">
+                            <span class="font-bold text-emerald-700 uppercase block text-[9px]">Folhas Boas (Prod)</span>
+                            <span id="rep-total-boas" class="text-sm font-extrabold text-emerald-900">0</span>
+                        </div>
+                        <div class="bg-white border p-2 rounded">
+                            <span class="font-bold text-amber-700 uppercase block text-[9px]">Desperdício de Setup</span>
+                            <span id="rep-total-desp-setup" class="text-sm font-extrabold text-amber-900">0</span>
+                        </div>
+                        <div class="bg-white border p-2 rounded">
+                            <span class="font-bold text-rose-700 uppercase block text-[9px]">Desperdício de Produção</span>
+                            <span id="rep-total-desp-prod" class="text-sm font-extrabold text-rose-900">0</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                        <div class="bg-blue-50 border border-blue-200 p-1.5 rounded">
+                            <span class="font-bold text-blue-700 uppercase block text-[8px]">Vel. Média (Total)</span>
+                            <span id="rep-vel-media-total" class="text-xs font-extrabold text-blue-900">0 imp/h</span>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-200 p-1.5 rounded">
+                            <span class="font-bold text-blue-700 uppercase block text-[8px]">Vel. Média (Prod)</span>
+                            <span id="rep-vel-media-prod" class="text-xs font-extrabold text-blue-900">0 imp/h</span>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 p-1.5 rounded">
+                            <span class="font-bold text-amber-700 uppercase block text-[8px]">Desp. Médio Setup</span>
+                            <span id="rep-desp-medio-setup" class="text-xs font-extrabold text-amber-900">0 folhas</span>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-200 p-1.5 rounded">
+                            <span class="font-bold text-rose-700 uppercase block text-[8px]">Desp. Médio Prod</span>
+                            <span id="rep-desp-medio-prod" class="text-xs font-extrabold text-rose-900">0 folhas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Quadro de Blocos -->
+                <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid">
+                    <h4 class="font-bold text-slate-700 uppercase mb-1.5 border-b pb-0.5">4. Quadro de Blocos de Apontamento (Turno)</h4>
                     <div id="relatorio-grade-horarios" class="space-y-0.5">
                         <!-- Gerado via Script -->
                     </div>
                 </div>
 
-                <!-- 4. Gráficos de Análise e Tempos -->
+                <!-- 5. Gráficos de Análise e Tempos -->
                 <div class="bg-slate-50 border p-2.5 rounded-lg page-break-avoid space-y-2">
-                    <h4 class="font-bold text-slate-700 uppercase border-b pb-0.5">4. Análise de Tempos por Categoria</h4>
+                    <h4 class="font-bold text-slate-700 uppercase border-b pb-0.5">5. Análise de Tempos por Categoria</h4>
                     <div class="grid grid-cols-3 gap-2 text-center">
                         <div class="bg-emerald-100 border border-emerald-300 p-1.5 rounded">
                             <span class="font-bold text-emerald-800 uppercase block text-[9px]">Produção</span>
@@ -243,49 +353,11 @@
         </div>
     </div>
 
-    <!-- MODAL DE ANÁLISE -->
-    <div id="modal-analise" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl space-y-5 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-chart-column text-purple-600 mr-2"></i> Relatório de Análise de Tempo e Paradas</h3>
-                <button onclick="fecharModal('modal-analise')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-center">
-                        <span class="text-[11px] font-bold text-emerald-700 uppercase">Tempo em Produção</span>
-                        <h4 id="analise-tempo-prod" class="text-xl font-extrabold text-emerald-800 mt-1">0 min</h4>
-                    </div>
-                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-center">
-                        <span class="text-[11px] font-bold text-amber-700 uppercase">Total de Paradas</span>
-                        <h4 id="analise-tempo-paradas" class="text-xl font-extrabold text-amber-800 mt-1">0 min</h4>
-                    </div>
-                    <div class="bg-cyan-50 border border-cyan-200 p-3 rounded-lg text-center col-span-2 sm:col-span-1">
-                        <span class="text-[11px] font-bold text-cyan-700 uppercase">Planejadas / Intervalos</span>
-                        <h4 id="analise-tempo-planejadas" class="text-xl font-extrabold text-cyan-800 mt-1">0 min</h4>
-                    </div>
-                </div>
-
-                <div>
-                    <h4 class="text-xs font-bold text-slate-700 uppercase mb-2">Distribuição de Tempo por Categoria (Gráfico em Barras)</h4>
-                    <div id="grafico-barras-analise" class="space-y-2 bg-slate-50 border rounded-lg p-3">
-                        <!-- Gerado dinamicamente -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-end pt-2 border-t">
-                <button onclick="fecharModal('modal-analise')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium">Fechar Relatório</button>
-            </div>
-        </div>
-    </div>
-
     <!-- MODAL DE DADOS DO BLOCO DE PRODUÇÃO -->
     <div id="modal-bloco-producao" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-box-open text-emerald-600 mr-2"></i> Apontamento de Detalhes do Bloco</h3>
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-box-open text-emerald-600 mr-2"></i> Apontamento de Detalhes da Produção</h3>
                 <button onclick="fecharModal('modal-bloco-producao')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <input type="hidden" id="bloco-index-ativo">
@@ -293,17 +365,17 @@
                 <p id="bloco-info-hora" class="text-xs font-bold text-slate-500">Horário do Bloco:</p>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Impressos Bons</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Folhas Boas</label>
                         <input type="number" id="bloco-input-boas" value="0" class="w-full border rounded-lg p-2 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Refugo / Perdas</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Desperdício Produção</label>
                         <input type="number" id="bloco-input-refugo" value="0" class="w-full border rounded-lg p-2 text-sm">
                     </div>
                 </div>
             </div>
             <div class="flex justify-between pt-3 border-t">
-                <button onclick="desmarcarBlocoProducao()" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
+                <button onclick="desmarcarBloco('producao')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
                     <i class="fa-solid fa-trash mr-1"></i> Desmarcar Bloco
                 </button>
                 <div class="space-x-2">
@@ -314,11 +386,38 @@
         </div>
     </div>
 
+    <!-- MODAL DE DADOS DO BLOCO DE SETUP -->
+    <div id="modal-bloco-setup" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-wrench text-amber-600 mr-2"></i> Apontamento de Desperdício de Setup</h3>
+                <button onclick="fecharModal('modal-bloco-setup')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <input type="hidden" id="setup-index-ativo">
+            <div class="space-y-3">
+                <p id="setup-info-hora" class="text-xs font-bold text-slate-500">Horário do Bloco:</p>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Desperdício de Setup (Folhas)</label>
+                    <input type="number" id="setup-input-desperdicio" value="0" class="w-full border rounded-lg p-2 text-sm">
+                </div>
+            </div>
+            <div class="flex justify-between pt-3 border-t">
+                <button onclick="desmarcarBloco('setup')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-xs font-bold transition">
+                    <i class="fa-solid fa-trash mr-1"></i> Desmarcar Bloco
+                </button>
+                <div class="space-x-2">
+                    <button onclick="fecharModal('modal-bloco-setup')" class="bg-slate-200 hover:bg-slate-300 px-3 py-2 rounded-lg text-xs font-medium">Cancelar</button>
+                    <button onclick="salvarBlocoSetup()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE DADOS BASE E VELOCIDADE -->
     <div id="modal-dados" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-slate-800">Dados Base e Velocidade</h3>
+                <h3 class="font-bold text-lg text-slate-800">Dados Base e Horários</h3>
                 <button onclick="fecharModal('modal-dados')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="space-y-3">
@@ -338,13 +437,23 @@
                     <label class="block text-xs font-medium text-slate-600 mb-1">Operador</label>
                     <input type="text" id="cfg-operador" placeholder="Nome do Operador" class="w-full border rounded-lg p-2 text-sm">
                 </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Início da Operação</label>
+                        <input type="time" id="cfg-inicio" value="08:00" class="w-full border rounded-lg p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Fim da Operação</label>
+                        <input type="time" id="cfg-fim" value="18:00" class="w-full border rounded-lg p-2 text-sm">
+                    </div>
+                </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Velocidade Nominal (Impressos por Hora)</label>
-                    <input type="number" id="cfg-velocidade" value="12000" oninput="calcularTempoCiclo()" class="w-full border rounded-lg p-2 text-sm font-bold text-blue-600">
+                    <input type="number" id="cfg-velocidade" value="18000" oninput="calcularTempoCiclo()" class="w-full border rounded-lg p-2 text-sm font-bold text-blue-600">
                 </div>
                 <div class="bg-slate-50 border p-3 rounded-lg flex justify-between items-center">
                     <span class="text-xs font-semibold text-slate-600">Tempo de Ciclo Calculado:</span>
-                    <span id="info-tempo-ciclo" class="text-sm font-extrabold text-slate-900">0.30 s/impresso</span>
+                    <span id="info-tempo-ciclo" class="text-sm font-extrabold text-slate-900">0.20 s/impresso</span>
                 </div>
             </div>
             <div class="flex justify-end space-x-2 pt-2 border-t">
@@ -382,7 +491,15 @@
 
     <!-- SCRIPT DO SISTEMA -->
     <script>
-        let dadosBase = { maquina: "XL106", cliente: "Não Definido", produto: "Geral", operador: "Não Definido", velocidadeHora: 12000 };
+        let dadosBase = { 
+            maquina: "XL106", 
+            cliente: "Não Definido", 
+            produto: "Geral", 
+            operador: "Não Definido", 
+            velocidadeHora: 18000,
+            horaInicio: "08:00",
+            horaFim: "18:00"
+        };
 
         let categorias = [
             { nome: "Produzindo", tipo: "Produzindo", cor: "bg-emerald-500 text-white border-emerald-600" },
@@ -395,16 +512,16 @@
             { nome: "Aguarda Chapa", tipo: "Disponibilidade", cor: "bg-yellow-500 text-slate-900 border-yellow-600" },
             { nome: "Aguarda Papel", tipo: "Disponibilidade", cor: "bg-lime-500 text-slate-900 border-lime-600" },
             { nome: "Aguarda Cip", tipo: "Disponibilidade", cor: "bg-teal-500 text-white border-teal-600" },
-            { nome: "Aprovação", tipo: "Disponibilidade", cor: "bg-indigo-500 text-white border-indigo-600" },
-            { nome: "Desligada", tipo: "Disponibilidade", cor: "bg-red-600 text-white border-red-700" }
+            { nome: "Aprovação", tipo: "Disponibilidade", cor: "bg-indigo-500 text-white border-indigo-600" }
         ];
 
         let categoriaAtiva = "Produzindo";
-        let totalBlocos = 120; // 10h * 12 blocos de 5 min
-        let estadoBlocos = new Array(totalBlocos).fill(null);
+        let estadoBlocos = [];
         let dadosBlocosProducao = {};
+        let dadosBlocosSetup = {};
 
         window.onload = function() {
+            inicializarGrade();
             calcularTempoCiclo();
             renderizarBotoesSelecaoCategorias();
             renderizarGradeHorarios();
@@ -412,14 +529,33 @@
             atualizarKPIs();
         };
 
+        function inicializarGrade() {
+            let totalB = calcularTotalBlocos();
+            if(estadoBlocos.length !== totalB) {
+                estadoBlocos = new Array(totalB).fill(null);
+            }
+        }
+
+        function calcularTotalBlocos() {
+            let [hIni, mIni] = dadosBase.horaInicio.split(':').map(Number);
+            let [hFim, mFim] = dadosBase.horaFim.split(':').map(Number);
+            let minutosTotal = (hFim * 60 + mFim) - (hIni * 60 + mIni);
+            if(minutosTotal <= 0) minutosTotal = 600;
+            return Math.floor(minutosTotal / 5);
+        }
+
         function abrirModal(id) { 
-            if(id === 'modal-dados') calcularTempoCiclo();
+            if(id === 'modal-dados') {
+                calcularTempoCiclo();
+                document.getElementById('cfg-inicio').value = dadosBase.horaInicio;
+                document.getElementById('cfg-fim').value = dadosBase.horaFim;
+            }
             document.getElementById(id).classList.remove('hidden'); 
         }
         function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
 
         function calcularTempoCiclo() {
-            let vel = parseFloat(document.getElementById('cfg-velocidade').value) || 12000;
+            let vel = parseFloat(document.getElementById('cfg-velocidade').value) || 18000;
             let ciclo = vel > 0 ? (3600 / vel).toFixed(2) : 0;
             document.getElementById('info-tempo-ciclo').innerText = `${ciclo} s/impresso`;
         }
@@ -429,9 +565,15 @@
             dadosBase.cliente = document.getElementById('cfg-cliente').value || "Não Definido";
             dadosBase.produto = document.getElementById('cfg-produto').value || "Geral";
             dadosBase.operador = document.getElementById('cfg-operador').value || "Não Definido";
-            dadosBase.velocidadeHora = parseFloat(document.getElementById('cfg-velocidade').value) || 12000;
+            dadosBase.velocidadeHora = parseFloat(document.getElementById('cfg-velocidade').value) || 18000;
+            dadosBase.horaInicio = document.getElementById('cfg-inicio').value || "08:00";
+            dadosBase.horaFim = document.getElementById('cfg-fim').value || "18:00";
+
             document.getElementById('header-detalhes').innerText = `Máquina: ${dadosBase.maquina} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
+            
+            inicializarGrade();
             fecharModal('modal-dados');
+            renderizarGradeHorarios();
             atualizarKPIs();
         }
 
@@ -458,7 +600,7 @@
         function renderizarAdminCats() {
             const lista = document.getElementById('lista-admin-cats');
             lista.innerHTML = '';
-            categorias.filter(c => c.tipo !== 'Produzindo' && c.nome !== 'Desligada').forEach((cat, idx) => {
+            categorias.filter(c => c.tipo !== 'Produzindo').forEach((cat, idx) => {
                 lista.innerHTML += `<div class="flex justify-between items-center p-1 bg-white rounded border"><span><b>${cat.nome}</b> (${cat.tipo})</span> <button onclick="removerCat('${cat.nome}')" class="text-red-500 font-bold px-1">&times;</button></div>`;
             });
         }
@@ -466,14 +608,11 @@
         function adicionarNovaCategoria() {
             const nome = document.getElementById('nova-cat-nome').value.trim();
             const tipo = document.getElementById('nova-cat-tipo').value;
-            if(nome && nome !== 'Desligada') {
+            if(nome) {
                 const cores = ["bg-pink-500 text-white border-pink-600", "bg-sky-500 text-white border-sky-600", "bg-violet-500 text-white border-violet-600"];
                 const cor = cores[categorias.length % cores.length];
                 
-                let desligadaObj = categorias.pop();
                 categorias.push({ nome, tipo, cor });
-                categorias.push(desligadaObj);
-
                 document.getElementById('nova-cat-nome').value = '';
                 renderizarBotoesSelecaoCategorias();
                 renderizarAdminCats();
@@ -481,7 +620,6 @@
         }
 
         function removerCat(nome) {
-            if(nome === 'Desligada') return;
             categorias = categorias.filter(c => c.nome !== nome);
             if(categoriaAtiva === nome) categoriaAtiva = "Produzindo";
             renderizarBotoesSelecaoCategorias();
@@ -492,11 +630,18 @@
             const container = document.getElementById('grade-horarios');
             container.innerHTML = '';
 
-            let horaInicio = 8;
-            let blocoIdx = 0;
+            let [hIni, mIni] = dadosBase.horaInicio.split(':').map(Number);
+            let totalB = calcularTotalBlocos();
+            if(estadoBlocos.length !== totalB) inicializarGrade();
 
-            for(let h = 0; h < 10; h++) {
-                let horaStr = String(horaInicio + h).padStart(2, '0') + ":00";
+            let blocoIdx = 0;
+            let horaAtualH = hIni;
+            let horaAtualM = mIni;
+
+            let numHoras = Math.ceil(totalB / 12);
+
+            for(let h = 0; h < numHoras; h++) {
+                let horaStr = String(horaAtualH).padStart(2, '0') + ":" + String(horaAtualM).padStart(2, '0');
                 
                 let linhaDiv = document.createElement('div');
                 linhaDiv.className = "flex items-center gap-0.5 text-xs";
@@ -507,9 +652,12 @@
                 linhaDiv.appendChild(rotulo);
 
                 for(let m = 0; m < 12; m++) {
+                    if (blocoIdx >= totalB) break;
                     let atualIdx = blocoIdx;
-                    let minutoNum = m * 5;
+                    let minutoNum = horaAtualM;
                     let minutoStr = String(minutoNum).padStart(2, '0');
+                    let horaBlocoStr = String(horaAtualH).padStart(2, '0');
+                    
                     let catNome = estadoBlocos[atualIdx];
                     let catObj = categorias.find(c => c.nome === catNome);
 
@@ -517,27 +665,36 @@
                     
                     if(catObj) {
                         celula.className = `grid-cell flex-1 rounded border flex items-center justify-center cursor-pointer font-bold shadow-2xs ${catObj.cor}`;
-                        let prodInfo = dadosBlocosProducao[atualIdx];
-                        let infoExtra = (catNome === 'Produzindo' && prodInfo) ? ` | Bons: ${prodInfo.boas}` : '';
-                        celula.title = `${horaStr.substring(0,2)}:${minutoStr} - ${catNome}${infoExtra} (Clique novamente para detalhes)`;
+                        let infoExtra = '';
+                        if(catNome === 'Produzindo' && dadosBlocosProducao[atualIdx]) {
+                            infoExtra = ` | Bons: ${dadosBlocosProducao[atualIdx].boas}`;
+                        } else if(catNome === 'Setup' && dadosBlocosSetup[atualIdx]) {
+                            infoExtra = ` | Desp. Setup: ${dadosBlocosSetup[atualIdx].desperdicio}`;
+                        }
+                        celula.title = `${horaBlocoStr}:${minutoStr} - ${catNome}${infoExtra}`;
                         celula.innerHTML = `<span>${minutoNum}</span>`;
                     } else {
                         celula.className = `grid-cell vazio flex-1 rounded border flex items-center justify-center cursor-pointer font-bold`;
-                        celula.title = `${horaStr.substring(0,2)}:${minutoStr} - Vazio (Clique para preencher)`;
+                        celula.title = `${horaBlocoStr}:${minutoStr} - Vazio (Clique para preencher)`;
                         celula.innerHTML = `<span>${minutoNum}</span>`;
                     }
                     
                     celula.onclick = () => {
                         if (catNome === 'Produzindo') {
-                            abrirModalBlocoProducao(atualIdx, horaStr.substring(0,2), minutoStr);
+                            abrirModalBlocoProducao(atualIdx, horaBlocoStr, minutoStr);
+                        } else if (catNome === 'Setup') {
+                            abrirModalBlocoSetup(atualIdx, horaBlocoStr, minutoStr);
                         } else {
-                            if (categoriaAtiva === 'Produzindo') {
-                                estadoBlocos[atualIdx] = 'Produzindo';
+                            if (catNome !== null) {
+                                estadoBlocos[atualIdx] = null;
+                                delete dadosBlocosProducao[atualIdx];
+                                delete dadosBlocosSetup[atualIdx];
                                 renderizarGradeHorarios();
                                 atualizarKPIs();
                             } else {
                                 estadoBlocos[atualIdx] = categoriaAtiva;
                                 delete dadosBlocosProducao[atualIdx];
+                                delete dadosBlocosSetup[atualIdx];
                                 renderizarGradeHorarios();
                                 atualizarKPIs();
                             }
@@ -546,6 +703,12 @@
 
                     linhaDiv.appendChild(celula);
                     blocoIdx++;
+                    
+                    horaAtualM += 5;
+                    if(horaAtualM >= 60) {
+                        horaAtualM = 0;
+                        horaAtualH = (horaAtualH + 1) % 24;
+                    }
                 }
                 container.appendChild(linhaDiv);
             }
@@ -573,14 +736,79 @@
             atualizarKPIs();
         }
 
-        function desmarcarBlocoProducao() {
-            let idx = parseInt(document.getElementById('bloco-index-ativo').value);
-            estadoBlocos[idx] = null;
-            delete dadosBlocosProducao[idx];
+        function abrirModalBlocoSetup(idx, hora, min) {
+            document.getElementById('setup-index-ativo').value = idx;
+            document.getElementById('setup-info-hora').innerText = `Horário do Bloco: ${hora}:${min}`;
+            let setupInfo = dadosBlocosSetup[idx] || { desperdicio: 0 };
+            document.getElementById('setup-input-desperdicio').value = setupInfo.desperdicio;
+            abrirModal('modal-bloco-setup');
+        }
 
-            fecharModal('modal-bloco-producao');
+        function salvarBlocoSetup() {
+            let idx = parseInt(document.getElementById('setup-index-ativo').value);
+            let desperdicio = parseFloat(document.getElementById('setup-input-desperdicio').value) || 0;
+
+            estadoBlocos[idx] = 'Setup';
+            dadosBlocosSetup[idx] = { desperdicio };
+
+            fecharModal('modal-bloco-setup');
             renderizarGradeHorarios();
             atualizarKPIs();
+        }
+
+        function desmarcarBloco(tipo) {
+            let idx = parseInt(tipo === 'producao' ? document.getElementById('bloco-index-ativo').value : document.getElementById('setup-index-ativo').value);
+            estadoBlocos[idx] = null;
+            delete dadosBlocosProducao[idx];
+            delete dadosBlocosSetup[idx];
+
+            fecharModal(tipo === 'producao' ? 'modal-bloco-producao' : 'modal-bloco-setup');
+            renderizarGradeHorarios();
+            atualizarKPIs();
+        }
+
+        function calcularEstatisticasAvancadas() {
+            let totalPreenchidos = estadoBlocos.filter(b => b !== null).length;
+            let qtdProduzindo = 0;
+            let totalFolhasBoas = 0;
+            let totalDesperdicioProd = 0;
+            let totalDesperdicioSetup = 0;
+            let blocosComDespProd = 0;
+            let blocosComDespSetup = 0;
+
+            estadoBlocos.forEach((catNome, idx) => {
+                if(catNome === 'Produzindo') {
+                    qtdProduzindo++;
+                    if(dadosBlocosProducao[idx]) {
+                        totalFolhasBoas += dadosBlocosProducao[idx].boas;
+                        let refugo = dadosBlocosProducao[idx].refugo;
+                        totalDesperdicioProd += refugo;
+                        if(refugo > 0) blocosComDespProd++;
+                    }
+                } else if(catNome === 'Setup') {
+                    if(dadosBlocosSetup[idx]) {
+                        let desp = dadosBlocosSetup[idx].desperdicio;
+                        totalDesperdicioSetup += desp;
+                        if(desp > 0) blocosComDespSetup++;
+                    }
+                }
+            });
+
+            let horasTotais = totalPreenchidos * (5 / 60);
+            let horasProd = qtdProduzindo * (5 / 60);
+
+            let velMediaTotal = horasTotais > 0 ? (totalFolhasBoas / horasTotais) : 0;
+            let velMediaProd = horasProd > 0 ? (totalFolhasBoas / horasProd) : 0;
+
+            let despMedioSetup = blocosComDespSetup > 0 ? (totalDesperdicioSetup / blocosComDespSetup) : 0;
+            let despMedioProd = blocosComDespProd > 0 ? (totalDesperdicioProd / blocosComDespProd) : 0;
+
+            return {
+                velMediaTotal: Math.round(velMediaTotal),
+                velMediaProd: Math.round(velMediaProd),
+                despMedioSetup: Math.round(despMedioSetup),
+                despMedioProd: Math.round(despMedioProd)
+            };
         }
 
         function abrirModalAnalise() {
@@ -604,9 +832,32 @@
                 else if(cat.tipo === 'Disponibilidade') minutosParadas += mins;
             });
 
+            let totalBoas = 0;
+            let totalDespProd = 0;
+            Object.values(dadosBlocosProducao).forEach(p => {
+                totalBoas += p.boas;
+                totalDespProd += p.refugo;
+            });
+
+            let totalDespSetup = 0;
+            Object.values(dadosBlocosSetup).forEach(s => {
+                totalDespSetup += s.desperdicio;
+            });
+
+            let stats = calcularEstatisticasAvancadas();
+
             document.getElementById('analise-tempo-prod').innerText = `${minutosProd} min`;
             document.getElementById('analise-tempo-paradas').innerText = `${minutosParadas} min`;
             document.getElementById('analise-tempo-planejadas').innerText = `${minutosPlanejadas} min`;
+            
+            document.getElementById('analise-total-boas').innerText = totalBoas.toLocaleString();
+            document.getElementById('analise-total-desp-setup').innerText = totalDespSetup.toLocaleString();
+            document.getElementById('analise-total-desp-prod').innerText = totalDespProd.toLocaleString();
+
+            document.getElementById('analise-vel-media-total').innerText = `${stats.velMediaTotal.toLocaleString()} imp/h`;
+            document.getElementById('analise-vel-media-prod').innerText = `${stats.velMediaProd.toLocaleString()} imp/h`;
+            document.getElementById('analise-desp-medio-setup').innerText = `${stats.despMedioSetup.toLocaleString()} folhas`;
+            document.getElementById('analise-desp-medio-prod').innerText = `${stats.despMedioProd.toLocaleString()} folhas`;
 
             const containerBarras = document.getElementById('grafico-barras-analise');
             containerBarras.innerHTML = '';
@@ -645,7 +896,7 @@
             document.getElementById('rep-cliente').innerText = dadosBase.cliente;
             document.getElementById('rep-produto').innerText = dadosBase.produto;
             document.getElementById('rep-operador').innerText = dadosBase.operador;
-            document.getElementById('rep-velocidade').innerText = dadosBase.velocidadeHora;
+            document.getElementById('rep-horario').innerText = `${dadosBase.horaInicio} - ${dadosBase.horaFim}`;
 
             document.getElementById('rep-kpi-oee').innerText = document.getElementById('kpi-oee').innerText;
             document.getElementById('rep-kpi-disponibilidade').innerText = document.getElementById('kpi-disponibilidade').innerText;
@@ -672,16 +923,44 @@
                 else if(cat.tipo === 'Disponibilidade') minutosParadas += mins;
             });
 
+            let totalBoas = 0;
+            let totalDespProd = 0;
+            Object.values(dadosBlocosProducao).forEach(p => {
+                totalBoas += p.boas;
+                totalDespProd += p.refugo;
+            });
+
+            let totalDespSetup = 0;
+            Object.values(dadosBlocosSetup).forEach(s => {
+                totalDespSetup += s.desperdicio;
+            });
+
+            let stats = calcularEstatisticasAvancadas();
+
+            document.getElementById('rep-total-boas').innerText = totalBoas.toLocaleString();
+            document.getElementById('rep-total-desp-setup').innerText = totalDespSetup.toLocaleString();
+            document.getElementById('rep-total-desp-prod').innerText = totalDespProd.toLocaleString();
+
+            document.getElementById('rep-vel-media-total').innerText = `${stats.velMediaTotal.toLocaleString()} imp/h`;
+            document.getElementById('rep-vel-media-prod').innerText = `${stats.velMediaProd.toLocaleString()} imp/h`;
+            document.getElementById('rep-desp-medio-setup').innerText = `${stats.despMedioSetup.toLocaleString()} folhas`;
+            document.getElementById('rep-desp-medio-prod').innerText = `${stats.despMedioProd.toLocaleString()} folhas`;
+
             document.getElementById('rep-min-prod').innerText = `${minutosProd} min`;
             document.getElementById('rep-min-paradas').innerText = `${minutosParadas} min`;
             document.getElementById('rep-min-planejadas').innerText = `${minutosPlanejadas} min`;
 
             const containerRepGrade = document.getElementById('relatorio-grade-horarios');
             containerRepGrade.innerHTML = '';
-            let horaInicio = 8;
+            let [hIni, mIni] = dadosBase.horaInicio.split(':').map(Number);
+            let totalB = calcularTotalBlocos();
             let blocoIdx = 0;
-            for(let h = 0; h < 10; h++) {
-                let horaStr = String(horaInicio + h).padStart(2, '0') + ":00";
+            let horaAtualH = hIni;
+            let horaAtualM = mIni;
+            let numHoras = Math.ceil(totalB / 12);
+
+            for(let h = 0; h < numHoras; h++) {
+                let horaStr = String(horaAtualH).padStart(2, '0') + ":" + String(horaAtualM).padStart(2, '0');
                 let linhaDiv = document.createElement('div');
                 linhaDiv.className = "flex items-center gap-0.5 text-[9px]";
                 let rotulo = document.createElement('div');
@@ -690,8 +969,9 @@
                 linhaDiv.appendChild(rotulo);
 
                 for(let m = 0; m < 12; m++) {
+                    if (blocoIdx >= totalB) break;
                     let atualIdx = blocoIdx;
-                    let minutoNum = m * 5;
+                    let minutoNum = horaAtualM;
                     let catNome = estadoBlocos[atualIdx];
                     let catObj = categorias.find(c => c.nome === catNome);
                     let celula = document.createElement('div');
@@ -704,6 +984,12 @@
                     celula.innerText = minutoNum;
                     linhaDiv.appendChild(celula);
                     blocoIdx++;
+
+                    horaAtualM += 5;
+                    if(horaAtualM >= 60) {
+                        horaAtualM = 0;
+                        horaAtualH = (horaAtualH + 1) % 24;
+                    }
                 }
                 containerRepGrade.appendChild(linhaDiv);
             }
@@ -737,14 +1023,14 @@
             abrirModal('modal-relatorio');
         }
 
-        // FUNÇÕES DE BACKUP (EXPORTAR E IMPORTAR)
         function exportarBackup() {
             let dadosBackup = {
                 dadosBase: dadosBase,
                 categorias: categorias,
                 estadoBlocos: estadoBlocos,
                 dadosBlocosProducao: dadosBlocosProducao,
-                versao: "1.0",
+                dadosBlocosSetup: dadosBlocosSetup,
+                versao: "1.8",
                 dataBackup: new Date().toISOString()
             };
 
@@ -770,13 +1056,16 @@
                         categorias = conteudo.categorias || categorias;
                         estadoBlocos = conteudo.estadoBlocos || estadoBlocos;
                         dadosBlocosProducao = conteudo.dadosBlocosProducao || dadosBlocosProducao;
+                        dadosBlocosSetup = conteudo.dadosBlocosSetup || dadosBlocosSetup;
 
-                        // Atualiza campos visuais de configuração
                         document.getElementById('cfg-maquina').value = dadosBase.maquina;
                         document.getElementById('cfg-cliente').value = dadosBase.cliente;
                         document.getElementById('cfg-produto').value = dadosBase.produto;
                         document.getElementById('cfg-operador').value = dadosBase.operador;
                         document.getElementById('cfg-velocidade').value = dadosBase.velocidadeHora;
+                        document.getElementById('cfg-inicio').value = dadosBase.horaInicio || "08:00";
+                        document.getElementById('cfg-fim').value = dadosBase.horaFim || "18:00";
+                        
                         document.getElementById('header-detalhes').innerText = `Máquina: ${dadosBase.maquina} | Cliente: ${dadosBase.cliente} | Operador: ${dadosBase.operador}`;
 
                         calcularTempoCiclo();
@@ -792,7 +1081,7 @@
                 } catch (erro) {
                     alert("Erro ao ler o arquivo JSON de backup.");
                 }
-                event.target.value = ''; // Limpa o input file
+                event.target.value = '';
             };
             leitor.readAsText(arquivo);
         }
@@ -838,8 +1127,11 @@
             
             let capacidadeBloco = (dadosBase.velocidadeHora / 60) * 5; 
             let capacidadeTotalProduzindo = capacidadeBloco * produzindo;
-            let performance = capacidadeTotalProduzindo > 0 ? Math.min(1.0, totalBons / capacidadeTotalProduzindo) : 0.85;
-            if (totalProd === 0) performance = 0.5699;
+            
+            let performance = 0;
+            if (capacidadeTotalProduzindo > 0 && totalBons > 0) {
+                performance = Math.min(1.0, totalBons / capacidadeTotalProduzindo);
+            }
 
             let oee = disponibilidade * performance * qualidade;
 
