@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curvas de Molha - Calculadora e Gráficos</title>
+    <!-- Tailwind CSS para Estilização Profissional -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para os Gráficos Interativos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- HEADER -->
+    <header class="bg-slate-900 border-b border-slate-800 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2.5 rounded-xl shadow-md shadow-blue-500/20 text-white">
+                    <i class="fa-solid fa-droplet text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white">Curvas de Molha</h1>
+                    <p class="text-xs text-slate-400">Sistema Avançado de Cálculo e Parâmetros Heidelberg</p>
+                </div>
+            </div>
+            <!-- Abas de Navegação Z1 / Z2 -->
+            <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 shadow-inner">
+                <button onclick="switchTab('Z1')" id="btnTabZ1" class="px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md">
+                    <i class="fa-solid fa-gauge-high mr-2"></i> Zona 1 (Z1)
+                </button>
+                <button onclick="switchTab('Z2')" id="btnTabZ2" class="px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-gauge-high mr-2"></i> Zona 2 (Z2)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- PAINEL DE CONTROLE E ENTRADA (Esquerda - 5 colunas) -->
+        <div class="lg:col-span-5 space-y-6">
+            
+            <!-- CONFIGURAÇÃO DE CORREÇÃO -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-500"></i> Fator de Correção
+                </h2>
+                
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="relative flex-grow">
+                        <input type="number" id="correctionFactor" value="15" step="0.5" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-lg font-bold text-white focus:outline-none focus:border-blue-500 transition-colors">
+                        <span class="absolute right-4 top-3.5 text-slate-400 font-bold">%</span>
+                    </div>
+                    <button onclick="applyCorrection()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-3 rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center gap-2">
+                        <i class="fa-solid fa-check"></i> Aplicar
+                    </button>
+                </div>
+
+                <!-- Atalhos Rápidos -->
+                <div class="flex gap-2">
+                    <button onclick="setCorrection(10)" class="flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs font-semibold transition-colors">10%</button>
+                    <button onclick="setCorrection(15)" class="flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs font-semibold transition-colors">15%</button>
+                    <button onclick="setCorrection(20)" class="flex-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs font-semibold transition-colors">20%</button>
+                </div>
+            </div>
+
+            <!-- SELEÇÃO E MEMÓRIA DE CURVAS -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-bookmark text-emerald-500"></i> Gerenciamento de Curvas
+                    </h2>
+                    <span id="zoneBadge" class="bg-blue-500/10 text-blue-400 text-xs px-2.5 py-1 rounded-full font-bold border border-blue-500/20">Z1 (20)</span>
+                </div>
+
+                <!-- Botão Carregar com Memória -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Selecione uma Curva Memorizada</label>
+                        <div class="flex gap-2">
+                            <select id="savedCurvesSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
+                                <!-- Preenchido via JS -->
+                            </select>
+                            <button onclick="loadSelectedCurve()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/25 whitespace-nowrap flex items-center gap-2">
+                                <i class="fa-solid fa-folder-open"></i> Carregar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Entradas Manuais para os 6 pontos (Ocultas inicialmente até carregar) -->
+                    <div id="customInputsContainer" class="pt-2 border-t border-slate-800 hidden">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-medium text-slate-400">Valores Personalizados (6 Pontos)</label>
+                            <button onclick="openSaveModal()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold">
+                                <i class="fa-solid fa-circle-plus"></i> Salvar na Memória (+)
+                            </button>
+                        </div>
+                        <div id="customInputsGrid" class="grid grid-cols-3 gap-2">
+                            <!-- Gerado via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABELA DE DADOS CALCULADOS (Oculta inicialmente até carregar) -->
+            <div id="dataTableContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden">
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-table text-indigo-500"></i> Tabela Analítica
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="pb-3 font-semibold">Velocidade</th>
+                                <th class="pb-3 font-semibold">Heidelberg</th>
+                                <th class="pb-3 font-semibold">Corrigida</th>
+                                <th class="pb-3 font-semibold">Atual</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="divide-y divide-slate-800/50">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- PAINEL DE GRÁFICO E VISUALIZAÇÃO (Direita - 7 colunas) -->
+        <div class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- CARD DO GRÁFICO -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex-grow flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 id="chartTitle" class="text-lg font-bold text-white">Curvas de Molha - Zona 1</h2>
+                        <p class="text-xs text-slate-400">Comparativo visual entre padrão Heidelberg e curva corrigida</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center gap-1.5 text-xs text-slate-300"><span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span> Heidelberg</span>
+                        <span class="flex items-center gap-1.5 text-xs text-slate-300"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Corrigida</span>
+                        <span id="legendCustom" class="hidden items-center gap-1.5 text-xs text-slate-300"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> Selecionada</span>
+                    </div>
+                </div>
+
+                <!-- Container do Canvas -->
+                <div class="relative flex-grow w-full h-[400px]">
+                    <canvas id="molhaChart"></canvas>
+                </div>
+            </div>
+
+            <!-- ESTATÍSTICAS RÁPIDAS -->
+            <div class="grid grid-cols-2 gap-4" id="statsGrid">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+                    <span class="text-xs text-slate-400 block mb-1">Média Heidelberg</span>
+                    <span id="statHd" class="text-xl font-bold text-white">-</span>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+                    <span class="text-xs text-slate-400 block mb-1">Média Corrigida</span>
+                    <span id="statCorr" class="text-xl font-bold text-emerald-400">-</span>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL PARA SALVAR CURVA PERSONALIZADA -->
+    <div id="saveModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk text-blue-500"></i> Salvar Nova Curva na Memória
+                </h3>
+                <button onclick="closeSaveModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">Dê um nome identificador para esta curva personalizada para poder carregá-la futuramente.</p>
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Nome da Curva</label>
+                <input type="text" id="newCurveName" placeholder="Ex: Curva Especial Papel Couché" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeSaveModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
+                <button onclick="saveCurrentCurveToMemory()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-blue-600/25">Salvar Curva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RODAPÉ -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        Curvas de Molha &bull; Sistema Industrial Profissional &copy; 2026
+    </footer>
+
+    <!-- JAVASCRIPT DA APLICAÇÃO -->
+    <script>
+        const xValues = [3000, 6000, 9000, 12000, 15000, 18000];
+
+        const zoneData = {
+            Z1: {
+                name: "Zona 1 (Z1)",
+                badge: "Z1 (20)",
+                hd: [319, 412, 505, 598, 691, 783],
+                defaultCurves: [
+                    { name: "Padrão Z1 (Planilha)", values: [607, 740, 874, 1007, 1141, 1275] },
+                    { name: "Curva Alternativa 1", values: [751, 889, 1027, 1165, 1303, 1441] },
+                    { name: "Curva Alternativa 2", values: [827, 1031, 1234, 1438, 1642, 1846] },
+                    { name: "Curva Alternativa 3", values: [660, 865, 1071, 1276, 1482, 1688] },
+                    { name: "Curva Alternativa 4", values: [330, 417, 505, 592, 680, 768] },
+                    { name: "Curva Alternativa 5", values: [480, 567, 655, 742, 830, 918] },
+                    { name: "Curva Alternativa 6", values: [583, 865, 1146, 1427, 1708, 1900] }
+                ]
+            },
+            Z2: {
+                name: "Zona 2 (Z2)",
+                badge: "Z2 (60)",
+                hd: [919, 1012, 1105, 1197, 1290, 1383],
+                defaultCurves: [
+                    { name: "Padrão Z2 (Planilha)", values: [1264, 1398, 1531, 1665, 1798, 1931] },
+                    { name: "Curva Alternativa 1", values: [1497, 1635, 1773, 1911, 2049, 2187] },
+                    { name: "Curva Alternativa 2", values: [1706, 1938, 2169, 2400, 2631, 2862] },
+                    { name: "Curva Alternativa 3", values: [1444, 1714, 1984, 2254, 2524, 2794] },
+                    { name: "Curva Alternativa 4", values: [930, 1017, 1105, 1192, 1280, 1368] },
+                    { name: "Curva Alternativa 5", values: [1080, 1167, 1255, 1342, 1430, 1518] },
+                    { name: "Curva Alternativa 6", values: [1432, 1714, 1995, 2276, 2557, 2800] }
+                ]
+            }
+        };
+
+        let currentZone = 'Z1';
+        let chartInstance = null;
+        let isLoaded = false; // Controle de estado de carregamento
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initZone();
+            renderChart();
+        });
+
+        function switchTab(zone) {
+            currentZone = zone;
+            isLoaded = false; // Reseta ao trocar de aba
+            if(zone === 'Z1') {
+                document.getElementById('btnTabZ1').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md";
+                document.getElementById('btnTabZ2').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-white";
+            } else {
+                document.getElementById('btnTabZ2').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md";
+                document.getElementById('btnTabZ1').className = "px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-400 hover:text-white";
+            }
+            initZone();
+            updateAll();
+        }
+
+        function initZone() {
+            const data = zoneData[currentZone];
+            document.getElementById('zoneBadge').innerText = data.badge;
+            document.getElementById('chartTitle').innerText = `Curvas de Molha - ${data.name}`;
+            
+            populateSelect();
+
+            // Oculta tabela e inputs na inicialização
+            document.getElementById('customInputsContainer').classList.add('hidden');
+            document.getElementById('dataTableContainer').classList.add('hidden');
+            document.getElementById('legendCustom').classList.add('hidden');
+            document.getElementById('statsGrid').className = "grid grid-cols-2 gap-4";
+
+            updateAll();
+        }
+
+        function populateSelect() {
+            const select = document.getElementById('savedCurvesSelect');
+            select.innerHTML = '<option value="" disabled selected>-- Escolha uma Curva --</option>';
+            
+            zoneData[currentZone].defaultCurves.forEach((item, idx) => {
+                const opt = document.createElement('option');
+                opt.value = `default_${idx}`;
+                opt.textContent = item.name;
+                select.appendChild(opt);
+            });
+
+            const saved = JSON.parse(localStorage.getItem(`molha_curves_${currentZone}`)) || [];
+            saved.forEach((item, idx) => {
+                const opt = document.createElement('option');
+                opt.value = `saved_${idx}`;
+                opt.textContent = `⭐ [Salva] ${item.name}`;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderCustomInputs(values) {
+            const grid = document.getElementById('customInputsGrid');
+            grid.innerHTML = '';
+            values.forEach((val, idx) => {
+                grid.innerHTML += `
+                    <div>
+                        <span class="text-[10px] text-slate-500 block mb-0.5">${xValues[idx]} ph</span>
+                        <input type="number" id="customVal_${idx}" value="${val}" oninput="updateAll()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold text-amber-400 text-center focus:outline-none focus:border-amber-500">
+                    </div>
+                `;
+            });
+        }
+
+        function loadSelectedCurve() {
+            const select = document.getElementById('savedCurvesSelect');
+            const val = select.value;
+            if(!val) {
+                alert('Por favor, selecione uma curva na lista antes de carregar.');
+                return;
+            }
+
+            let values = [];
+            if(val.startsWith('default_')) {
+                const idx = parseInt(val.split('_')[1]);
+                values = zoneData[currentZone].defaultCurves[idx].values;
+            } else if(val.startsWith('saved_')) {
+                const idx = parseInt(val.split('_')[1]);
+                const saved = JSON.parse(localStorage.getItem(`molha_curves_${currentZone}`)) || [];
+                values = saved[idx].values;
+            }
+
+            renderCustomInputs(values);
+
+            // Exibe os elementos ao carregar
+            isLoaded = true;
+            document.getElementById('customInputsContainer').classList.remove('hidden');
+            document.getElementById('dataTableContainer').classList.remove('hidden');
+            document.getElementById('legendCustom').classList.remove('hidden');
+            document.getElementById('legendCustom').style.display = 'flex';
+            document.getElementById('statsGrid').className = "grid grid-cols-3 gap-4";
+
+            // Adiciona card de média customizada se não existir
+            if(document.getElementById('statCustomCard') === null) {
+                document.getElementById('statsGrid').innerHTML += `
+                    <div id="statCustomCard" class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+                        <span class="text-xs text-slate-400 block mb-1">Média Ativa/Custom</span>
+                        <span id="statCustom" class="text-xl font-bold text-amber-400">-</span>
+                    </div>
+                `;
+            }
+
+            updateAll();
+        }
+
+        function setCorrection(val) {
+            document.getElementById('correctionFactor').value = val;
+            updateAll();
+        }
+
+        function applyCorrection() {
+            updateAll();
+        }
+
+        function getCurrentCustomValues() {
+            let vals = [];
+            for(let i=0; i<6; i++) {
+                const input = document.getElementById(`customVal_${i}`);
+                vals.push(input ? parseFloat(input.value) || 0 : 0);
+            }
+            return vals;
+        }
+
+        function updateAll() {
+            const factor = parseFloat(document.getElementById('correctionFactor').value) || 0;
+            const hd = zoneData[currentZone].hd;
+            const corrected = hd.map(val => parseFloat((val * (1 + factor / 100)).toFixed(2)));
+
+            const avg = arr => (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1);
+            document.getElementById('statHd').innerText = avg(hd);
+            document.getElementById('statCorr').innerText = avg(corrected);
+
+            let custom = [];
+            if(isLoaded) {
+                custom = getCurrentCustomValues();
+                document.getElementById('statCustom').innerText = avg(custom);
+                
+                const tbody = document.getElementById('dataTableBody');
+                tbody.innerHTML = '';
+                for(let i=0; i<6; i++) {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="py-2.5 font-medium text-slate-300">${xValues[i]}</td>
+                            <td class="py-2.5 text-blue-400 font-semibold">${hd[i]}</td>
+                            <td class="py-2.5 text-emerald-400 font-semibold">${corrected[i]}</td>
+                            <td class="py-2.5 text-amber-400 font-semibold">${custom[i]}</td>
+                        </tr>
+                    `;
+                }
+            }
+
+            updateChart(hd, corrected, isLoaded ? custom : []);
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('molhaChart').getContext('2d');
+            const hd = zoneData[currentZone].hd;
+            const factor = parseFloat(document.getElementById('correctionFactor').value) || 15;
+            const corrected = hd.map(val => parseFloat((val * (1 + factor / 100)).toFixed(2)));
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xValues.map(v => `${v} RPM`),
+                    datasets: [
+                        {
+                            label: 'Heidelberg (Padrão)',
+                            data: hd,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Curva Corrigida',
+                            data: corrected,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            borderDash: [5, 5],
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Selecionada / Custom',
+                            data: [],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                            borderWidth: 3,
+                            pointRadius: 6,
+                            pointStyle: 'rectRot',
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12,
+                            boxPadding: 6
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart(hd, corrected, custom) {
+            if(!chartInstance) return;
+            chartInstance.data.datasets[0].data = hd;
+            chartInstance.data.datasets[1].data = corrected;
+            chartInstance.data.datasets[2].data = isLoaded ? custom : [];
+            chartInstance.update();
+        }
+
+        function openSaveModal() {
+            if(!isLoaded) {
+                alert('Carregue uma curva primeiro.');
+                return;
+            }
+            document.getElementById('newCurveName').value = '';
+            document.getElementById('saveModal').classList.remove('hidden');
+        }
+
+        function closeSaveModal() {
+            document.getElementById('saveModal').classList.add('hidden');
+        }
+
+        function saveCurrentCurveToMemory() {
+            const name = document.getElementById('newCurveName').value.trim();
+            if(!name) {
+                alert('Por favor, informe um nome para a curva.');
+                return;
+            }
+            const values = getCurrentCustomValues();
+            const storageKey = `molha_curves_${currentZone}`;
+            const saved = JSON.parse(localStorage.getItem(storageKey)) || [];
+            
+            saved.push({ name, values });
+            localStorage.setItem(storageKey, JSON.stringify(saved));
+
+            closeSaveModal();
+            populateSelect();
+            alert('Curva salva com sucesso na memória do navegador!');
+        }
+    </script>
+</body>
+</html>
