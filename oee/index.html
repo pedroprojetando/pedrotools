@@ -50,50 +50,54 @@
 
     <!-- CABEÇALHO -->
     <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="bg-blue-600 p-2 rounded-lg text-xl font-bold">
-                    <i class="fa-solid fa-industry"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-extrabold tracking-wide">OEE - DIÁRIO DE BORDO</h1>
-                    <p class="text-xs text-slate-400" id="header-detalhes">Máquina: Não Definido | Cliente: Não Definido | Operador: Não Definido</p>
+        <div class="max-w-7xl mx-auto px-4 py-3 space-y-3">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-blue-600 p-2 rounded-lg text-xl font-bold">
+                        <i class="fa-solid fa-industry"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-extrabold tracking-wide">OEE - DIÁRIO DE BORDO</h1>
+                        <p class="text-xs text-slate-400" id="header-detalhes">Máquina: Não Definido | Cliente: Não Definido | Operador: Não Definido</p>
+                    </div>
                 </div>
             </div>
-            <div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                <button onclick="clicarNovoTurno()" class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow" title="Iniciar Nova Análise">
-                    <i class="fa-solid fa-file-circle-plus"></i> Novo
+
+            <!-- BOTÕES DO CABEÇALHO RETANGULARES EM LINHAS DE EXATAMENTE 3 POR LINHA -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
+                <button onclick="clicarNovoTurno()" class="w-full h-11 bg-sky-600 hover:bg-sky-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
+                    <i class="fa-solid fa-file-circle-plus text-sm"></i> Novo
                 </button>
-                <button onclick="abrirModal('modal-dados')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
-                    <i class="fa-solid fa-gear"></i> Dados Base
+                <button onclick="abrirModal('modal-dados')" class="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
+                    <i class="fa-solid fa-gear text-sm"></i> Dados Base
                 </button>
-                <button onclick="salvarTurnoAtual()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow" title="Salvar Turno no Histórico">
-                    <i class="fa-solid fa-floppy-disk"></i> Salvar
+                <button onclick="salvarTurnoAtual()" class="w-full h-11 bg-emerald-700 hover:bg-emerald-800 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide" title="Salvar Turno no Histórico">
+                    <i class="fa-solid fa-floppy-disk text-sm"></i> Salvar
                 </button>
-                <button onclick="abrirModalHistorico()" class="bg-amber-700 hover:bg-amber-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
-                    <i class="fa-solid fa-box-archive"></i> Histórico (<span id="contador-historico">0</span>)
+                <button onclick="abrirModalHistorico()" class="w-full h-11 bg-amber-700 hover:bg-amber-800 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
+                    <i class="fa-solid fa-box-archive text-sm"></i> Histórico (<span id="contador-historico">0</span>)
                 </button>
-                <button onclick="abrirModal('modal-calculadora')" class="bg-indigo-700 hover:bg-indigo-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
-                    <i class="fa-solid fa-calculator"></i> Calculadora
+                <button onclick="abrirModal('modal-calculadora')" class="w-full h-11 bg-indigo-700 hover:bg-indigo-800 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
+                    <i class="fa-solid fa-calculator text-sm"></i> Calculadora
                 </button>
-                <button onclick="abrirModalNotasGerais()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
-                    <i class="fa-solid fa-note-sticky"></i> Notas (<span id="contador-notas">0</span>)
+                <button onclick="abrirModalNotasGerais()" class="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
+                    <i class="fa-solid fa-note-sticky text-sm"></i> Notas (<span id="contador-notas">0</span>)
                 </button>
-                <button onclick="abrirModalAnalise()" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
-                    <i class="fa-solid fa-chart-column"></i> Análise
+                <button onclick="abrirModalAnalise()" class="w-full h-11 bg-purple-600 hover:bg-purple-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
+                    <i class="fa-solid fa-chart-column text-sm"></i> Análise
                 </button>
-                <button onclick="abrirModalRelatorio()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
-                    <i class="fa-solid fa-print"></i> Relatório
+                <button onclick="abrirModalRelatorio()" class="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
+                    <i class="fa-solid fa-print text-sm"></i> Relatório
                 </button>
-                <button onclick="exportarBackup()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow" title="Exportar Backup">
-                    <i class="fa-solid fa-download"></i> Exportar
+                <button onclick="exportarBackup()" class="w-full h-11 bg-amber-600 hover:bg-amber-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide" title="Exportar Backup">
+                    <i class="fa-solid fa-download text-sm"></i> Exportar
                 </button>
-                <label class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow cursor-pointer" title="Carregar Backup">
-                    <i class="fa-solid fa-upload"></i> Carregar
+                <label class="w-full h-11 bg-cyan-600 hover:bg-cyan-700 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow cursor-pointer text-center uppercase tracking-wide" title="Carregar Backup">
+                    <i class="fa-solid fa-upload text-sm"></i> Carregar
                     <input type="file" id="input-carregar-backup" accept=".json" onchange="importarBackup(event)" class="hidden">
                 </label>
-                <button onclick="abrirModal('modal-admin')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1 shadow">
-                    <i class="fa-solid fa-sliders"></i> Administração
+                <button onclick="abrirModal('modal-admin')" class="w-full h-11 bg-slate-700 hover:bg-slate-600 text-white px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow uppercase tracking-wide">
+                    <i class="fa-solid fa-sliders text-sm"></i> Administração
                 </button>
             </div>
         </div>
@@ -169,11 +173,32 @@
                 </div>
             </div>
 
-            <!-- BOTÕES DE SELEÇÃO RÁPIDA DE CATEGORIAS -->
-            <div class="space-y-2 bg-slate-50 p-3 rounded-lg border">
-                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Selecione a Categoria para Pintar:</div>
-                <div id="botoes-secao-categorias" class="flex flex-wrap gap-2">
-                    <!-- Gerado dinamicamente -->
+            <!-- BOTÕES DE SELEÇÃO RÁPIDA SEPARADOS POR SUAS ORIGENS (EM GRADES DE 3 COLUNAS) -->
+            <div class="space-y-4 bg-slate-50 p-4 rounded-lg border">
+                <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b pb-1">Selecione a Categoria para Pintar (Separadas por Origem):</div>
+                
+                <!-- GRUPO 1: PRODUÇÃO -->
+                <div class="space-y-1.5">
+                    <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block"><i class="fa-solid fa-industry mr-1"></i> Produção</span>
+                    <div id="botoes-grupo-produzindo" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        <!-- Gerado via JS -->
+                    </div>
+                </div>
+
+                <!-- GRUPO 2: DISPONIBILIDADE (PARADAS) -->
+                <div class="space-y-1.5 pt-2 border-t">
+                    <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider block"><i class="fa-solid fa-wrench mr-1"></i> Disponibilidade / Paradas</span>
+                    <div id="botoes-grupo-disponibilidade" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        <!-- Gerado via JS -->
+                    </div>
+                </div>
+
+                <!-- GRUPO 3: PROGRAMADA / PLANEJADA -->
+                <div class="space-y-1.5 pt-2 border-t">
+                    <span class="text-[11px] font-bold text-cyan-700 uppercase tracking-wider block"><i class="fa-solid fa-calendar-check mr-1"></i> Programada / Planejada</span>
+                    <div id="botoes-grupo-programacao" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        <!-- Gerado via JS -->
+                    </div>
                 </div>
             </div>
 
@@ -517,9 +542,6 @@
                         <span>Anterior: <b id="bloco-val-anterior">0</b></span>
                         <span>Diferença Calculada: <b id="bloco-val-diferenca" class="text-blue-700 text-xs">0</b> fls</span>
                     </div>
-                    <button type="button" onclick="aplicarDiferencaProducao()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded text-xs font-bold transition">
-                        <i class="fa-solid fa-arrow-down mr-1"></i> Usar Diferença nas Folhas Boas
-                    </button>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
@@ -532,6 +554,11 @@
                         <input type="number" id="bloco-input-refugo" value="0" class="w-full border rounded-lg p-2 text-sm">
                     </div>
                 </div>
+
+                <button type="button" onclick="aplicarDiferencaProducao()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-bold transition shadow">
+                    <i class="fa-solid fa-arrow-down mr-1"></i> Usar Diferença nas Folhas Boas (Subtraindo o Desperdício)
+                </button>
+
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Nota / Observação do Bloco</label>
                     <textarea id="bloco-input-nota" rows="2" placeholder="Digite alguma observação..." class="w-full border rounded-lg p-2 text-sm"></textarea>
@@ -573,15 +600,17 @@
                         <span>Anterior: <b id="setup-val-anterior">0</b></span>
                         <span>Diferença Calculada: <b id="setup-val-diferenca" class="text-amber-800 text-xs">0</b> fls</span>
                     </div>
-                    <button type="button" onclick="aplicarDiferencaSetup()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-1.5 rounded text-xs font-bold transition">
-                        <i class="fa-solid fa-arrow-down mr-1"></i> Usar Diferença no Desperdício de Setup
-                    </button>
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Desperdício de Setup (Folhas)</label>
                     <input type="number" id="setup-input-desperdicio" value="0" class="w-full border rounded-lg p-2 text-sm">
                 </div>
+
+                <button type="button" onclick="aplicarDiferencaSetup()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-lg text-xs font-bold transition shadow">
+                    <i class="fa-solid fa-arrow-down mr-1"></i> Usar Diferença no Desperdício de Setup
+                </button>
+
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Nota / Observação do Bloco</label>
                     <textarea id="setup-input-nota" rows="2" placeholder="Digite alguma observação..." class="w-full border rounded-lg p-2 text-sm"></textarea>
@@ -770,14 +799,12 @@
 
         // --- BUSCA O ÚLTIMO TOTALIZADOR ANTERIOR ---
         function obterUltimoTotalizador(indiceAtual) {
-            // 1. Procurar nos contadores gerais salvos
             if (contadoresGeraisSalvos.length > 0) {
                 let ultimoGeral = contadoresGeraisSalvos[contadoresGeraisSalvos.length - 1].valor;
                 let num = parseInt(ultimoGeral.replace(/\D/g, ''));
                 if(!isNaN(num)) return num;
             }
 
-            // 2. Procurar nos blocos anteriores de produção ou setup que tenham totalizador
             for (let i = indiceAtual - 1; i >= 0; i--) {
                 if (dadosBlocosProducao[i] && dadosBlocosProducao[i].totalizador) {
                     let num = parseInt(String(dadosBlocosProducao[i].totalizador).replace(/\D/g, ''));
@@ -789,7 +816,7 @@
                 }
             }
 
-            return 0; // Se não houver nenhum anterior
+            return 0;
         }
 
         // --- FUNÇÃO DO BOTÃO NOVO ---
@@ -1116,21 +1143,29 @@
         }
 
         function renderizarBotoesSelecaoCategorias() {
-            const container = document.getElementById('botoes-secao-categorias');
-            container.innerHTML = '';
-            
-            let fixos = categorias.filter(c => c.nome === "Produzindo" || c.nome === "Setup");
-            let outros = categorias.filter(c => c.nome !== "Produzindo" && c.nome !== "Setup");
-            let ordenadas = [...fixos, ...outros];
+            const containerProd = document.getElementById('botoes-grupo-produzindo');
+            const containerDisp = document.getElementById('botoes-grupo-disponibilidade');
+            const containerProg = document.getElementById('botoes-grupo-programacao');
 
-            ordenadas.forEach(cat => {
+            containerProd.innerHTML = '';
+            containerDisp.innerHTML = '';
+            containerProg.innerHTML = '';
+
+            categorias.forEach(cat => {
                 let btn = document.createElement('button');
                 let isAtivo = categoriaAtiva === cat.nome;
                 let ring = isAtivo ? "ring-2 ring-slate-900 scale-105 font-extrabold shadow-md" : "opacity-80 hover:opacity-100";
-                btn.className = `px-3 py-1.5 rounded-lg text-xs border ${cat.cor} ${ring} transition flex items-center gap-1.5`;
-                btn.innerHTML = `<span>${cat.nome}</span> ${isAtivo ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}`;
+                btn.className = `w-full h-11 px-3 rounded-lg text-xs border ${cat.cor} ${ring} transition flex items-center justify-between gap-1.5 uppercase tracking-wide font-bold`;
+                btn.innerHTML = `<span class="truncate">${cat.nome}</span> ${isAtivo ? '<i class="fa-solid fa-check text-xs"></i>' : ''}`;
                 btn.onclick = () => selecionarCategoria(cat.nome);
-                container.appendChild(btn);
+
+                if (cat.tipo === "Produzindo") {
+                    containerProd.appendChild(btn);
+                } else if (cat.tipo === "Disponibilidade") {
+                    containerDisp.appendChild(btn);
+                } else if (cat.tipo === "Programacao") {
+                    containerProg.appendChild(btn);
+                }
             });
         }
 
@@ -1308,7 +1343,9 @@
 
         function aplicarDiferencaProducao() {
             let diff = calcularDiferencaTotalizador('producao');
-            document.getElementById('bloco-input-boas').value = diff;
+            let refugo = parseFloat(document.getElementById('bloco-input-refugo').value) || 0;
+            let folhasBoasLiquidas = Math.max(0, diff - refugo);
+            document.getElementById('bloco-input-boas').value = folhasBoasLiquidas;
         }
 
         function aplicarDiferencaSetup() {
@@ -1797,7 +1834,7 @@
                 notasBlocos: notasBlocos,
                 historicoTurnos: historicoTurnos,
                 contadoresGeraisSalvos: contadoresGeraisSalvos,
-                versao: "2.7",
+                versao: "2.9",
                 dataBackup: new Date().toISOString()
             };
 
