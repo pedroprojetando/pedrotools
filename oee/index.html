@@ -173,7 +173,7 @@
                 </div>
             </div>
 
-            <!-- BOTÕES DE SELEÇÃO RÁPIDA EM EXATAMENTE 3 COLUNAS POR LINHA (COMPACTOS E ORGANIZADOS) -->
+            <!-- BOTÕES DE SELEÇÃO RÁPIDA EM EXATAMENTE 3 COLUNAS POR LINHA COM FONTES AJUSTADAS E LEGÍVEIS -->
             <div class="space-y-4 bg-slate-50 p-4 rounded-lg border">
                 <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b pb-1">Selecione a Categoria para Pintar (Separadas por Origem):</div>
                 
@@ -705,7 +705,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE ADMINISTRAÇÃO -->
+    <!-- MODAL DE ADMINISTRAÇÃO (EDITAR, ADICIONAR E REMOVER CATEGORIAS E SUBCATEGORIAS) -->
     <div id="modal-admin" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3">
@@ -726,12 +726,13 @@
                 </div>
 
                 <div class="bg-slate-50 p-3 rounded-lg border space-y-2">
-                    <h4 class="text-xs font-bold text-slate-700 uppercase">Categorias de Parada / Planejadas</h4>
+                    <h4 class="text-xs font-bold text-slate-700 uppercase">Categorias de Parada / Planejadas / Produção</h4>
                     <div class="flex gap-2">
                         <input type="text" id="nova-cat-nome" placeholder="Nome da categoria" class="flex-1 border rounded p-2 text-xs">
                         <select id="nova-cat-tipo" class="border rounded p-2 text-xs">
                             <option value="Programacao">Planejada</option>
                             <option value="Disponibilidade">Parada (Disp.)</option>
+                            <option value="Produzindo">Produzindo</option>
                         </select>
                         <button onclick="adicionarNovaCategoria()" class="bg-slate-800 text-white px-3 py-2 rounded text-xs font-medium hover:bg-slate-900">Adicionar</button>
                     </div>
@@ -1106,6 +1107,9 @@
                 document.getElementById('cfg-maquina').value = dadosBase.maquina;
                 document.getElementById('cfg-inicio').value = dadosBase.horaInicio;
                 document.getElementById('cfg-fim').value = dadosBase.horaFim;
+            } else if(id === 'modal-admin') {
+                renderizarAdminCats();
+                renderizarAdminSubcatsSetup();
             }
             document.getElementById(id).classList.remove('hidden'); 
         }
@@ -1154,10 +1158,11 @@
             categorias.forEach(cat => {
                 let btn = document.createElement('button');
                 let isAtivo = categoriaAtiva === cat.nome;
-                let ring = isAtivo ? "ring-2 ring-slate-900 scale-105 font-extrabold shadow-md" : "opacity-80 hover:opacity-100";
-                // Altura fixa h-8 (mesmo padrão do cabeçalho) e fonte compacta text-[11px]
-                btn.className = `w-full h-8 px-2 rounded text-[11px] border ${cat.cor} ${ring} transition flex items-center justify-between gap-1 uppercase tracking-wide font-semibold truncate`;
-                btn.innerHTML = `<span class="truncate">${cat.nome}</span> ${isAtivo ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}`;
+                let ring = isAtivo ? "ring-2 ring-slate-900 scale-105 font-extrabold shadow-md" : "opacity-90 hover:opacity-100";
+                
+                // Fonte reduzida e adaptação de quebra de texto para evitar cortes e garantir legibilidade total
+                btn.className = `w-full h-9 px-1.5 rounded text-[10px] leading-tight border ${cat.cor} ${ring} transition flex flex-col items-center justify-center text-center font-semibold overflow-hidden`;
+                btn.innerHTML = `<span class="truncate w-full">${cat.nome}</span> ${isAtivo ? '<i class="fa-solid fa-check text-[9px]"></i>' : ''}`;
                 btn.onclick = () => selecionarCategoria(cat.nome);
 
                 if (cat.tipo === "Produzindo") {
@@ -1173,8 +1178,16 @@
         function renderizarAdminCats() {
             const lista = document.getElementById('lista-admin-cats');
             lista.innerHTML = '';
-            categorias.filter(c => c.nome !== 'Produzindo' && c.nome !== 'Setup').forEach((cat, idx) => {
-                lista.innerHTML += `<div class="flex justify-between items-center p-1.5 bg-slate-50 rounded border"><span><b>${cat.nome}</b> (${cat.tipo})</span> <button onclick="removerCat('${cat.nome}')" class="text-red-500 font-bold px-1 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></div>`;
+            categorias.forEach((cat, idx) => {
+                lista.innerHTML += `
+                    <div class="flex justify-between items-center p-1.5 bg-slate-50 rounded border text-xs">
+                        <span><b>${cat.nome}</b> <span class="text-slate-400 text-[10px]">(${cat.tipo})</span></span> 
+                        <div class="space-x-1">
+                            <button onclick="editarCategoria(${idx})" class="text-blue-600 font-bold px-1.5 py-0.5 hover:bg-blue-50 rounded" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="removerCat('${cat.nome}')" class="text-red-500 font-bold px-1.5 py-0.5 hover:bg-red-50 rounded" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
             });
         }
 
@@ -1182,15 +1195,31 @@
             const lista = document.getElementById('lista-admin-subcats');
             lista.innerHTML = '';
             subcategoriasSetup.forEach((sub, idx) => {
-                lista.innerHTML += `<div class="flex justify-between items-center p-1.5 bg-slate-50 rounded border"><span><b>${sub}</b></span> <div class="space-x-1"><button onclick="editarSubcatSetup(${idx})" class="text-blue-500 font-bold px-1 hover:text-blue-700" title="Editar"><i class="fa-solid fa-pen"></i></button><button onclick="removerSubcatSetup(${idx})" class="text-red-500 font-bold px-1 hover:text-red-700" title="Excluir"><i class="fa-solid fa-trash"></i></button></div></div>`;
+                lista.innerHTML += `
+                    <div class="flex justify-between items-center p-1.5 bg-slate-50 rounded border text-xs">
+                        <span><b>${sub}</b></span> 
+                        <div class="space-x-1">
+                            <button onclick="editarSubcatSetup(${idx})" class="text-blue-600 font-bold px-1.5 py-0.5 hover:bg-blue-50 rounded" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="removerSubcatSetup(${idx})" class="text-red-500 font-bold px-1.5 py-0.5 hover:bg-red-50 rounded" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
             });
         }
 
         function adicionarNovaCategoria() {
             const nome = document.getElementById('nova-cat-nome').value.trim();
             const tipo = document.getElementById('nova-cat-tipo').value;
-            if(nome && !categorias.some(c => c.nome === nome)) {
-                const cores = ["bg-pink-500 text-white border-pink-600", "bg-sky-500 text-white border-sky-600", "bg-violet-500 text-white border-violet-600", "bg-indigo-500 text-white border-indigo-600"];
+            if(nome && !categorias.some(c => c.nome.toLowerCase() === nome.toLowerCase())) {
+                const cores = [
+                    "bg-emerald-500 text-white border-emerald-600",
+                    "bg-amber-500 text-white border-amber-600",
+                    "bg-cyan-500 text-white border-cyan-600",
+                    "bg-blue-500 text-white border-blue-600",
+                    "bg-purple-500 text-white border-purple-600",
+                    "bg-rose-500 text-white border-rose-600",
+                    "bg-indigo-500 text-white border-indigo-600"
+                ];
                 const cor = cores[categorias.length % cores.length];
                 
                 categorias.push({ nome, tipo, cor });
@@ -1198,15 +1227,60 @@
                 renderizarBotoesSelecaoCategorias();
                 renderizarAdminCats();
                 gravarAutomatico();
+            } else {
+                alert("Nome inválido ou categoria já existente.");
+            }
+        }
+
+        function editarCategoria(idx) {
+            let cat = categorias[idx];
+            let novoNome = prompt("Editar nome da categoria:", cat.nome);
+            if(novoNome && novoNome.trim() !== "") {
+                let nomeAntigo = cat.nome;
+                cat.nome = novoNome.trim();
+                
+                // Atualiza blocos existentes se o nome da categoria mudou
+                for(let k in estadoBlocos) {
+                    if(estadoBlocos[k] === nomeAntigo) {
+                        estadoBlocos[k] = cat.nome;
+                    }
+                }
+                if(categoriaAtiva === nomeAntigo) {
+                    categoriaAtiva = cat.nome;
+                    document.getElementById('label-categoria-ativa').innerText = cat.nome;
+                }
+
+                renderizarBotoesSelecaoCategorias();
+                renderizarAdminCats();
+                renderizarGradeHorarios();
+                gravarAutomatico();
             }
         }
 
         function removerCat(nome) {
-            categorias = categorias.filter(c => c.nome !== nome);
-            if(categoriaAtiva === nome) categoriaAtiva = "Produzindo";
-            renderizarBotoesSelecaoCategorias();
-            renderizarAdminCats();
-            gravarAutomatico();
+            if(categorias.length <= 1) {
+                alert("Você deve manter ao menos uma categoria.");
+                return;
+            }
+            if(confirm(`Deseja realmente excluir a categoria "${nome}"?`)) {
+                categorias = categorias.filter(c => c.nome !== nome);
+                if(categoriaAtiva === nome) categoriaAtiva = categorias[0] ? categorias[0].nome : "Produzindo";
+                
+                // Limpa blocos associados à categoria removida
+                for(let k in estadoBlocos) {
+                    if(estadoBlocos[k] === nome) {
+                        estadoBlocos[k] = null;
+                        delete dadosBlocosProducao[k];
+                        delete dadosBlocosSetup[k];
+                    }
+                }
+
+                renderizarBotoesSelecaoCategorias();
+                renderizarAdminCats();
+                renderizarGradeHorarios();
+                atualizarKPIs();
+                gravarAutomatico();
+            }
         }
 
         function adicionarSubcategoriaSetup() {
@@ -1279,9 +1353,9 @@
                         let infoExtra = '';
                         if(catNome === 'Produzindo' && dadosBlocosProducao[atualIdx]) {
                             infoExtra = ` | Bons: ${dadosBlocosProducao[atualIdx].boas}`;
-                        } else if(catNome === 'Setup' && dadosBlocosSetup[atualIdx]) {
+                        } else if(catObj.tipo === 'Disponibilidade' && dadosBlocosSetup[atualIdx]) {
                             let subInfo = dadosBlocosSetup[atualIdx].subcat ? dadosBlocosSetup[atualIdx].subcat : "Não Definida";
-                            infoExtra = ` | Setup (${subInfo}): ${dadosBlocosSetup[atualIdx].desperdicio}`;
+                            infoExtra = ` | Detalhe (${subInfo}): ${dadosBlocosSetup[atualIdx].desperdicio}`;
                         }
                         if(temNota) infoExtra += ` | Nota: ${notasBlocos[atualIdx]}`;
                         
@@ -1297,14 +1371,15 @@
                         if (catNome !== null) {
                             if (catNome === 'Produzindo') {
                                 abrirModalBlocoProducao(atualIdx, horaBlocoStr, minutoStr);
-                            } else if (catNome === 'Setup') {
+                            } else if (catObj && catObj.tipo === 'Disponibilidade') {
                                 abrirModalBlocoSetup(atualIdx, horaBlocoStr, minutoStr);
                             } else {
                                 abrirModalBlocoGenerico(atualIdx, catNome, horaBlocoStr, minutoStr);
                             }
                         } else {
                             estadoBlocos[atualIdx] = categoriaAtiva;
-                            if (categoriaAtiva === 'Setup' && !dadosBlocosSetup[atualIdx]) {
+                            let selCatObj = categorias.find(c => c.nome === categoriaAtiva);
+                            if (selCatObj && selCatObj.tipo === 'Disponibilidade' && !dadosBlocosSetup[atualIdx]) {
                                 dadosBlocosSetup[atualIdx] = { subcat: "", desperdicio: 0, totalizador: "" };
                             }
                             renderizarGradeHorarios();
@@ -1420,7 +1495,8 @@
             let desperdicio = parseFloat(document.getElementById('setup-input-desperdicio').value) || 0;
             let nota = document.getElementById('setup-input-nota').value.trim();
 
-            estadoBlocos[idx] = 'Setup';
+            let catAtualNome = estadoBlocos[idx] || 'Setup';
+            estadoBlocos[idx] = catAtualNome;
             dadosBlocosSetup[idx] = { subcat, totalizador, desperdicio };
             if(nota !== "") notasBlocos[idx] = nota;
             else delete notasBlocos[idx];
@@ -1539,16 +1615,19 @@
                         totalDesperdicioProd += refugo;
                         if(refugo > 0) blocosComDespProd++;
                     }
-                } else if(catNome === 'Setup') {
-                    if(dadosBlocosSetup[idx]) {
-                        let desp = dadosBlocosSetup[idx].desperdicio;
-                        let sub = dadosBlocosSetup[idx].subcat || "Não Definida";
-                        totalDesperdicioSetup += desp;
-                        if(desp > 0) blocosComDespSetup++;
+                } else {
+                    let catObj = categorias.find(c => c.nome === catNome);
+                    if(catObj && catObj.tipo === 'Disponibilidade') {
+                        if(dadosBlocosSetup[idx]) {
+                            let desp = dadosBlocosSetup[idx].desperdicio;
+                            let sub = dadosBlocosSetup[idx].subcat || "Não Definida";
+                            totalDesperdicioSetup += desp;
+                            if(desp > 0) blocosComDespSetup++;
 
-                        contagemSubcatsSetup[sub] = contagemSubcatsSetup[sub] || { blocos: 0, desperdicio: 0 };
-                        contagemSubcatsSetup[sub].blocos++;
-                        contagemSubcatsSetup[sub].desperdicio += desp;
+                            contagemSubcatsSetup[sub] = contagemSubcatsSetup[sub] || { blocos: 0, desperdicio: 0 };
+                            contagemSubcatsSetup[sub].blocos++;
+                            contagemSubcatsSetup[sub].desperdicio += desp;
+                        }
                     }
                 }
             });
@@ -1835,7 +1914,7 @@
                 notasBlocos: notasBlocos,
                 historicoTurnos: historicoTurnos,
                 contadoresGeraisSalvos: contadoresGeraisSalvos,
-                versao: "3.1",
+                versao: "3.2",
                 dataBackup: new Date().toISOString()
             };
 
