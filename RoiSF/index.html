@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de ROI - Redução / Eliminação de Álcool (IPA)</title>
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --accent-color: #10b981;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #d1d5db;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+        }
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto;
+            overflow-x: hidden;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        header h1 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin-bottom: 3px;
+        }
+        header p {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        .action-bar {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        @media(min-width: 600px) {
+            .action-bar {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .card h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 6px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .form-group {
+            margin-bottom: 8px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-bottom: 2px;
+            color: #374151;
+        }
+        input, select {
+            width: 100%;
+            padding: 7px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            min-width: 320px;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            text-align: left;
+        }
+        th {
+            background-color: #eff6ff;
+            color: var(--primary-color);
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .highlight-box {
+            background-color: #ecfdf5;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .highlight-box h3 {
+            margin: 0 0 3px 0;
+            color: #065f46;
+            font-size: 0.95rem;
+        }
+        .highlight-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #047857;
+        }
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 9px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+            text-align: center;
+        }
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+        .btn-secondary {
+            background-color: #4b5563;
+        }
+        .btn-secondary:hover {
+            background-color: #374151;
+        }
+        .btn-success {
+            background-color: #059669;
+        }
+        .btn-success:hover {
+            background-color: #047857;
+        }
+        .btn-print {
+            background-color: #2563eb;
+        }
+        .btn-print:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 15px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover { color: black; }
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-info { font-size: 0.85rem; }
+
+        @media print {
+            body {
+                background-color: #ffffff;
+                color: #000000;
+                padding: 0;
+            }
+            .action-bar, .btn, .card:has(.grid-2) {
+                display: none !important;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #d1d5db;
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Calculadora de ROI - IPA</h1>
+        <p>Uso de Álcool vs. Redução (FilterStar)</p>
+    </header>
+
+    <div class="action-bar">
+        <button class="btn btn-success" onclick="salvarAnalise()">💾 Salvar</button>
+        <button class="btn btn-secondary" onclick="abrirHistorico()">📋 Histórico</button>
+        <button class="btn btn-print" onclick="gerarRelatorioPrint()">🖨️ Relatório</button>
+        <button class="btn btn-secondary" onclick="exportarBackup()">📥 Exportar</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">📤 Importar</button>
+        <input type="file" id="file-input" style="display: none;" accept=".json" onchange="importarBackup(event)">
+    </div>
+
+    <div class="card">
+        <h2>1. Dados Operacionais e Custos</h2>
+        <div class="grid-2">
+            <div class="form-group"><label>Tanque (L):</label><input type="number" id="tanque" value="40" step="1" oninput="autoSave()"></div>
+            <div class="form-group"><label>Trocas/Mês:</label><input type="number" id="trocas_mes" value="4" step="1" oninput="autoSave()"></div>
+            <div class="form-group"><label>Horas/Dia:</label><input type="number" id="horas_dia" value="12" step="1" oninput="autoSave()"></div>
+            <div class="form-group"><label>Dias/Mês:</label><input type="number" id="dias_mes" value="22" step="1" oninput="autoSave()"></div>
+            <div class="form-group"><label>Meses/Ano:</label><input type="number" id="meses_ano" value="12" step="1" oninput="autoSave()"></div>
+            <div class="form-group"><label>Unidades:</label><input type="number" id="unidades" value="8" step="1" oninput="autoSave()"></div>
+            <div class="form-group"><label>Hora Máquina (R$):</label><input type="number" id="hora_maquina" value="324" step="0.01" oninput="autoSave()"></div>
+            <div class="form-group"><label>Custo Água/L (R$):</label><input type="number" id="custo_agua" value="0.0227" step="0.0001" oninput="autoSave()"></div>
+            <div class="form-group"><label>Custo Descarte/L (R$):</label><input type="number" id="custo_descarte" value="0.80" step="0.01" oninput="autoSave()"></div>
+            <div class="form-group"><label>Tempo Troca (min):</label><input type="number" id="tempo_troca" value="90" step="1" oninput="autoSave()"></div>
+            <div class="form-group"><label>Custo FilterStar (R$):</label><input type="number" id="custo_filterstar" value="18000" step="100" oninput="autoSave()"></div>
+            <div class="form-group"><label>Custo Elemento (R$):</label><input type="number" id="custo_elemento" value="750" step="10" oninput="autoSave()"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Parâmetros por Cenário (%)</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parâmetro</th>
+                        <th>1. IPA</th>
+                        <th>2. Aditivo</th>
+                        <th>3. IPA Red.</th>
+                        <th>4. Ad. Red.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>% Prod.</strong></td>
+                        <td><input type="number" id="pct_ipa" value="10" step="0.1" oninput="autoSave()"></td>
+                        <td><input type="number" id="pct_adic_comum" value="3" step="0.1" oninput="autoSave()"></td>
+                        <td><input type="number" id="pct_ipa_red" value="3" step="0.1" oninput="autoSave()"></td>
+                        <td><input type="number" id="pct_adic_red" value="4" step="0.1" oninput="autoSave()"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>R$/Litro</strong></td>
+                        <td><input type="number" id="val_ipa" value="5.19" step="0.01" oninput="autoSave()"></td>
+                        <td><input type="number" id="val_adic_comum" value="8.71" step="0.01" oninput="autoSave()"></td>
+                        <td><input type="number" id="val_ipa_red" value="5.19" step="0.01" oninput="autoSave()"></td>
+                        <td><input type="number" id="val_adic_red" value="19.60" step="0.01" oninput="autoSave()"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="btn" style="margin-top: 10px;" onclick="calcular()">Recalcular Custos e ROI</button>
+    </div>
+
+    <div class="card">
+        <h2>3. Resultados Comparativos</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Indicador</th>
+                        <th>Padrão (IPA)</th>
+                        <th>Alternativa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Consumo Mensal</td><td id="res_cons_mes_ipa">-</td><td id="res_cons_mes_alt">-</td></tr>
+                    <tr><td>Consumo Anual</td><td id="res_cons_ano_ipa">-</td><td id="res_cons_ano_alt">-</td></tr>
+                    <tr><td>Custo Anual</td><td id="res_custo_ano_ipa">-</td><td id="res_custo_ano_alt">-</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <h3>Retorno sobre o Investimento (ROI)</h3>
+        <div class="highlight-value" id="res_roi">- anos</div>
+        <p id="res_detalhes_roi" style="margin-top: 3px; color: #065f46; font-weight: 600; font-size: 0.8rem;"></p>
+    </div>
+</div>
+
+<div id="historicoModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="fecharHistorico()">&times;</span>
+        <h3 style="color: var(--primary-color); margin-top:0;">Histórico de Análises Salvas</h3>
+        <div id="listaHistorico"></div>
+    </div>
+</div>
+
+<script>
+const idsCampos = ['tanque', 'trocas_mes', 'horas_dia', 'dias_mes', 'meses_ano', 'unidades', 'hora_maquina', 'custo_agua', 'custo_descarte', 'tempo_troca', 'custo_filterstar', 'custo_elemento', 'pct_ipa', 'pct_adic_comum', 'pct_ipa_red', 'pct_adic_red', 'val_ipa', 'val_adic_comum', 'val_ipa_red', 'val_adic_red'];
+
+function calcular() {
+    let tanque = parseFloat(document.getElementById('tanque').value) || 0;
+    let trocas_mes = parseFloat(document.getElementById('trocas_mes').value) || 0;
+    let horas_dia = parseFloat(document.getElementById('horas_dia').value) || 0;
+    let dias_mes = parseFloat(document.getElementById('dias_mes').value) || 0;
+    let meses_ano = parseFloat(document.getElementById('meses_ano').value) || 0;
+    let unidades = parseFloat(document.getElementById('unidades').value) || 0;
+    let hora_maquina = parseFloat(document.getElementById('hora_maquina').value) || 0;
+    let custo_descarte = parseFloat(document.getElementById('custo_descarte').value) || 0;
+    let tempo_troca = parseFloat(document.getElementById('tempo_troca').value) || 0;
+    let custo_filterstar = parseFloat(document.getElementById('custo_filterstar').value) || 0;
+    let custo_elemento = parseFloat(document.getElementById('custo_elemento').value) || 0;
+
+    let pct_ipa = (parseFloat(document.getElementById('pct_ipa').value) || 0) / 100;
+    let pct_adic_comum = (parseFloat(document.getElementById('pct_adic_comum').value) || 0) / 100;
+    let pct_ipa_red = (parseFloat(document.getElementById('pct_ipa_red').value) || 0) / 100;
+    let pct_adic_red = (parseFloat(document.getElementById('pct_adic_red').value) || 0) / 100;
+
+    // Consumo proporcional ao percentual digitado (0% = 0 consumo)
+    let base_ml_ipa_padrao = 1180; 
+    let ml_hora_ipa = base_ml_ipa_padrao * pct_ipa * unidades;
+    
+    let ml_hora_adic = 35.4 * unidades;
+    let val_ipa = parseFloat(document.getElementById('val_ipa').value) || 0;
+    let val_adic = parseFloat(document.getElementById('val_adic_comum').value) || 0;
+
+    let cons_h_ipa = ml_hora_ipa / 1000;
+    let cons_h_adic = ml_hora_adic / 1000;
+    let horas_mes = horas_dia * dias_mes;
+    let cons_mes_ipa = cons_h_ipa * horas_mes;
+    let cons_mes_adic = cons_h_adic * horas_mes;
+
+    let prod_trocas_ipa = tanque * trocas_mes * pct_ipa;
+    let prod_trocas_adic = tanque * trocas_mes * pct_adic_comum;
+
+    let total_mes_ipa = cons_mes_ipa + prod_trocas_ipa;
+    let total_mes_adic = cons_mes_adic + prod_trocas_adic;
+
+    let total_ano_ipa = total_mes_ipa * meses_ano;
+    let total_ano_adic = total_mes_adic * meses_ano;
+
+    let custo_anual_ipa_val = (total_ano_ipa * val_ipa) + (total_ano_adic * val_adic);
+
+    // Cenário Alternativo (Redução) proporcional ao percentual digitado
+    let base_ml_ipa_red = 472;
+    let ml_hora_ipa_red = base_ml_ipa_red * pct_ipa_red * unidades;
+    
+    let val_ipa_red = parseFloat(document.getElementById('val_ipa_red').value) || 0;
+    let val_adic_red = parseFloat(document.getElementById('val_adic_red').value) || 0;
+
+    let cons_h_ipa_red = ml_hora_ipa_red / 1000;
+    let cons_mes_ipa_red = cons_h_ipa_red * horas_mes;
+
+    let trocas_ano_fs = 3;
+    let prod_trocas_ipa_ano = tanque * trocas_ano_fs * pct_ipa_red;
+    let prod_trocas_adic_ano = tanque * trocas_ano_fs * pct_adic_red;
+
+    let total_ano_ipa_red = (cons_mes_ipa_red * meses_ano) + prod_trocas_ipa_ano;
+    let total_ano_adic_red = ( (35.4 * unidades / 1000) * horas_mes * meses_ano ) + prod_trocas_adic_ano;
+
+    let custo_anual_alt = (total_ano_ipa_red * val_ipa_red) + (total_ano_adic_red * val_adic_red) + (3 * custo_elemento);
+
+    let economia_anual = custo_anual_ipa_val - custo_anual_alt;
+    let tempo_troca_horas = tempo_troca / 60;
+    let economia_tempo_troca = ((trocas_mes * meses_ano) - trocas_ano_fs) * tempo_troca_horas * hora_maquina;
+    let economia_descarte = ((trocas_mes * meses_ano) - trocas_ano_fs) * tanque * custo_descarte;
+
+    let economia_total = economia_anual + economia_tempo_troca + economia_descarte;
+    let roi = economia_total > 0 ? (custo_filterstar / economia_total) : 0;
+
+    document.getElementById('res_cons_mes_ipa').innerText = total_mes_ipa.toFixed(1) + " L";
+    document.getElementById('res_cons_mes_alt').innerText = (total_ano_ipa_red/meses_ano).toFixed(1) + " L";
+    document.getElementById('res_cons_ano_ipa').innerText = total_ano_ipa.toFixed(1) + " L";
+    document.getElementById('res_cons_ano_alt').innerText = total_ano_ipa_red.toFixed(1) + " L";
+    document.getElementById('res_custo_ano_ipa').innerText = "R$ " + custo_anual_ipa_val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('res_custo_ano_alt').innerText = "R$ " + custo_anual_alt.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('res_roi').innerText = roi.toFixed(2) + " anos";
+    document.getElementById('res_detalhes_roi').innerText = "Economia Anual: R$ " + economia_total.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function gerarRelatorioPrint() {
+    calcular();
+    window.print();
+}
+
+function obterDadosAtuais() {
+    let dados = {};
+    idsCampos.forEach(id => {
+        dados[id] = document.getElementById(id).value;
+    });
+    dados.dataHora = new Date().toLocaleString('pt-BR');
+    return dados;
+}
+
+function autoSave() {
+    localStorage.setItem('roi_ipa_temp', JSON.stringify(obterDadosAtuais()));
+    calcular();
+}
+
+function salvarAnalise() {
+    let historico = JSON.parse(localStorage.getItem('roi_ipa_historico') || '[]');
+    let atual = obterDadosAtuais();
+    atual.nome = "Simulação - " + atual.dataHora;
+    historico.unshift(atual);
+    localStorage.setItem('roi_ipa_historico', JSON.stringify(historico));
+    alert('Análise salva com sucesso no histórico!');
+}
+
+function carregarSalvos() {
+    let salvoTemp = localStorage.getItem('roi_ipa_temp');
+    if (salvoTemp) {
+        let dados = JSON.parse(salvoTemp);
+        idsCampos.forEach(id => {
+            if (dados[id] !== undefined) document.getElementById(id).value = dados[id];
+        });
+    }
+    calcular();
+}
+
+function abrirHistorico() {
+    let historico = JSON.parse(localStorage.getItem('roi_ipa_historico') || '[]');
+    let html = '';
+    if (historico.length === 0) {
+        html = '<p>Nenhuma análise salva no histórico.</p>';
+    } else {
+        historico.forEach((item, index) => {
+            html += `<div class="history-item">
+                <div class="history-info"><strong>${item.nome}</strong><br><small>Tanque: ${item.tanque}L | Unidades: ${item.unidades}</small></div>
+                <div>
+                    <button class="btn" style="padding: 5px 10px; font-size: 0.75rem;" onclick="carregarHistorico(${index})">Carregar</button>
+                    <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.75rem; background:#dc2626;" onclick="excluirHistorico(${index})">X</button>
+                </div>
+            </div>`;
+        });
+    }
+    document.getElementById('listaHistorico').innerHTML = html;
+    document.getElementById('historicoModal').style.display = 'block';
+}
+
+function fecharHistorico() {
+    document.getElementById('historicoModal').style.display = 'none';
+}
+
+function carregarHistorico(index) {
+    let historico = JSON.parse(localStorage.getItem('roi_ipa_historico') || '[]');
+    let item = historico[index];
+    if (item) {
+        idsCampos.forEach(id => {
+            if (item[id] !== undefined) document.getElementById(id).value = item[id];
+        });
+        calcular();
+        fecharHistorico();
+        alert('Análise carregada!');
+    }
+}
+
+function excluirHistorico(index) {
+    let historico = JSON.parse(localStorage.getItem('roi_ipa_historico') || '[]');
+    historico.splice(index, 1);
+    localStorage.setItem('roi_ipa_historico', JSON.stringify(historico));
+    abrirHistorico();
+}
+
+function exportarBackup() {
+    let dadosBackup = {
+        temp: localStorage.getItem('roi_ipa_temp'),
+        historico: localStorage.getItem('roi_ipa_historico')
+    };
+    let blob = new Blob([JSON.stringify(dadosBackup, null, 2)], {type: 'application/json'});
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = 'backup_roi_ipa.json';
+    a.click();
+}
+
+function importarBackup(event) {
+    let file = event.target.files[0];
+    if (!file) return;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            let dadosBackup = JSON.parse(e.target.result);
+            if (dadosBackup.temp) localStorage.setItem('roi_ipa_temp', dadosBackup.temp);
+            if (dadosBackup.historico) localStorage.setItem('roi_ipa_historico', dadosBackup.historico);
+            carregarSalvos();
+            alert('Backup importado com sucesso!');
+        } catch (err) {
+            alert('Erro ao importar arquivo de backup.');
+        }
+    };
+    reader.readAsText(file);
+}
+
+window.onload = function() {
+    carregarSalvos();
+};
+</script>
+</body>
+</html>
