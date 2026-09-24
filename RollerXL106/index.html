@@ -163,9 +163,17 @@
   .gaptable td strong { display: block; }
   .gaptable td small { color: var(--ink-soft); }
   .gaptable .hit { color: #C0261B; font-weight: 700; }
+  .gaptable .hit.green { color: #0E9F3E; }
+  .gaptable h3 + .tablewrap { margin-top: 0; }
   .gaptable button { padding: 6px 10px; font-size: .9rem; white-space: nowrap; }
   .impact-pulse { transform-box: fill-box; transform-origin: center; animation: impact 1.2s ease-out forwards; }
   @keyframes impact { from { transform: scale(.6); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
+  .marklist { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+  .marklist li { display: grid; grid-template-columns: 14px 5.5rem 1fr; gap: 10px; align-items: baseline; line-height: 1.35; }
+  .marklist .sw { width: 14px; height: 6px; border-radius: 2px; align-self: center; }
+  .overlap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 6px; }
+  .overlap button { padding: 7px 12px; font-size: .95rem; }
+  .overlap button:disabled { opacity: .45; cursor: default; }
   .sheetmap { margin-top: 22px; padding-top: 6px; border-top: 1px solid var(--line); }
   .sheetmap svg { margin: 6px 0 10px; max-width: 760px; }
   .err { color: #C0261B; font-weight: 600; margin: 14px 0 0; }
@@ -242,6 +250,7 @@
       <label>Comprimento da folha (mm)<input id="fLen" type="text" inputmode="decimal" value="750"></label>
       <label>Altura da mancha (mm)<input id="fPos" type="text" inputmode="decimal" placeholder="ex.: 588"></label>
       <label>Vario do molhador (%)<input id="fVario" type="text" inputmode="decimal" value="0"></label>
+      <label>Distância entre faixas repetidas (mm)<input id="fRep" type="text" inputmode="decimal" placeholder="opcional"></label>
     </div>
     <details>
       <summary>Bordas da imagem e da chapa</summary>
@@ -250,6 +259,8 @@
         <label>Borda frontal da imagem (mm)<input id="fImgF" type="text" inputmode="decimal" value="10"></label>
         <label>Borda traseira da imagem (mm)<input id="fImgR" type="text" inputmode="decimal" placeholder="automático"></label>
         <label>Fim do contato com a chapa (mm)<input id="fC4" type="text" inputmode="decimal" value="749,4"></label>
+        <label>Formato máximo da máquina (mm)<input id="fFmax" type="text" inputmode="decimal" value="750"></label>
+        <label>Registro circunferencial (mm)<input id="fReg" type="text" inputmode="decimal" value="0"></label>
       </div>
       <p class="hint">Padrões da tabela Heidelberg da XL 106: contato de 10 a 749,4 mm, circunferência da chapa 973,4 mm. Sem valor, a borda traseira da imagem fica 5 mm antes do fim da folha (no máximo 744,4 mm).</p>
     </details>
@@ -307,7 +318,7 @@ const rollers = [
   { id: "1", x: 556.42, y: 573.06, r: 50.0, d: 80, fill: C.branco, ring: true, tc: "#13304D", sub: "Branco", cor: "Branco" },
   { id: "9", x: 746.45, y: 583.08, r: 45.62, d: 73, fill: C.vermelho, ring: true, tc: "#fff", sub: "Vermelho", cor: "Vermelho" },
   { id: "C", x: 652.0, y: 611.45, r: 53.0, d: 84.8, fill: C.cinza, stroke: "#3d3d3d", tc: "#fff", cor: "Cinza", diamBelow: true },
-  { id: "16", x: 733.11, y: 673.72, r: 40.0, d: 64, fill: C.branco, stroke: "#444", tc: "#111", cor: "Branco" },
+  { id: "16", kind: "Cavaleiro", x: 733.11, y: 673.72, r: 40.0, d: 64, fill: C.branco, stroke: "#444", tc: "#111", cor: "Branco" },
   { id: "14", x: 648.34, y: 721.89, r: 57.5, d: 92, fill: C.verde, ring: true, tc: "#fff", sub: "Verde", cor: "Verde" },
   { id: "17", kind: "Cromado", x: 748.02, y: 774.05, r: 55.0, d: 88, fill: C.branco, stroke: "#444", tc: "#111", sub: "Cromado", cor: "Branco" },
   { id: "F", x: 647.98, y: 833.01, r: 53.62, d: 85.8, fill: C.cinzaClaro, stroke: "#555", tc: "#111", cor: "Cinza claro", diamBelow: true },
@@ -317,24 +328,33 @@ const rollers = [
 // mesmo diâmetro e mesma boca da chapa, já que os valores reais não foram informados)
 rollers.push(
   { id: "blanqueta", name: "Cilindro de blanqueta", r: 193.75, fill: "#009A44", stroke: "#00652C", tc: "#FFFFFF",
-    cor: "Verde (representação)", gapMm: 230, circMm: 973.4, assumed: true, follow: -1, manchas: true },
+    cor: "Verde (representação)", gapMm: 233, circMm: 973.4, assumed: true, follow: -1, manchas: true },
   { id: "impressao", name: "Cilindro de impressão", r: 193.75, fill: "#0B3D6E", stroke: "#06284A", tc: "#FFFFFF",
-    cor: "Azul-marinho (representação)", gapMm: 230, circMm: 973.4, assumed: true, follow: 1, manchas: true }
+    cor: "Azul-marinho (representação)", gapMm: 233, circMm: 973.4, assumed: true, follow: 1, manchas: true }
 );
 const R = Object.fromEntries(rollers.map(o => [o.id, o]));
+const BLANKET_MM = 584;   // percurso calibrado na blanqueta (mm)
+const GRIPPER = 10;       // pinça: a borda frontal da folha fica 10 mm antes da saída da boca
 {
   // blanqueta logo abaixo da chapa, impressão logo abaixo da blanqueta, levemente para a esquerda
   const P = R.chapa, B = R.blanqueta, I = R.impressao;
-  const PHI = 95, PSI = 100; // direção chapa→blanqueta e blanqueta→impressão (graus)
+  // Calibração pelos valores Heidelberg (A1 594, E1 361, A2 400, E2 165) com pinça de 10 mm:
+  //   percurso da blanqueta do contato com a chapa até o contato com a impressão = 584 mm (A1 − pinça),
+  //   bocas da blanqueta e da impressão = 233 mm (A1 − E1). A boca da chapa é a real, 230 mm.
+  const PHI = 95, PSI = (PHI + 180 + BLANKET_MM / 973.4 * 360) % 360;
   const at = (o, from, deg) => {
     const a = deg * Math.PI / 180, L = from.r + o.r;
     o.x = from.x + Math.cos(a) * L; o.y = from.y + Math.sin(a) * L;
   };
   at(B, P, PHI); at(I, B, PSI);
-  // bocas sincronizadas: as bocas da chapa e da blanqueta chegam juntas ao contato entre elas,
-  // e as da blanqueta e da impressão chegam juntas ao contato entre elas
-  B.gapAt = 2 * PHI + 180 - P.gapAt;
-  I.gapAt = 2 * PSI + 180 - B.gapAt;
+  // bocas sincronizadas pela saída: a chapa e a blanqueta saem da boca juntas no contato entre elas,
+  // e a blanqueta e a impressão saem juntas no contato entre elas (a pinça vem logo depois)
+  const half = o => o.gapMm / o.circMm * 180;
+  const pExit = P.gapAt + half(P);              // saída da boca da chapa (gira no sentido anti-horário)
+  const bExit = 2 * PHI + 180 - pExit;          // saída da boca da blanqueta (gira no sentido horário)
+  B.gapAt = bExit + half(B);
+  const iExit = 2 * PSI + 180 - bExit;          // saída da boca da impressão, onde fica a pinça
+  I.gapAt = iExit - half(I);
 }
 // Momentos de impacto entre cilindros, na coordenada x = ponto do papel que está
 // no contato blanqueta–impressão (mm a partir da borda frontal)
@@ -349,15 +369,25 @@ const NIP = {
 };
 // percurso da superfície da blanqueta do contato com a chapa até o contato com a impressão (gira no sentido horário)
 const BLANKET_TRAVEL = mod(NIP.BI - NIP.BP, 360) / 360 * CYL_C;
+// x = superfície da impressão que está no contato blanqueta–impressão (0 = saída da boca, onde fica a pinça).
+// Na folha: posição = x + pinça.
 function impactEvents(L) {
+  const gBI = Math.max(R.blanqueta.gapMm, R.impressao.gapMm), gPB = Math.max(R.chapa.gapMm, R.blanqueta.gapMm);
+  const a2 = mod(-BLANKET_TRAVEL, CYL_C);
   return [
     { code: "A1", where: "bi", x: 0, text: "Início da pressão entre impressão e blanqueta (saída da boca)" },
-    { code: "E1", where: "bi", x: CYL_SURF, text: "Fim da pressão entre impressão e blanqueta (entrada da boca)" },
-    { code: "Papel", where: "bi", x: Math.min(L, CYL_C), text: "Fim do papel: a borda traseira sai do contato blanqueta–impressão" },
-    { code: "A2", where: "pb", x: mod(-BLANKET_TRAVEL, CYL_C), text: "Início da pressão entre blanqueta e chapa (saída da boca)" },
-    { code: "E2", where: "pb", x: mod(CYL_SURF - BLANKET_TRAVEL, CYL_C), text: "Fim da pressão entre blanqueta e chapa (entrada da boca)" }
+    { code: "E1", where: "bi", x: CYL_C - gBI, text: "Fim da pressão entre impressão e blanqueta (entrada da boca)" },
+    { code: "Descarga", where: "bi", x: Math.min(L, CYL_C) - GRIPPER, text: "Descarga: a borda traseira do papel sai do contato blanqueta–impressão" },
+    { code: "A2", where: "pb", x: a2, text: "Início da pressão entre blanqueta e chapa (saída da boca)" },
+    { code: "E2", where: "pb", x: mod(a2 - gPB, CYL_C), text: "Fim da pressão entre blanqueta e chapa (entrada da boca)" }
   ];
 }
+// Onde a listra aparece na folha (mecanismo dos slides Heidelberg):
+//  - tranco no contato blanqueta–impressão → listra no contato chapa–blanqueta (ponto da chapa naquele instante)
+//  - tranco no contato chapa–blanqueta → listra no contato blanqueta–impressão (ponto do papel naquele instante)
+const paperAt = ev => ev.x + GRIPPER;                               // ponto do papel no contato blanqueta–impressão
+const plateAt = ev => mod(ev.x + BLANKET_TRAVEL + GRIPPER, CYL_C);  // ponto da chapa no contato, em mm da folha
+const streakAt = ev => ev.where === "bi" ? plateAt(ev) : paperAt(ev);
 // ponto do papel que está no contato blanqueta–impressão agora
 function sheetX() {
   const I = R.impressao, a2 = gapAngles(I).a2 * 180 / Math.PI;
@@ -560,7 +590,7 @@ function drawRoller(o) {
 rollers.forEach(drawRoller);
 function applyManchas() {
   rollers.forEach(o => { if (o.manchas) o.el.style.display = manchasOn ? "" : "none"; });
-  svg.setAttribute("viewBox", manchasOn ? "95 25 785 1705" : "150 25 730 965");
+  svg.setAttribute("viewBox", manchasOn ? "-120 25 1000 1620" : "150 25 730 965");
   document.body.classList.toggle("manchas", manchasOn);
   document.getElementById("diag").hidden = !manchasOn;
 }
@@ -902,13 +932,46 @@ function tick(now) {
 /* ---------- Análise de manchas ---------- */
 const PLATE_CIRC = 973.4;   // circunferência da chapa XL 106 (mm)
 const TOL = 5;              // variação de leitura considerada (mm)
-// Listras de boca (gap streaks) da tabela Heidelberg XL 106, a partir da borda frontal
+// Listras de boca pelos valores Heidelberg (XL 106), a partir da borda frontal, no formato máximo
+//   A1 = início blanqueta × contra-pressão, E1 = fim blanqueta × contra-pressão,
+//   A2 = início chapa × blanqueta,          E2 = fim chapa × blanqueta
+// Regras da Tabela de manchas: descarga = E1 − (formato máximo − formato atual);
+// A2 e E2 variam com o registro circunferencial.
 const GAP_STREAKS = [
-  { code: "E2", mm: 165, text: "Fim da pressão entre blanqueta e chapa (E2)" },
-  { code: "E1", mm: 361, text: "Fim da pressão entre impressão e blanqueta (E1)" },
-  { code: "A2", mm: 400, text: "Início da pressão entre blanqueta e chapa (A2)" },
-  { code: "A1", mm: 594, text: "Início da pressão entre impressão e blanqueta (A1)" }
+  { code: "A1", mm: 594, text: "Início blanqueta × contra-pressão (A1)" },
+  { code: "E1", mm: 361, text: "Fim blanqueta × contra-pressão (E1)" },
+  { code: "A2", mm: 400, text: "Início chapa × blanqueta (A2)" },
+  { code: "E2", mm: 165, text: "Fim chapa × blanqueta (E2)" }
 ];
+// Faixas periódicas da mesma linha XL 105 (distância entre faixas repetidas, em mm)
+const PERIODIC_XL105 = [
+  { mm: 289, text: "Molhador (rolo 14, Ø 92)", roller: "14" },
+  { mm: 251, text: "1º rolo de chapa (rolo 1, Ø 80)", roller: "1" },
+  { mm: 270, text: "2º rolo de chapa (rolo 2, Ø 86)", roller: "2" },
+  { mm: 232, text: "3º rolo de chapa (rolo 3, Ø 74)", roller: "3" },
+  { mm: 320, text: "4º rolo de chapa (rolo 4, Ø 102)", roller: "4" },
+  { mm: 13, text: "Trem de engrenagem" },
+  { mm: 8.9, text: "Engrenagem de entintamento" }
+];
+function gapStreaks(P) {
+  const fmax = isNaN(P.fmax) ? 750 : P.fmax, reg = P.reg || 0;
+  const out = GAP_STREAKS.map(g => {
+    let v = g.mm, calc = `Valor Heidelberg: ${g.mm} mm`;
+    if ((g.code === "A2" || g.code === "E2") && reg) {
+      v = g.mm + reg;
+      calc = `Heidelberg: ${g.mm} mm ${reg > 0 ? "+" : "−"} ${mm(Math.abs(reg))} mm de registro circunferencial = ${mm(v)} mm`;
+    }
+    return { ...g, v, calc };
+  });
+  // descarga: no formato máximo coincide com o E1; em formato menor, anda junto com a borda traseira
+  const e1 = GAP_STREAKS.find(g => g.code === "E1").mm;
+  const L = P.L > 0 ? P.L : fmax;
+  if (L !== fmax) out.push({ code: "Descarga", mm: e1, v: e1 - (fmax - L), text: "Descarga: fim do papel no contato blanqueta × contra-pressão",
+    calc: `Descarga: ${e1} − (${mm(fmax)} − ${mm(L)}) = ${mm(e1 - (fmax - L))} mm` });
+  else out.push({ code: "Descarga", mm: e1, v: e1, text: "Descarga: fim do papel no contato blanqueta × contra-pressão",
+    calc: `No formato máximo (${mm(fmax)} mm), a descarga coincide com o E1: ${e1} mm`, hidden: true });
+  return out;
+}
 const num = id => {
   const v = document.getElementById(id).value.trim().replace(",", ".");
   return v === "" ? NaN : Number(v);
@@ -918,6 +981,7 @@ const ord = k => k + "º giro";
 function roleName(o) {
   if (o.id === "14") return "Rolo 14 (molhador)";
   if (o.id === "17") return "Rolo 17 (cromado)";
+  if (o.id === "16") return "Rolo 16 (cavaleiro)";
   if (o.id === "11") return "Rolo 11 (tomador)";
   if (["1", "2", "3", "4"].includes(o.id)) return `Rolo ${o.id} (entintador)`;
   if (isLetter(o.id)) return `Distribuidor ${o.id}`;
@@ -927,7 +991,7 @@ function roleName(o) {
 // Só marcam o impresso os rolos que tocam a chapa (entintadores e molhador)
 // e os contatos entre cilindros (listras de boca). Os demais só transferem tinta/água.
 const FORM_ROLLERS = ["1", "2", "3", "4", "14"];
-const GAP_BY_CYL = { chapa: ["E2", "A2"], blanqueta: ["E2", "E1", "A2", "A1"], impressao: ["E1", "A1"] };
+const GAP_BY_CYL = { chapa: ["E2", "A2"], blanqueta: ["E2", "E1", "A2", "A1", "Descarga"], impressao: ["E1", "A1", "Descarga"] };
 
 function readParams() {
   const L = num("fLen"), vario = num("fVario") || 0;
@@ -935,7 +999,7 @@ function readParams() {
   let imgR = num("fImgR");
   const Ls = L > 0 ? L : 750;
   if (isNaN(imgR)) imgR = Math.min(Ls, isNaN(c4) ? Ls : c4) - 5;
-  return { L, Ls, pos: num("fPos"), vario, c1, imgF, imgR, c4 };
+  return { L, Ls, pos: num("fPos"), vario, c1, imgF, imgR, c4, fmax: num("fFmax"), reg: num("fReg") || 0, rep: num("fRep") };
 }
 
 // Posições (mm a partir da borda frontal) onde um rolo de forma marca a folha
@@ -975,11 +1039,35 @@ function streaksFor(o, P, limit = 0) {
   return out.sort((x, y) => x.v - y.v);
 }
 
+// Faixas que se repetem pela folha: compara a distância entre elas com a tabela XL 105
+function periodicHtml(P) {
+  if (!(P.rep > 0)) return "";
+  const tol = v => Math.min(TOL, Math.max(1, v * 0.1));
+  const list = PERIODIC_XL105.map(p => ({ ...p, d: P.rep - p.mm })).filter(p => Math.abs(p.d) <= tol(p.mm))
+    .sort((a, b) => Math.abs(a.d) - Math.abs(b.d));
+  TRANSMIT.forEach(id => {
+    const c = Math.PI * R[id].d;
+    if (Math.abs(P.rep - c) <= TOL) list.push({ mm: c, d: P.rep - c, roller: id, text: `${roleName(R[id])}, impacto transmitido pelo molhador (π × ${fmt(R[id].d)})` });
+  });
+  const item = p => {
+    const ex = Math.abs(p.d) <= 0.5;
+    return `<li><button class="cause${ex ? " exact" : ""}" ${p.roller ? `data-roller="${p.roller}"` : ""}>
+      <span class="val">${mm(p.mm)}<small>mm</small></span>
+      <span><strong>${p.text}</strong><span class="why">Faixas repetidas a cada ${mm(p.mm)} mm</span>
+        <span class="kind">${p.roller ? "Circunferência do rolo" : "Engrenagem"}</span></span>
+      <span class="diff">${ex ? "exato" : (p.d > 0 ? "+" : "−") + mm(Math.abs(p.d)) + " mm"}</span></button></li>`;
+  };
+  return `<h3>Faixas repetidas a cada ${mm(P.rep)} mm</h3>` + (list.length
+    ? `<ol class="causes">${list.map(item).join("")}</ol>`
+    : `<p class="hint">Nenhum rolo ou engrenagem da tabela XL 105 tem esse passo. Referências: molhador 289, rolos de chapa 251, 270, 232 e 320, trem de engrenagem 13 e engrenagem de entintamento 8,9 mm.</p>`);
+}
+
 function diagnose() {
   const box = document.getElementById("diagOut");
   const P = readParams(), L = P.L, pos = P.pos;
+  const periodic = periodicHtml(P);
   if (!(L > 0) || !(pos >= 0)) {
-    box.innerHTML = `<p class="err">Informe o comprimento da folha e a altura da mancha em mm.</p>`;
+    box.innerHTML = periodic || `<p class="err">Informe o comprimento da folha e a altura da mancha em mm, ou a distância entre faixas repetidas.</p>`;
     return;
   }
   if (pos > L) {
@@ -995,8 +1083,15 @@ function diagnose() {
       title: `${roleName(o)}: ${ord(m.k)}${m.next ? ", na folha seguinte" : ""}`, why: m.why, calc: m.calc,
       kind: id === "14" ? "Molhador na chapa" : "Entintador na chapa", hop: 1 }));
   });
-  GAP_STREAKS.forEach(g => found.push({ o: null, gap: g.code, v: g.mm, title: `Listra de boca ${g.code}`, why: g.text,
-    calc: `Valor fixo da XL 106: ${g.mm} mm`, kind: "Boca dos cilindros", hop: 0 }));
+  TRANSMIT.forEach(id => {
+    const t = transmittedFor(id, P, TOL);
+    if (!t.linked) return;
+    t.marks.forEach(m => found.push({ o: R[id], v: m.v,
+      title: `${roleName(R[id])}: ${ord(m.k)}${m.next ? ", na folha seguinte" : ""}`, why: m.why, calc: m.calc,
+      kind: "Impacto transmitido pelo molhador", hop: 2 }));
+  });
+  gapStreaks(P).filter(g => !g.hidden).forEach(g => found.push({ o: null, gap: g.code, v: g.v, title: `Listra de boca ${g.code}`, why: g.text,
+    calc: g.calc, kind: "Boca dos cilindros", hop: 0 }));
 
   const hits = found.map(f => ({ ...f, d: f.v - pos }))
     .filter(f => Math.abs(f.d) <= TOL + 1e-9)
@@ -1017,6 +1112,7 @@ function diagnose() {
   html += hits.length ? `${hits.length} ${hits.length === 1 ? "causa possível" : "causas possíveis"}${rollersHit.length ? `, envolvendo ${rollersHit.length} ${rollersHit.length === 1 ? "rolo" : "rolos"} (destacados no esquema)` : ""}. Toque numa causa para ver o rolo.</p>`
     : `Nenhuma causa calculada nessa faixa.</p><p class="hint">Confira a medida a partir da borda frontal, o comprimento da folha e as posições de Entintadores, Molha e Tintagem. Também vale conferir o Vario do molhador e as bordas da imagem.</p>`;
   if (off.length) html += `<p class="hint">Fora da análise por estarem afastados da chapa agora: ${off.join(", ")}.</p>`;
+  html += periodic;
   if (exact.length) html += `<h3>Valor exato</h3><ol class="causes">${exact.map(item).join("")}</ol>`;
   if (near.length) html += `<h3>Até ${TOL} mm de diferença</h3><ol class="causes">${near.map(item).join("")}</ol>`;
   box.innerHTML = html;
@@ -1034,6 +1130,46 @@ function diagnose() {
   drawSheet(selected);
 }
 /* Folha com as marcas do rolo selecionado */
+/* Impacto transmitido: quando o molhador 14 bate na entrada ou saída da boca da chapa,
+   o choque passa para o cromado 17 e o cavaleiro 16. A marca fica nesses rolos, volta
+   ao contato com o 14 a cada giro deles e percorre o 14 até a chapa. */
+const TRANSMIT = ["17", "16"];
+const GREEN = "#0E9F3E", GREEN_TXT = "#0A6E2B";
+// percurso na superfície do 14, do contato com o rolo x até o contato com a chapa.
+// O 14 rola contra a chapa: com a chapa girando para frente (anti-horário), ele gira no sentido horário.
+function arcOn14(x) {
+  const w = R["14"], a = mod(deg(w, R.chapa) - deg(w, x), 360);
+  return a / 360 * Math.PI * w.d;
+}
+function transmittedFor(xId, P, limit = 0) {
+  const x = R[xId], w = R["14"];
+  const linked = contactsOf(w).includes(x) && contactsOf(R.chapa).includes(w);
+  const circ = Math.PI * x.d, arc = arcOn14(x);
+  const out = [];
+  const evs = [
+    { at: P.c1, rear: false, short: "impacto do molhador na saída da boca", code: "saída",
+      text: "Impacto do molhador na saída da boca da chapa, transmitido ao " + (xId === "17" ? "cromado" : "cavaleiro") },
+    { at: P.c4, rear: true, short: "impacto do molhador na entrada da boca", code: "entrada",
+      text: "Impacto do molhador na entrada da boca da chapa, transmitido ao " + (xId === "17" ? "cromado" : "cavaleiro") }
+  ];
+  evs.forEach(e => {
+    if (isNaN(e.at)) return;
+    for (let k = 1; k < 40; k++) {
+      const v = e.at + arc + k * circ - (e.rear ? PLATE_CIRC : 0);
+      if (v > P.Ls + limit) break;
+      if (v < -limit) continue;
+      out.push({ v, k, next: e.rear, why: e.text, short: e.short, code: e.code,
+        calc: `${mm(e.at)} + ${mm(arc)} (percurso no 14) + ${k} × ${mm(circ)}${e.rear ? ` − ${mm(PLATE_CIRC)}` : ""} = ${mm(v)} mm (circunferência π × ${fmt(x.d)})` });
+    }
+  });
+  return { linked, arc, circ, marks: out.sort((m, n) => m.v - n.v) };
+}
+const greenMarks = (xId, P) => transmittedFor(xId, P).marks.filter(m => m.v >= 0 && m.v <= P.Ls)
+  .map(m => ({ v: m.v, color: "green", label: `${mm(m.v)} mm`,
+    sub: `${xId === "17" ? "cromado 17" : "cavaleiro 16"}, ${ord(m.k)}${m.next ? " (folha seguinte)" : ""}, ${m.short}` }));
+
+/* Folha com as marcas do rolo selecionado */
+const sheetState = { layered: false, layer: 0 };
 function drawSheet(o, onlyGap) {
   const box = document.getElementById("sheetMap");
   if (!box || !manchasOn) return;
@@ -1043,58 +1179,96 @@ function drawSheet(o, onlyGap) {
     title = `Onde o ${roleName(o).replace("Rolo", "rolo")} marca a folha`;
     marks = streaksFor(o, P).filter(m => m.v >= 0 && m.v <= L)
       .map(m => ({ v: m.v, label: `${mm(m.v)} mm`, sub: `${ord(m.k)}${m.next ? " (folha seguinte)" : ""}, ${m.short}` }));
+    if (o.id === "14") {
+      TRANSMIT.forEach(id => { if (transmittedFor(id, P).linked) marks.push(...greenMarks(id, P)); });
+      title = "Onde o rolo 14 (molhador) marca a folha, com o impacto transmitido ao cromado e ao cavaleiro";
+    }
     if (!contactsOf(R.chapa).includes(o)) note = "Este rolo está afastado da chapa agora. As marcas mostram onde ele marcaria quando encostado.";
+  } else if (o && TRANSMIT.includes(o.id)) {
+    const t = transmittedFor(o.id, P);
+    title = `Onde o ${roleName(o).replace("Rolo", "rolo")} marca a folha pelo impacto do molhador`;
+    marks = greenMarks(o.id, P);
+    if (!t.linked) note = "Agora ele não está ligado à chapa pelo molhador 14 (molha desligada ou 14 afastado). As marcas mostram onde ele marcaria com o contato.";
   } else if (onlyGap || (o && GAP_BY_CYL[o.id])) {
     const codes = onlyGap ? [onlyGap] : GAP_BY_CYL[o.id];
     title = onlyGap ? `Listra de boca ${onlyGap}` : `Listras de boca ligadas ao ${o.name.toLowerCase()}`;
-    marks = GAP_STREAKS.filter(g => codes.includes(g.code) && g.mm <= L)
-      .map(g => ({ v: g.mm, label: `${mm(g.mm)} mm`, sub: `${g.code}, ${g.text.replace(/ \(.*\)/, "").toLowerCase()}` }));
+    marks = gapStreaks(P).filter(g => !g.hidden && codes.includes(g.code) && g.v >= 0 && g.v <= L)
+      .map(g => ({ v: g.v, label: `${mm(g.v)} mm`, sub: `${g.code}, ${g.text.replace(/ \(.*\)/, "").toLowerCase()}` }));
   } else {
     box.innerHTML = o
-      ? `<p class="hint"><strong>${o.name || roleName(o)}</strong> não toca a chapa nem os cilindros, então não marca o impresso diretamente: só transfere tinta ou água para os outros rolos. Toque num entintador (1 a 4), no molhador 14 ou num cilindro.</p>`
-      : `<p class="hint">Toque num entintador (1 a 4), no molhador 14 ou num cilindro para ver onde ele marca a folha.</p>`;
+      ? `<p class="hint"><strong>${o.name || roleName(o)}</strong> não toca a chapa nem os cilindros, então não marca o impresso diretamente: só transfere tinta ou água para os outros rolos. Toque num entintador (1 a 4), no molhador 14, no cromado 17, no cavaleiro 16 ou num cilindro.</p>`
+      : `<p class="hint">Toque num entintador (1 a 4), no molhador 14, no cromado 17, no cavaleiro 16 ou num cilindro para ver onde ele marca a folha.</p>`;
     return;
   }
-
+  sheetState.layer = 0;
   paintSheet(box, P, title, marks, note);
 }
+
+// agrupa faixas que coincidem (a menos de 12 mm uma da outra)
+function clusters(marks) {
+  const sorted = [...marks].sort((a, b) => a.v - b.v), groups = [];
+  sorted.forEach(m => {
+    const g = groups[groups.length - 1];
+    if (g && m.v - g[g.length - 1].v < 12) g.push(m); else groups.push([m]);
+  });
+  return groups;
+}
+
 function paintSheet(box, P, title, marks, note = "") {
+  Object.assign(sheetState, { box, P, title, marks, note });
   const L = P.Ls;
+  const groups = clusters(marks), layers = Math.max(1, ...groups.map(g => g.length));
+  const hasOverlap = layers > 1;
+  if (!hasOverlap) sheetState.layered = false;
+  if (sheetState.layer >= layers) sheetState.layer = 0;
+  const shown = !sheetState.layered ? marks
+    : groups.flatMap(g => g.length === 1 ? g : (g[sheetState.layer] ? [g[sheetState.layer]] : []));
+
   // desenho em mm: largura ilustrativa de 1060 mm (formato máximo da XL 106)
   const W = 1060, ML = 30, MR = 30, MT = 70, MB = 70, fs = 26;
   const y = v => MT + (L - v);   // borda frontal embaixo, como nos slides
   let svgs = `<svg viewBox="0 0 ${W + ML + MR} ${L + MT + MB}" role="img" aria-label="${title}" style="width:100%;height:auto;display:block">`;
   svgs += `<rect x="${ML}" y="${MT}" width="${W}" height="${L}" fill="#F2F4F5" stroke="#13304D" stroke-width="3"/>`;
-  // área da imagem
   if (!isNaN(P.imgF) && !isNaN(P.imgR) && P.imgR > P.imgF)
     svgs += `<rect x="${ML + 120}" y="${y(Math.min(P.imgR, L))}" width="${W - 240}" height="${Math.min(P.imgR, L) - P.imgF}" fill="#F7D4D6"/>`;
-  // pinça
   if (!isNaN(P.c1) && P.c1 > 0) svgs += `<rect x="${ML}" y="${y(P.c1)}" width="${W}" height="${P.c1}" fill="#D5DBE0"/>`;
   svgs += `<text x="${ML + W / 2}" y="${MT + L + 44}" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-size="${fs}" fill="#4B6177">Borda frontal (0 mm)</text>`;
   svgs += `<text x="${ML + W / 2}" y="${MT - 22}" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-size="${fs}" fill="#4B6177">Borda traseira (${mm(L)} mm)</text>`;
-  // mancha informada
   if (P.pos >= 0 && P.pos <= L) {
     svgs += `<line x1="${ML}" x2="${ML + W}" y1="${y(P.pos)}" y2="${y(P.pos)}" stroke="#13304D" stroke-width="3" stroke-dasharray="14 8"/>`;
     svgs += `<text x="${ML + W - 12}" y="${y(P.pos) + fs + 6}" text-anchor="end" font-family="Barlow, Arial, sans-serif" font-size="${fs - 4}" fill="#13304D">mancha informada ${mm(P.pos)} mm</text>`;
   }
-  // barras vermelhas; rótulo acima da barra, ou abaixo se colidir com o anterior
-  // de cima para baixo: rótulo acima da barra; se não couber, abaixo; se ainda colidir, empurra para baixo
-  let prev = -Infinity;
-  const sorted = marks.sort((a, b) => b.v - a.v);
-  sorted.forEach(m => svgs += `<rect x="${ML}" y="${y(m.v) - 4}" width="${W}" height="8" fill="#E30613"/>`);
+  // barras; o valor em mm fica logo acima de cada barra, em colunas para não encavalar
+  const sorted = [...shown].sort((a, b) => b.v - a.v);
+  sorted.forEach(m => svgs += `<rect x="${ML}" y="${y(m.v) - 4}" width="${W}" height="8" fill="${m.color === "green" ? GREEN : "#E30613"}"/>`);
+  const cols = [ML + 14, ML + 280, ML + 546, ML + 812], colPrev = cols.map(() => -Infinity), lh = fs + 8;
   sorted.forEach(m => {
-    const yy = y(m.v);
-    let ly = yy - 12;
-    if (ly - fs < prev + 6) ly = yy + fs + 10;
-    if (ly - fs < prev + 6) ly = prev + fs + 10;
-    prev = ly;
-    svgs += `<text x="${ML + 14}" y="${ly}" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="${fs + 4}" fill="#B00010" paint-order="stroke" stroke="#F2F4F5" stroke-width="6">${m.label}</text>`;
-    svgs += `<text x="${ML + 190}" y="${ly}" font-family="Barlow, Arial, sans-serif" font-size="${fs - 3}" fill="#13304D" paint-order="stroke" stroke="#F2F4F5" stroke-width="6">${m.sub}</text>`;
+    const yy = y(m.v), want = yy - 10;
+    let c = colPrev.findIndex(p => want - lh >= p);
+    let ly = want;
+    if (c < 0) { c = colPrev.indexOf(Math.min(...colPrev)); ly = colPrev[c] + lh; }
+    colPrev[c] = ly;
+    svgs += `<text x="${cols[c]}" y="${ly}" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="${fs + 4}" fill="${m.color === "green" ? GREEN_TXT : "#B00010"}" paint-order="stroke" stroke="#F2F4F5" stroke-width="7">${m.label}</text>`;
   });
   svgs += `</svg>`;
+  const legend = sorted.length ? `<ol class="marklist">${[...sorted].sort((a, b) => a.v - b.v).map(m =>
+    `<li><span class="sw" style="background:${m.color === "green" ? GREEN : "#E30613"}"></span><strong>${m.label}</strong><span>${m.sub}</span></li>`).join("")}</ol>` : "";
+
+  const hasGreen = marks.some(m => m.color === "green"), hasRed = marks.some(m => m.color !== "green");
+  const controls = `<div class="overlap">
+      <button id="ovBtn" aria-pressed="${sheetState.layered}" ${hasOverlap ? "" : "disabled"}>${sheetState.layered ? "Mostrar todas as faixas" : "Tirar sobreposição"}</button>
+      ${sheetState.layered ? `<button id="ovPrev">Anterior</button><span>Faixas sobrepostas: ${sheetState.layer + 1} de ${layers}</span><button id="ovNext">Próxima</button>` : ""}
+      ${hasOverlap ? "" : `<span class="hint" style="margin:0">Nenhuma faixa sobreposta.</span>`}
+    </div>`;
   box.innerHTML = `<h3>${title}</h3>${note ? `<p class="hint">${note}</p>` : ""}
-    ${marks.length ? "" : `<p class="hint">Nenhuma marca cai dentro de uma folha de ${mm(L)} mm.</p>`}${svgs}
-    <p class="hint">Faixa cinza: pinça. Área rosada: imagem. Largura da folha apenas ilustrativa.</p>`;
+    ${marks.length ? controls : `<p class="hint">Nenhuma marca cai dentro de uma folha de ${mm(L)} mm.</p>`}${svgs}${legend}
+    <p class="hint">${hasRed ? "Vermelho: impacto direto. " : ""}${hasGreen ? "Verde: impacto do molhador transmitido ao cromado 17 e ao cavaleiro 16. " : ""}Faixa cinza: pinça. Área rosada: imagem. Largura da folha apenas ilustrativa.</p>`;
+  const rerender = () => paintSheet(box, P, title, marks, note);
+  const ov = box.querySelector("#ovBtn");
+  if (ov) ov.addEventListener("click", () => { sheetState.layered = !sheetState.layered; sheetState.layer = 0; rerender(); });
+  const pv = box.querySelector("#ovPrev"), nx = box.querySelector("#ovNext");
+  if (pv) pv.addEventListener("click", () => { sheetState.layer = (sheetState.layer - 1 + layers) % layers; rerender(); });
+  if (nx) nx.addEventListener("click", () => { sheetState.layer = (sheetState.layer + 1) % layers; rerender(); });
 }
 
 /* Pontos vermelhos de impacto: presos à chapa (no contato chapa–blanqueta) e ao papel
@@ -1121,9 +1295,9 @@ function fireImpact(ev) {
   (impactMarks[ev.code] || []).forEach(n => n.remove());
   const list = impactMarks[ev.code] = [];
   const L = readParams().Ls;
-  const label = ev.code === "Papel" ? "Fim do papel" : ev.code;
+  const label = ev.code;
   markOn(R.chapa, NIP.PB, R.chapa.r - 10, label, list);                 // chapa no contato com a blanqueta
-  if (ev.x >= 0 && ev.x <= L) markOn(R.impressao, NIP.IB, R.impressao.r + 4, label, list);  // papel no contato
+  if (paperAt(ev) >= 0 && paperAt(ev) <= L) markOn(R.impressao, NIP.IB, R.impressao.r + 4, label, list);  // papel no contato
   pulseAt(ev.where === "pb" ? R.chapa : R.impressao, ev.where === "pb" ? NIP.PB : NIP.IB);
 }
 function clearImpacts() { Object.values(impactMarks).forEach(l => l.forEach(n => n.remove())); prevX = null; }
@@ -1141,43 +1315,61 @@ function trackImpacts() {
 }
 
 /* Tabela dos momentos de impacto */
-const HEIDELBERG_REF = { E2: 165, E1: 361, A2: 400, A1: 594 };
 function buildTable() {
   const P = readParams(), L = P.Ls;
-  const rows = impactEvents(L).sort((a, b) => a.x - b.x).map(ev => {
-    const onPaper = ev.x >= 0 && ev.x <= L;
-    const plate = mod(ev.x + BLANKET_TRAVEL, CYL_C);     // ponto da chapa no contato, em mm equivalentes da folha
-    const plateOk = plate <= CYL_SURF;
-    const marks = [];
-    if (onPaper) marks.push({ v: ev.x, label: `${mm(ev.x)} mm`, sub: `${ev.code === "Papel" ? "fim do papel" : ev.code}, direto no contato blanqueta–impressão` });
-    if (plateOk && plate <= L && Math.abs(plate - ev.x) > 0.5)
-      marks.push({ v: plate, label: `${mm(plate)} mm`, sub: `${ev.code === "Papel" ? "fim do papel" : ev.code}, pelo ponto da chapa que sofreu o impacto` });
-    ev.marks = marks;
-    const ref = HEIDELBERG_REF[ev.code];
+  const refs = gapStreaks(P);
+  const evName = ev => ev.code === "Descarga" ? "Descarga" : ev.code;
+  const rows = impactEvents(L).sort((a, b) => streakAt(a) - streakAt(b)).map(ev => {
+    const pp = paperAt(ev), pl = plateAt(ev), st = streakAt(ev);
+    const onPaper = pp >= 0 && pp <= L, plateOk = pl >= GRIPPER && pl <= GRIPPER + CYL_C - R.chapa.gapMm;
+    const ok = st >= 0 && st <= L && (ev.where === "bi" ? plateOk : onPaper);
+    const ref = refs.find(g => g.code === ev.code);
     return `<tr>
-      <td><strong>${ev.code === "Papel" ? "Fim do papel" : ev.code}</strong><small>${ev.text}</small></td>
+      <td><strong>${evName(ev)}</strong><small>${ev.text}</small></td>
       <td>${ev.where === "pb" ? "Chapa–blanqueta" : "Blanqueta–impressão"}</td>
-      <td>${onPaper ? `<span class="hit">${mm(ev.x)} mm</span>` : "Sem papel (boca)"}</td>
-      <td>${plateOk ? `${mm(plate)} mm` : "Na boca da chapa"}</td>
-      <td>${marks.length ? marks.map(m => `<span class="hit">${m.label}</span>`).join("<br>") : "Nenhuma"}</td>
-      <td>${ref ? ref + " mm" : "—"}</td>
-      <td>${marks.length ? `<button data-ev="${ev.code}">Ver na folha</button>` : ""}</td></tr>`;
+      <td>${onPaper ? `${mm(pp)} mm` : "Sem papel (boca)"}</td>
+      <td>${plateOk ? `${mm(pl)} mm` : "Na boca da chapa"}</td>
+      <td>${ok ? `<span class="hit">${mm(st)} mm</span><br><small>${ev.where === "bi" ? "no contato chapa–blanqueta" : "no contato blanqueta–impressão"}</small>` : "Fora da folha"}</td>
+      <td>${ref ? mm(ref.v) + " mm" : "—"}</td>
+      <td>${ok ? `<button data-ev="${ev.code}">Ver na folha</button>` : ""}</td></tr>`;
   });
   const box = document.getElementById("gapTable");
   box.innerHTML = `<h3>Momentos de impacto numa folha de ${mm(L)} mm</h3>
     <div class="tablewrap"><table>
       <thead><tr><th>Momento</th><th>Onde acontece</th><th>Papel no contato blanqueta–impressão</th>
-      <th>Chapa no contato chapa–blanqueta</th><th>Marca possível no papel</th><th>Referência Heidelberg</th><th></th></tr></thead>
+      <th>Chapa no contato chapa–blanqueta</th><th>Onde a listra aparece</th><th>Heidelberg</th><th></th></tr></thead>
       <tbody>${rows.join("")}</tbody></table></div>
-    <p class="hint">Medidas a partir da borda frontal da folha. A posição da chapa está em mm equivalentes da folha (0 = início da chapa, após a boca). No esquema, a blanqueta leva ${mm(BLANKET_TRAVEL)} mm para levar um ponto do contato com a chapa ao contato com a impressão. Os valores calculados dependem dos diâmetros e da posição dos cilindros no esquema, que é aproximada; por isso podem diferir da referência Heidelberg, medida na máquina real.</p>`;
+    <p class="hint">Medidas a partir da borda frontal da folha, com pinça de ${GRIPPER} mm. A posição da chapa está em mm da folha (a chapa começa a ${GRIPPER} mm). Calibração pelos valores Heidelberg: a blanqueta leva ${mm(BLANKET_TRAVEL)} mm de um contato ao outro e as bocas da blanqueta e da impressão foram ajustadas para 233 mm. Pelo mecanismo dos slides, um tranco entre blanqueta e impressão marca o ponto da chapa, e um tranco entre chapa e blanqueta marca o ponto do papel. A descarga acompanha o formato: E1 − (formato máximo − formato atual).</p>`;
+  // impacto transmitido pelo molhador
+  const trRows = TRANSMIT.flatMap(id => {
+    const t = transmittedFor(id, P), name = roleName(R[id]);
+    return ["saída", "entrada"].map(code => {
+      const ms = t.marks.filter(m => m.code === code && m.v >= 0 && m.v <= L);
+      return `<tr><td><strong>${name}</strong>${t.linked ? "" : "<small>Sem contato com o 14 agora</small>"}</td>
+        <td>Molhador na ${code} da boca da chapa (${code === "saída" ? mm(P.c1) : mm(P.c4)} mm)</td>
+        <td>${mm(t.arc)} mm</td><td>${mm(t.circ)} mm</td>
+        <td>${ms.length ? ms.map(m => `<span class="hit green">${mm(m.v)} mm</span> <small>${ord(m.k)}${m.next ? ", folha seguinte" : ""}</small>`).join("<br>") : "Nenhuma na folha"}</td>
+        <td>${ms.length ? `<button data-tr="${id}">Ver na folha</button>` : ""}</td></tr>`;
+    });
+  });
+  box.insertAdjacentHTML("beforeend", `<h3>Impacto do molhador transmitido ao cromado e ao cavaleiro</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Rolo</th><th>Impacto no molhador</th><th>Percurso no 14 até a chapa</th><th>Circunferência</th><th>Marcas no papel</th><th></th></tr></thead>
+      <tbody>${trRows.join("")}</tbody></table></div>
+    <p class="hint">A marca fica no cromado ou no cavaleiro, volta ao contato com o 14 a cada giro deles e percorre o 14 até a chapa. Na folha, essas marcas aparecem em verde.</p>`);
+  box.querySelectorAll("[data-tr]").forEach(b => b.addEventListener("click", () => {
+    const id = b.dataset.tr;
+    sheetState.layer = 0;
+    paintSheet(document.getElementById("sheetMap"), P, `Impacto do molhador transmitido ao ${id === "17" ? "cromado 17" : "cavaleiro 16"}`, greenMarks(id, P));
+    document.getElementById("sheetMap").scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+
   const evs = impactEvents(L);
   box.querySelectorAll("[data-ev]").forEach(b => b.addEventListener("click", () => {
-    const ev = evs.find(e => e.code === b.dataset.ev);
-    const onPaper = ev.x >= 0 && ev.x <= L, plate = mod(ev.x + BLANKET_TRAVEL, CYL_C), marks = [];
-    const name = ev.code === "Papel" ? "fim do papel" : ev.code;
-    if (onPaper) marks.push({ v: ev.x, label: `${mm(ev.x)} mm`, sub: `${name}, direto no contato blanqueta–impressão` });
-    if (plate <= CYL_SURF && plate <= L && Math.abs(plate - ev.x) > 0.5) marks.push({ v: plate, label: `${mm(plate)} mm`, sub: `${name}, pelo ponto da chapa` });
-    paintSheet(document.getElementById("sheetMap"), P, `Impacto ${ev.code === "Papel" ? "no fim do papel" : ev.code} na folha`, marks);
+    const ev = evs.find(e => e.code === b.dataset.ev), st = streakAt(ev);
+    sheetState.layer = 0;
+    paintSheet(document.getElementById("sheetMap"), P, `Listra de boca ${evName(ev)} na folha`,
+      [{ v: st, label: `${mm(st)} mm`, sub: `${evName(ev)}, ${ev.where === "bi" ? "tranco blanqueta–impressão marcado no contato chapa–blanqueta" : "tranco chapa–blanqueta marcado no contato blanqueta–impressão"}` }]);
     document.getElementById("sheetMap").scrollIntoView({ behavior: "smooth", block: "start" });
   }));
 }
@@ -1198,7 +1390,8 @@ function drawPaper() {
   g.replaceChildren();
   const L = num("fLen");
   if (!(L > 0)) return;
-  const { a2 } = gapAngles(o);
+  // a borda frontal fica ${GRIPPER} mm antes da saída da boca, presa na pinça
+  const a2 = gapAngles(o).a2 - GRIPPER / o.circMm * Math.PI * 2;
   const theta = Math.min(L / o.circMm, 0.985) * Math.PI * 2;  // ângulo coberto pelo papel
   const rp = o.r + 4;
   const pt = (rad, a) => `${(Math.cos(a) * rad).toFixed(2)},${(Math.sin(a) * rad).toFixed(2)}`;
