@@ -1010,6 +1010,8 @@ function streaksFor(o, P, limit = 0) {
   const front = [], rear = [];
   if (!isNaN(P.c1)) front.push({ at: P.c1, text: "Início do contato com a chapa, na saída da boca (causa 1)", short: "saída da boca" });
   if (!isNaN(P.imgF)) front.push({ at: P.imgF, text: "Borda frontal da imagem (causa 2)", short: "borda frontal da imagem" });
+  // Tabela de manchas: rolaria = diâmetro × 3,14, contada da borda frontal sem somar a pinça
+  front.push({ at: 0, text: "Circunferência do rolo (π × d), contada da borda frontal sem somar a pinça, como na Tabela de manchas", short: "circunferência π × d", pure: true });
   if (!isNaN(P.imgR)) rear.push({ at: P.imgR, text: "Borda traseira da imagem (causa 3)", short: "borda traseira da imagem" });
   if (!isNaN(P.c4)) rear.push({ at: P.c4, text: "Fim do contato com a chapa, na entrada da boca (causa 4)", short: "entrada da boca" });
   const merge = list => list.reduce((acc, e) => {
@@ -1024,7 +1026,8 @@ function streaksFor(o, P, limit = 0) {
       const v = e.at + k * circ;
       if (v > P.Ls + limit) break;
       out.push({ v, k, next: false, why: e.text, short: e.short,
-        calc: `${mm(e.at)} + ${k} × ${mm(circ)} = ${mm(v)} mm (circunferência ${circTxt})` });
+        calc: e.pure ? `${k} × ${mm(circ)} = ${mm(v)} mm (circunferência ${circTxt})`
+          : `${mm(e.at)} + ${k} × ${mm(circ)} = ${mm(v)} mm (circunferência ${circTxt})` });
     }
   });
   merge(rear).forEach(e => {
