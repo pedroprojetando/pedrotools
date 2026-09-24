@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Redução de Álcool (IPA)</title>
+    <title>Calculadora de Redução de IPA e Aditivo</title>
     <style>
         :root {
             --primary-color: #1e3a8a;
@@ -14,9 +14,7 @@
             --text-color: #1f2937;
             --border-color: #d1d5db;
         }
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
@@ -151,27 +149,13 @@
             transition: background-color 0.2s;
             text-align: center;
         }
-        .btn:hover {
-            background-color: #1d4ed8;
-        }
-        .btn-secondary {
-            background-color: #4b5563;
-        }
-        .btn-secondary:hover {
-            background-color: #374151;
-        }
-        .btn-success {
-            background-color: #059669;
-        }
-        .btn-success:hover {
-            background-color: #047857;
-        }
-        .btn-print {
-            background-color: #2563eb;
-        }
-        .btn-print:hover {
-            background-color: #1d4ed8;
-        }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-secondary { background-color: #4b5563; }
+        .btn-secondary:hover { background-color: #374151; }
+        .btn-success { background-color: #059669; }
+        .btn-success:hover { background-color: #047857; }
+        .btn-print { background-color: #2563eb; }
+        .btn-print:hover { background-color: #1d4ed8; }
         
         .modal {
             display: none;
@@ -212,28 +196,17 @@
         .history-info { font-size: 0.85rem; }
 
         @media print {
-            body {
-                background-color: #ffffff;
-                color: #000000;
-                padding: 0;
-            }
-            .action-bar, .btn, .card:has(.grid-2) {
-                display: none !important;
-            }
-            .card {
-                box-shadow: none;
-                border: 1px solid #d1d5db;
-                page-break-inside: avoid;
-                margin-bottom: 20px;
-            }
+            body { background-color: #ffffff; color: #000000; padding: 0; }
+            .action-bar, .btn, .card:has(.grid-2) { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #d1d5db; page-break-inside: avoid; margin-bottom: 20px; }
         }
     </style>
 </head>
 <body>
 <div class="container">
     <header>
-        <h1>Calculadora de Redução de Álcool (IPA)</h1>
-        <p>Impacto Financeiro e Redução de Consumo</p>
+        <h1>Calculadora de Redução de IPA & Aditivo</h1>
+        <p>Impacto Financeiro e Custos de Insumos</p>
     </header>
 
     <div class="action-bar">
@@ -248,21 +221,19 @@
     <div class="card">
         <h2>1. Dados Operacionais Básicos</h2>
         <div class="grid-2">
-            <div class="form-group"><label>Tanque Impressora (L):</label><input type="number" id="tanque" value="40" step="1" oninput="autoSave()"></div>
+            <div class="form-group"><label>Tanque Impressora (L):</label><input type="number" id="tanque" value="40" step="1" oninput="autoScaleAndSave()"></div>
             <div class="form-group"><label>Trocas de Solução/Mês:</label><input type="number" id="trocas_mes" value="4" step="1" oninput="autoSave()"></div>
-            <div class="form-group"><label>Meses Trabalhados/Ano:</label><input type="number" id="meses_ano" value="12" step="1" oninput="autoSave()"></div>
-            <div class="form-group"><label>Número de Unidades:</label><input type="number" id="unidades" value="8" step="1" oninput="autoSave()"></div>
         </div>
     </div>
 
     <div class="card">
-        <h2>2. Parâmetros de Álcool (IPA) por Cenário</h2>
+        <h2>2. Parâmetros de Insumos por Cenário</h2>
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
                         <th>Parâmetro</th>
-                        <th>Cenário Atual (IPA)</th>
+                        <th>Cenário Atual</th>
                         <th>Cenário Proposto (Redução)</th>
                     </tr>
                 </thead>
@@ -273,9 +244,19 @@
                         <td><input type="number" id="pct_ipa_novo" value="3" step="0.1" oninput="autoSave()"></td>
                     </tr>
                     <tr>
-                        <td><strong>Valor do Litro do IPA (R$)</strong></td>
+                        <td><strong>Valor do Litro IPA (R$)</strong></td>
                         <td><input type="number" id="val_ipa_atual" value="5.19" step="0.01" oninput="autoSave()"></td>
                         <td><input type="number" id="val_ipa_novo" value="5.19" step="0.01" oninput="autoSave()"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>% Aditivo de Fonte</strong></td>
+                        <td><input type="number" id="pct_adic_atual" value="3" step="0.1" oninput="autoSave()"></td>
+                        <td><input type="number" id="pct_adic_novo" value="4" step="0.1" oninput="autoSave()"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Valor do Litro Aditivo (R$)</strong></td>
+                        <td><input type="number" id="val_adic_atual" value="8.71" step="0.01" oninput="autoSave()"></td>
+                        <td><input type="number" id="val_adic_novo" value="19.60" step="0.01" oninput="autoSave()"></td>
                     </tr>
                 </tbody>
             </table>
@@ -295,16 +276,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td>Consumo Mensal de IPA (L)</td><td id="res_cons_mes_atual">-</td><td id="res_cons_mes_novo">-</td></tr>
-                    <tr><td>Consumo Anual de IPA (L)</td><td id="res_cons_ano_atual">-</td><td id="res_cons_ano_novo">-</td></tr>
-                    <tr><td>Custo Anual de IPA (R$)</td><td id="res_custo_ano_atual">-</td><td id="res_custo_ano_novo">-</td></tr>
+                    <tr><td>Consumo Mensal de IPA (L)</td><td id="res_cons_mes_ipa_atual">-</td><td id="res_cons_mes_ipa_novo">-</td></tr>
+                    <tr><td>Consumo Mensal de Aditivo (L)</td><td id="res_cons_mes_adic_atual">-</td><td id="res_cons_mes_adic_novo">-</td></tr>
+                    <tr><td>Custo Anual Total (IPA + Aditivo) (R$)</td><td id="res_custo_ano_atual">-</td><td id="res_custo_ano_novo">-</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <div class="highlight-box">
-        <h3>Economia Anual com Redução de Álcool</h3>
+        <h3>Economia Anual Líquida (IPA + Aditivo)</h3>
         <div class="highlight-value" id="res_economia">-</div>
         <p id="res_reducao_litros" style="margin-top: 3px; color: #065f46; font-weight: 600; font-size: 0.85rem;"></p>
     </div>
@@ -319,54 +300,69 @@
 </div>
 
 <script>
-const idsCampos = ['tanque', 'trocas_mes', 'meses_ano', 'unidades', 'pct_ipa_atual', 'pct_ipa_novo', 'val_ipa_atual', 'val_ipa_novo'];
+const idsCampos = ['tanque', 'trocas_mes', 'pct_ipa_atual', 'pct_ipa_novo', 'val_ipa_atual', 'val_ipa_novo', 'pct_adic_atual', 'pct_adic_novo', 'val_adic_atual', 'val_adic_novo'];
+
+function autoScaleAndSave() {
+    autoSave();
+}
 
 function calcular() {
     let tanque = parseFloat(document.getElementById('tanque').value) || 0;
     let trocas_mes = parseFloat(document.getElementById('trocas_mes').value) || 0;
-    let meses_ano = parseFloat(document.getElementById('meses_ano').value) || 0;
-    let unidades = parseFloat(document.getElementById('unidades').value) || 0;
+    let meses_ano = 12;
 
-    let pct_atual = (parseFloat(document.getElementById('pct_ipa_atual').value) || 0) / 100;
-    let pct_novo = (parseFloat(document.getElementById('pct_ipa_novo').value) || 0) / 100;
+    let pct_ipa_atual = (parseFloat(document.getElementById('pct_ipa_atual').value) || 0) / 100;
+    let pct_ipa_novo = (parseFloat(document.getElementById('pct_ipa_novo').value) || 0) / 100;
 
-    let val_atual = parseFloat(document.getElementById('val_ipa_atual').value) || 0;
-    let val_novo = parseFloat(document.getElementById('val_ipa_novo').value) || 0;
+    let val_ipa_atual = parseFloat(document.getElementById('val_ipa_atual').value) || 0;
+    let val_ipa_novo = parseFloat(document.getElementById('val_ipa_novo').value) || 0;
 
-    let base_ml_hora_100 = 147.5 * unidades;
+    let pct_adic_atual = (parseFloat(document.getElementById('pct_adic_atual').value) || 0) / 100;
+    let pct_adic_novo = (parseFloat(document.getElementById('pct_adic_novo').value) || 0) / 100;
 
-    let ml_hora_atual = base_ml_hora_100 * pct_atual;
-    let ml_hora_novo = base_ml_hora_100 * pct_novo;
+    let val_adic_atual = parseFloat(document.getElementById('val_adic_atual').value) || 0;
+    let val_adic_novo = parseFloat(document.getElementById('val_adic_novo').value) || 0;
 
-    let horas_mes = 264;
+    let cons_mes_ipa_atual = (tanque * trocas_mes * pct_ipa_atual) * 2.5; 
+    let cons_mes_ipa_novo = (tanque * trocas_mes * pct_ipa_novo) * 2.5;
 
-    let cons_mes_atual = (ml_hora_atual / 1000) * horas_mes;
-    let cons_mes_novo = (ml_hora_novo / 1000) * horas_mes;
+    let cons_mes_adic_atual = (tanque * trocas_mes * pct_adic_atual) * 2.5;
+    let cons_mes_adic_novo = (tanque * trocas_mes * pct_adic_novo) * 2.5;
 
-    let trocas_mes_atual = tanque * trocas_mes * pct_atual;
-    let trocas_mes_novo = tanque * trocas_mes * pct_novo;
+    let trocas_mes_ipa_atual = tanque * trocas_mes * pct_ipa_atual;
+    let trocas_mes_ipa_novo = tanque * trocas_mes * pct_ipa_novo;
 
-    let total_mes_atual = cons_mes_atual + trocas_mes_atual;
-    let total_mes_novo = cons_mes_novo + trocas_mes_novo;
+    let trocas_mes_adic_atual = tanque * trocas_mes * pct_adic_atual;
+    let trocas_mes_adic_novo = tanque * trocas_mes * pct_adic_novo;
 
-    let total_ano_atual = total_mes_atual * meses_ano;
-    let total_ano_novo = total_mes_novo * meses_ano;
+    let total_mes_ipa_atual = cons_mes_ipa_atual + trocas_mes_ipa_atual;
+    let total_mes_ipa_novo = cons_mes_ipa_novo + trocas_mes_ipa_novo;
 
-    let custo_ano_atual = total_ano_atual * val_atual;
-    let custo_ano_novo = total_ano_novo * val_novo;
+    let total_mes_adic_atual = cons_mes_adic_atual + trocas_mes_adic_atual;
+    let total_mes_adic_novo = cons_mes_adic_novo + trocas_mes_adic_novo;
+
+    let total_ano_ipa_atual = total_mes_ipa_atual * meses_ano;
+    let total_ano_ipa_novo = total_mes_ipa_novo * meses_ano;
+
+    let total_ano_adic_atual = total_mes_adic_atual * meses_ano;
+    let total_ano_adic_novo = total_mes_adic_novo * meses_ano;
+
+    let custo_ano_atual = (total_ano_ipa_atual * val_ipa_atual) + (total_ano_adic_atual * val_adic_atual);
+    let custo_ano_novo = (total_ano_ipa_novo * val_ipa_novo) + (total_ano_adic_novo * val_adic_novo);
 
     let economia_financeira = custo_ano_atual - custo_ano_novo;
-    let reducao_litros = total_ano_atual - total_ano_novo;
+    let reducao_ipa_litros = total_ano_ipa_atual - total_ano_ipa_novo;
 
-    document.getElementById('res_cons_mes_atual').innerText = total_mes_atual.toFixed(1) + " L";
-    document.getElementById('res_cons_mes_novo').innerText = total_mes_novo.toFixed(1) + " L";
-    document.getElementById('res_cons_ano_atual').innerText = total_ano_atual.toFixed(1) + " L";
-    document.getElementById('res_cons_ano_novo').innerText = total_ano_novo.toFixed(1) + " L";
+    document.getElementById('res_cons_mes_ipa_atual').innerText = total_mes_ipa_atual.toFixed(1) + " L";
+    document.getElementById('res_cons_mes_ipa_novo').innerText = total_mes_ipa_novo.toFixed(1) + " L";
+    document.getElementById('res_cons_mes_adic_atual').innerText = total_mes_adic_atual.toFixed(1) + " L";
+    document.getElementById('res_cons_mes_adic_novo').innerText = total_mes_adic_novo.toFixed(1) + " L";
+
     document.getElementById('res_custo_ano_atual').innerText = "R$ " + custo_ano_atual.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('res_custo_ano_novo').innerText = "R$ " + custo_ano_novo.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     
     document.getElementById('res_economia').innerText = "R$ " + economia_financeira.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " / ano";
-    document.getElementById('res_reducao_litros').innerText = "Redução de " + reducao_litros.toFixed(1) + " Litros de IPA por ano";
+    document.getElementById('res_reducao_litros').innerText = "Redução de " + reducao_ipa_litros.toFixed(1) + " Litros de IPA por ano (com ajuste de aditivo)";
 }
 
 function gerarRelatorioPrint() {
@@ -384,21 +380,21 @@ function obterDadosAtuais() {
 }
 
 function autoSave() {
-    localStorage.setItem('roi_ipa_simples_temp', JSON.stringify(obterDadosAtuais()));
+    localStorage.setItem('roi_ipa_aditivo_temp', JSON.stringify(obterDadosAtuais()));
     calcular();
 }
 
 function salvarAnalise() {
-    let historico = JSON.parse(localStorage.getItem('roi_ipa_simples_historico') || '[]');
+    let historico = JSON.parse(localStorage.getItem('roi_ipa_aditivo_historico') || '[]');
     let atual = obterDadosAtuais();
     atual.nome = "Simulação - " + atual.dataHora;
     historico.unshift(atual);
-    localStorage.setItem('roi_ipa_simples_historico', JSON.stringify(historico));
+    localStorage.setItem('roi_ipa_aditivo_historico', JSON.stringify(historico));
     alert('Análise salva com sucesso no histórico!');
 }
 
 function carregarSalvos() {
-    let salvoTemp = localStorage.getItem('roi_ipa_simples_temp');
+    let salvoTemp = localStorage.getItem('roi_ipa_aditivo_temp');
     if (salvoTemp) {
         let dados = JSON.parse(salvoTemp);
         idsCampos.forEach(id => {
@@ -409,14 +405,14 @@ function carregarSalvos() {
 }
 
 function abrirHistorico() {
-    let historico = JSON.parse(localStorage.getItem('roi_ipa_simples_historico') || '[]');
+    let historico = JSON.parse(localStorage.getItem('roi_ipa_aditivo_historico') || '[]');
     let html = '';
     if (historico.length === 0) {
         html = '<p>Nenhuma análise salva no histórico.</p>';
     } else {
         historico.forEach((item, index) => {
             html += `<div class="history-item">
-                <div class="history-info"><strong>${item.nome}</strong><br><small>Tanque: ${item.tanque}L | Unidades: ${item.unidades}</small></div>
+                <div class="history-info"><strong>${item.nome}</strong><br><small>Tanque: ${item.tanque}L</small></div>
                 <div>
                     <button class="btn" style="padding: 5px 10px; font-size: 0.75rem;" onclick="carregarHistorico(${index})">Carregar</button>
                     <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.75rem; background:#dc2626;" onclick="excluirHistorico(${index})">X</button>
@@ -433,7 +429,7 @@ function fecharHistorico() {
 }
 
 function carregarHistorico(index) {
-    let historico = JSON.parse(localStorage.getItem('roi_ipa_simples_historico') || '[]');
+    let historico = JSON.parse(localStorage.getItem('roi_ipa_aditivo_historico') || '[]');
     let item = historico[index];
     if (item) {
         idsCampos.forEach(id => {
@@ -446,22 +442,22 @@ function carregarHistorico(index) {
 }
 
 function excluirHistorico(index) {
-    let historico = JSON.parse(localStorage.getItem('roi_ipa_simples_historico') || '[]');
+    let historico = JSON.parse(localStorage.getItem('roi_ipa_aditivo_historico') || '[]');
     historico.splice(index, 1);
-    localStorage.setItem('roi_ipa_simples_historico', JSON.stringify(historico));
+    localStorage.setItem('roi_ipa_aditivo_historico', JSON.stringify(historico));
     abrirHistorico();
 }
 
 function exportarBackup() {
     let dadosBackup = {
-        temp: localStorage.getItem('roi_ipa_simples_temp'),
-        historico: localStorage.getItem('roi_ipa_simples_historico')
+        temp: localStorage.getItem('roi_ipa_aditivo_temp'),
+        historico: localStorage.getItem('roi_ipa_aditivo_historico')
     };
     let blob = new Blob([JSON.stringify(dadosBackup, null, 2)], {type: 'application/json'});
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
     a.href = url;
-    a.download = 'backup_reducao_ipa.json';
+    a.download = 'backup_reducao_ipa_aditivo.json';
     a.click();
 }
 
@@ -472,8 +468,8 @@ function importarBackup(event) {
     reader.onload = function(e) {
         try {
             let dadosBackup = JSON.parse(e.target.result);
-            if (dadosBackup.temp) localStorage.setItem('roi_ipa_simples_temp', dadosBackup.temp);
-            if (dadosBackup.historico) localStorage.setItem('roi_ipa_simples_historico', dadosBackup.historico);
+            if (dadosBackup.temp) localStorage.setItem('roi_ipa_aditivo_temp', dadosBackup.temp);
+            if (dadosBackup.historico) localStorage.setItem('roi_ipa_aditivo_historico', dadosBackup.historico);
             carregarSalvos();
             alert('Backup importado com sucesso!');
         } catch (err) {
