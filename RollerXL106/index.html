@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Esquema de rolaria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #DCE3E8;
+    --ink: #13304D;
+    --ink-soft: #4B6177;
+    --sheet: #F8FAFB;
+    --panel: #FFFFFF;
+    --line: #B9C6D1;
+    --safety: #F2C230;
+    --safety-ink: #2A2100;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0F1B26; --ink: #E3ECF3; --ink-soft: #9DB1C3;
+      --sheet: #E7ECF0; --panel: #172838; --line: #2C4257;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F1B26; --ink: #E3ECF3; --ink-soft: #9DB1C3;
+    --sheet: #E7ECF0; --panel: #172838; --line: #2C4257;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100%;
+    background: var(--bg); color: var(--ink);
+    font-family: "Barlow", "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  header {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+    padding: 14px 20px; border-bottom: 3px solid var(--ink);
+  }
+  h1 {
+    margin: 0; font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight: 700; font-size: 1.6rem; letter-spacing: .01em; flex: 1 1 auto;
+  }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button {
+    font: 600 1rem "Barlow Condensed", "Arial Narrow", sans-serif;
+    padding: 9px 16px; border-radius: 4px; cursor: pointer;
+    border: 2px solid var(--ink); background: transparent; color: var(--ink);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  button[aria-pressed="true"] { background: var(--safety); color: var(--safety-ink); border-color: var(--safety); }
+  button:focus-visible { outline: 3px solid var(--safety); outline-offset: 3px; }
+  .roller:focus { outline: none; }
+  .roller:focus-visible .sel { opacity: .6; }
+  button svg { width: 18px; height: 18px; }
+  .speed { display: flex; align-items: center; gap: 8px; font-size: .95rem; color: var(--ink-soft); }
+  .speed input { accent-color: var(--safety); width: 110px; }
+
+  main {
+    display: grid; grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto;
+  }
+  .sheet {
+    background: var(--sheet); border: 2px solid var(--ink); border-radius: 6px;
+    padding: 8px; min-width: 0;
+  }
+  #diagram { display: block; width: 100%; height: auto; max-height: calc(100vh - 150px); }
+  body.manchas #diagram { max-height: none; }
+  .roller { cursor: pointer; }
+  .jogbar {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;
+    position: sticky; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 2;
+  }
+  .jogbar button {
+    justify-content: center; padding: 14px 10px; font-size: 1.15rem;
+    background: #13304D; color: #FFFFFF; border-color: #13304D;
+    box-shadow: 0 2px 0 #081827;
+  }
+  .jogbar button[aria-pressed="true"] { background: #F2C230; color: #2A2100; border-color: #B8900F; box-shadow: none; transform: translateY(2px); }
+  .roller .hl { stroke-width: 0; }
+  .roller.flash .hl { animation: flash 1s ease-in-out; }
+  @keyframes flash { 0% { stroke-width: 0; } 25%, 75% { stroke-width: 10; } 100% { stroke-width: 0; } }
+  .mark .halo { display: none; }
+  .mark.shared .halo { display: inline; transform-box: fill-box; transform-origin: center; animation: pulse 1.1s ease-out infinite; }
+  @keyframes pulse { from { transform: scale(1); opacity: 1; } to { transform: scale(1.9); opacity: 0; } }
+  .multi { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--line); line-height: 1.5; }
+  .multi strong { display: block; font-size: .95rem; color: var(--ink-soft); font-weight: 500; }
+  @media (prefers-reduced-motion: reduce) { .mark.shared .halo { animation: none; } }
+  .hold { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .modes { display: none; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%;
+    padding-top: 10px; border-top: 1px dashed var(--line); }
+  .modes.open { display: flex; }
+  .modes span { color: var(--ink-soft); font-size: .95rem; margin-right: 4px; }
+  .modes button { min-width: 64px; justify-content: center; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid currentColor; }
+  button[aria-pressed="true"] .dot { background: currentColor; }
+  #diagram.hide-info .info { display: none; }
+  .sep { width: 2px; align-self: stretch; background: var(--line); margin: 0 4px; }
+  .roller .sel { opacity: 0; transition: opacity .15s; }
+  .roller.active .sel { opacity: 1; }
+
+  aside {
+    background: var(--panel); border: 2px solid var(--line); border-radius: 6px;
+    padding: 20px; align-self: start; position: sticky; top: calc(20px + env(safe-area-inset-top, 0px));
+  }
+  .empty { color: var(--ink-soft); line-height: 1.5; margin: 0; }
+  .tag {
+    font: 700 3.4rem/1 "Barlow Condensed", "Arial Narrow", sans-serif; margin: 0 0 4px;
+  }
+  .kind { color: var(--ink-soft); margin: 0 0 18px; }
+  dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: center; }
+  dt { color: var(--ink-soft); font-size: .95rem; }
+  dd { margin: 0; font-weight: 600; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; }
+  .swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink); flex: none; }
+  .note {
+    margin: 18px 0 0; padding: 12px; border-left: 4px solid var(--safety);
+    background: color-mix(in srgb, var(--safety) 12%, transparent); line-height: 1.45; font-size: .95rem;
+  }
+
+  .leftcol { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  .diag { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 20px; }
+  .diag h2 { font: 700 1.6rem/1.1 "Barlow Condensed", "Arial Narrow", sans-serif; margin: 0 0 6px; }
+  .diag h3 { font: 600 1.15rem "Barlow Condensed", "Arial Narrow", sans-serif; margin: 22px 0 8px; }
+  .hint { color: var(--ink-soft); line-height: 1.45; margin: 0 0 14px; max-width: 70ch; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .fields label { display: flex; flex-direction: column; gap: 6px; font-size: .95rem; color: var(--ink-soft); }
+  .fields input {
+    font: 600 1.2rem "Barlow", Arial, sans-serif; color: var(--ink); background: transparent;
+    border: 2px solid var(--line); border-radius: 4px; padding: 9px 10px; width: 100%;
+  }
+  .fields input:focus-visible { outline: 3px solid var(--safety); outline-offset: 1px; border-color: var(--ink); }
+  details { margin-bottom: 14px; }
+  summary { cursor: pointer; color: var(--ink-soft); margin-bottom: 12px; }
+  button.primary { background: var(--ink); color: var(--panel); border-color: var(--ink); padding: 12px 22px; font-size: 1.1rem; }
+  .summary { margin: 18px 0 0; line-height: 1.5; }
+  .causes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .cause {
+    width: 100%; display: grid; grid-template-columns: 5.2rem 1fr auto; gap: 14px; align-items: start;
+    text-align: left; font: inherit; color: var(--ink); background: transparent;
+    border: 2px solid var(--line); border-radius: 4px; padding: 12px;
+  }
+  .cause.exact { border-color: var(--safety); }
+  .cause .val { font: 700 1.5rem/1 "Barlow Condensed", "Arial Narrow", sans-serif; }
+  .cause .val small { display: block; font: 500 .8rem "Barlow", Arial, sans-serif; color: var(--ink-soft); margin-top: 4px; }
+  .cause strong { display: block; font-size: 1.05rem; }
+  .cause .why { display: block; margin-top: 2px; }
+  .cause .calc { display: block; margin-top: 4px; color: var(--ink-soft); font-size: .92rem; }
+  .cause .kind { display: inline-block; margin-top: 6px; font-size: .82rem; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--ink-soft); }
+  .cause .diff { font-weight: 700; white-space: nowrap; justify-self: start; }
+  .cause > span { display: block; min-width: 0; }
+  .cause.exact .diff { color: var(--ink); background: var(--safety); color: var(--safety-ink); padding: 2px 8px; border-radius: 10px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .gaptable { margin-top: 18px; }
+  .tablewrap { overflow-x: auto; border: 2px solid var(--line); border-radius: 4px; }
+  .gaptable table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: .95rem; }
+  .gaptable th, .gaptable td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .gaptable th { font: 600 1rem "Barlow Condensed", "Arial Narrow", sans-serif; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .gaptable td strong { display: block; }
+  .gaptable td small { color: var(--ink-soft); }
+  .gaptable .hit { color: #C0261B; font-weight: 700; }
+  .gaptable button { padding: 6px 10px; font-size: .9rem; white-space: nowrap; }
+  .impact-pulse { transform-box: fill-box; transform-origin: center; animation: impact 1.2s ease-out forwards; }
+  @keyframes impact { from { transform: scale(.6); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
+  .sheetmap { margin-top: 22px; padding-top: 6px; border-top: 1px solid var(--line); }
+  .sheetmap svg { margin: 6px 0 10px; max-width: 760px; }
+  .err { color: #C0261B; font-weight: 600; margin: 14px 0 0; }
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; padding: 12px; gap: 12px; }
+    .cause { grid-template-columns: 4.4rem 1fr; }
+    .cause .diff { grid-column: 2; }
+    .diag { padding: 16px; }
+    aside { position: static; }
+    #diagram { max-height: none; }
+    header { padding: 12px; }
+    h1 { font-size: 1.35rem; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 6px; }
+    .controls button { justify-content: center; padding: 8px 6px; font-size: .95rem; }
+    .sep { display: none; }
+    .speed { grid-column: span 2; }
+    .modes.open { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .modes span { grid-column: span 4; }
+    .speed input { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Esquema de rolaria</h1>
+  <div class="controls">
+    <button id="fwd" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg>
+      Girar para frente
+    </button>
+    <button id="back" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>
+      Girar para trás
+    </button>
+    <button id="stop">Parar</button>
+    <span class="sep" aria-hidden="true"></span>
+    <button id="ink" aria-pressed="true"><span class="dot"></span>Entintadores</button>
+    <button id="water" aria-pressed="true"><span class="dot"></span>Molha</button>
+    <button id="tom" aria-pressed="true"><span class="dot"></span>Tomador</button>
+    <button id="tint" aria-expanded="false" aria-controls="modes">Tintagem <span id="tintOut">1:2</span></button>
+    <button id="stripe" aria-pressed="false"><span class="dot"></span>Modo faixa</button>
+    <button id="manchas" aria-pressed="false"><span class="dot"></span>Manchas</button>
+    <button id="info" aria-pressed="true">Mostrar informações</button>
+    <label class="speed">Velocidade <input id="speed" type="range" min="60" max="700" value="320"></label>
+  </div>
+  <div class="modes" id="modes" role="group" aria-label="Modo de tintagem">
+    <span>Tintagem:</span>
+    <button data-mode="1:1" aria-pressed="false">1:1</button>
+    <button data-mode="1:2" aria-pressed="true">1:2</button>
+    <button data-mode="2:1" aria-pressed="false">2:1</button>
+    <button data-mode="2:2" aria-pressed="false">2:2</button>
+  </div>
+</header>
+
+<main>
+  <div class="leftcol">
+  <div class="sheet">
+    <svg id="diagram" class="hide-info" viewBox="150 25 730 965" role="img" aria-label="Esquema de rolos numerados"></svg>
+    <div class="jogbar">
+      <button id="jogF" class="hold" aria-pressed="false" title="Segure para girar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="3 3.2"><path d="M4 12a8 8 0 1 0 2.4-5.7"/></svg>
+      Picote para frente
+      </button>
+      <button id="jogB" class="hold" aria-pressed="false" title="Segure para girar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="3 3.2"><path d="M20 12a8 8 0 1 1-2.4-5.7"/></svg>
+      Picote para trás
+      </button>
+    </div>
+  </div>
+  <section class="diag" id="diag" hidden aria-labelledby="diagTitle">
+    <h2 id="diagTitle">Análise de manchas</h2>
+    <p class="hint">Informe as medidas a partir da borda frontal da folha. O cálculo usa os diâmetros do esquema e os contatos na posição atual da máquina (entintadores, molha e tintagem).</p>
+    <div class="fields">
+      <label>Comprimento da folha (mm)<input id="fLen" type="text" inputmode="decimal" value="750"></label>
+      <label>Altura da mancha (mm)<input id="fPos" type="text" inputmode="decimal" placeholder="ex.: 588"></label>
+      <label>Vario do molhador (%)<input id="fVario" type="text" inputmode="decimal" value="0"></label>
+    </div>
+    <details>
+      <summary>Bordas da imagem e da chapa</summary>
+      <div class="fields">
+        <label>Início do contato com a chapa (mm)<input id="fC1" type="text" inputmode="decimal" value="10"></label>
+        <label>Borda frontal da imagem (mm)<input id="fImgF" type="text" inputmode="decimal" value="10"></label>
+        <label>Borda traseira da imagem (mm)<input id="fImgR" type="text" inputmode="decimal" placeholder="automático"></label>
+        <label>Fim do contato com a chapa (mm)<input id="fC4" type="text" inputmode="decimal" value="749,4"></label>
+      </div>
+      <p class="hint">Padrões da tabela Heidelberg da XL 106: contato de 10 a 749,4 mm, circunferência da chapa 973,4 mm. Sem valor, a borda traseira da imagem fica 5 mm antes do fim da folha (no máximo 744,4 mm).</p>
+    </details>
+    <div class="actions">
+      <button id="diagBtn" class="primary">Diagnosticar</button>
+      <button id="tableBtn" aria-expanded="false" aria-controls="gapTable">Tabela</button>
+    </div>
+    <div id="gapTable" class="gaptable" hidden></div>
+    <div id="diagOut" aria-live="polite"></div>
+    <div id="sheetMap" class="sheetmap"></div>
+  </section>
+  </div>
+  <aside id="panel" aria-live="polite">
+    <p class="empty">Toque em um rolo para ver o diâmetro, a cor e os contatos. Toque de novo nele, ou fora dos rolos, para desmarcar.</p>
+  </aside>
+</main>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("diagram");
+
+const K = 1.25;              // unidades de desenho por mm de diâmetro (r = d·K/2)
+const PLATE_GAP = 3 * K;     // folga de 3 mm ao desencostar do cilindro de chapa
+const DUCTOR_GAP = 12;       // curso do tomador entre o A e o ductor
+const TOUCH = 0.6;           // tolerância para considerar dois rolos encostados
+
+// Cores reais dos rolos (fixas, independem do tema)
+const C = {
+  roxo: "#6B2FA0", branco: "#FFFFFF", amarelo: "#F5E400", verde: "#0FA84A",
+  vermelho: "#E30613", azul: "#0B66C2", cinza: "#6D6D6D", cinzaClaro: "#CFCFCF"
+};
+
+// Posições com o tomador no A, tintagem e molha ligadas (todos os contatos tangentes)
+const rollers = [
+  { id: "ductor", name: "Ductor", x: 615.55, y: 111.09, r: 68.75, d: 110, fill: C.branco, stroke: "#333", tc: "#13304D", cor: "Branco" },
+  { id: "chapa", name: "Cilindro de chapa", x: 400.0, y: 760.0, r: 193.75, d: 310, fill: C.branco, stroke: "#333", tc: "#13304D", cor: "Não informada",
+    note: ["Sem o cromado = 5mm", "Com o cromado = 6mm"],
+    // Boca do cilindro (gap) da XL 106: 230 mm numa circunferência de 973,4 mm
+    gapMm: 230, circMm: 973.4, gapAt: 135 },
+  { id: "11", kind: "Tomador", x: 667.77, y: 213.51, r: 45.0, d: 72, fill: C.roxo, ring: true, tc: "#fff", sub: "Tomador", cor: "Roxo" },
+  { id: "13", x: 829.93, y: 222.31, r: 51.25, d: 82, fill: C.branco, ring: true, tc: "#111", sub: "Branco", cor: "Branco" },
+  { id: "A", x: 680.42, y: 316.05, r: 58.31, d: 93.3, fill: C.cinza, stroke: "#3d3d3d", tc: "#fff", cor: "Cinza" },
+  { id: "12", x: 810.25, y: 311.41, r: 40.0, d: 64, fill: C.amarelo, stroke: "#444", tc: "#111", cor: "Amarelo" },
+  { id: "10", x: 761.83, y: 386.54, r: 49.38, d: 79, fill: C.verde, ring: true, tc: "#fff", sub: "Verde", cor: "Verde" },
+  { id: "8", x: 293.72, y: 375.06, r: 45.62, d: 73, fill: C.vermelho, ring: true, tc: "#fff", sub: "Vermelho", cor: "Vermelho" },
+  { id: "7", x: 465.1, y: 391.71, r: 51.25, d: 82, fill: C.branco, ring: true, tc: "#13304D", sub: "Branco", cor: "Branco" },
+  { id: "D", x: 370.93, y: 436.42, r: 53.0, d: 84.8, fill: C.cinza, stroke: "#3d3d3d", tc: "#fff", cor: "Cinza" },
+  { id: "5", kind: "Posição tracejada no esquema", x: 649.4, y: 438.57, r: 38, fill: "none", dashed: true, tc: "#8a8a8a", cor: "Não informada" },
+  { id: "6", x: 540.89, y: 467.95, r: 56.25, d: 90, fill: C.azul, stroke: "#083D80", tc: "#fff", cor: "Azul" },
+  { id: "E", x: 242.93, y: 459.6, r: 53.0, d: 84.8, fill: C.cinza, stroke: "#3d3d3d", tc: "#fff", cor: "Cinza" },
+  { id: "B", x: 734.46, y: 485.19, r: 53.0, d: 84.8, fill: C.cinza, stroke: "#3d3d3d", tc: "#fff", cor: "Cinza" },
+  { id: "3", x: 335.05, y: 528.95, r: 46.25, d: 74, fill: C.vermelho, ring: true, tc: "#fff", sub: "Vermelho", cor: "Vermelho" },
+  { id: "2", x: 441.98, y: 516.09, r: 53.75, d: 86, fill: C.azul, ring: true, tc: "#fff", sub: "Azul", cor: "Azul" },
+  { id: "4", x: 221.54, y: 574.37, r: 63.75, d: 102, fill: C.amarelo, ring: true, tc: "#13304D", sub: "Amarelo", cor: "Amarelo" },
+  { id: "1", x: 556.42, y: 573.06, r: 50.0, d: 80, fill: C.branco, ring: true, tc: "#13304D", sub: "Branco", cor: "Branco" },
+  { id: "9", x: 746.45, y: 583.08, r: 45.62, d: 73, fill: C.vermelho, ring: true, tc: "#fff", sub: "Vermelho", cor: "Vermelho" },
+  { id: "C", x: 652.0, y: 611.45, r: 53.0, d: 84.8, fill: C.cinza, stroke: "#3d3d3d", tc: "#fff", cor: "Cinza", diamBelow: true },
+  { id: "16", x: 733.11, y: 673.72, r: 40.0, d: 64, fill: C.branco, stroke: "#444", tc: "#111", cor: "Branco" },
+  { id: "14", x: 648.34, y: 721.89, r: 57.5, d: 92, fill: C.verde, ring: true, tc: "#fff", sub: "Verde", cor: "Verde" },
+  { id: "17", kind: "Cromado", x: 748.02, y: 774.05, r: 55.0, d: 88, fill: C.branco, stroke: "#444", tc: "#111", sub: "Cromado", cor: "Branco" },
+  { id: "F", x: 647.98, y: 833.01, r: 53.62, d: 85.8, fill: C.cinzaClaro, stroke: "#555", tc: "#111", cor: "Cinza claro", diamBelow: true },
+  { id: "15", x: 760.17, y: 878.34, r: 50.0, d: 80, fill: C.branco, ring: true, tc: "#111", cor: "Branco", base: true }
+];
+// Modo Manchas: cilindros de blanqueta e de impressão abaixo da chapa (representação dos slides:
+// mesmo diâmetro e mesma boca da chapa, já que os valores reais não foram informados)
+rollers.push(
+  { id: "blanqueta", name: "Cilindro de blanqueta", r: 193.75, fill: "#009A44", stroke: "#00652C", tc: "#FFFFFF",
+    cor: "Verde (representação)", gapMm: 230, circMm: 973.4, assumed: true, follow: -1, manchas: true },
+  { id: "impressao", name: "Cilindro de impressão", r: 193.75, fill: "#0B3D6E", stroke: "#06284A", tc: "#FFFFFF",
+    cor: "Azul-marinho (representação)", gapMm: 230, circMm: 973.4, assumed: true, follow: 1, manchas: true }
+);
+const R = Object.fromEntries(rollers.map(o => [o.id, o]));
+{
+  // blanqueta logo abaixo da chapa, impressão logo abaixo da blanqueta, levemente para a esquerda
+  const P = R.chapa, B = R.blanqueta, I = R.impressao;
+  const PHI = 95, PSI = 100; // direção chapa→blanqueta e blanqueta→impressão (graus)
+  const at = (o, from, deg) => {
+    const a = deg * Math.PI / 180, L = from.r + o.r;
+    o.x = from.x + Math.cos(a) * L; o.y = from.y + Math.sin(a) * L;
+  };
+  at(B, P, PHI); at(I, B, PSI);
+  // bocas sincronizadas: as bocas da chapa e da blanqueta chegam juntas ao contato entre elas,
+  // e as da blanqueta e da impressão chegam juntas ao contato entre elas
+  B.gapAt = 2 * PHI + 180 - P.gapAt;
+  I.gapAt = 2 * PSI + 180 - B.gapAt;
+}
+// Momentos de impacto entre cilindros, na coordenada x = ponto do papel que está
+// no contato blanqueta–impressão (mm a partir da borda frontal)
+const CYL_C = 973.4, CYL_SURF = 973.4 - 230;   // circunferência e superfície útil (sem a boca)
+const deg = (a, b) => Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+const mod = (v, m) => ((v % m) + m) % m;
+const NIP = {
+  PB: deg(R.chapa, R.blanqueta),      // direção do contato chapa–blanqueta vista da chapa
+  BP: deg(R.blanqueta, R.chapa),
+  BI: deg(R.blanqueta, R.impressao),
+  IB: deg(R.impressao, R.blanqueta)   // direção do contato blanqueta–impressão vista da impressão
+};
+// percurso da superfície da blanqueta do contato com a chapa até o contato com a impressão (gira no sentido horário)
+const BLANKET_TRAVEL = mod(NIP.BI - NIP.BP, 360) / 360 * CYL_C;
+function impactEvents(L) {
+  return [
+    { code: "A1", where: "bi", x: 0, text: "Início da pressão entre impressão e blanqueta (saída da boca)" },
+    { code: "E1", where: "bi", x: CYL_SURF, text: "Fim da pressão entre impressão e blanqueta (entrada da boca)" },
+    { code: "Papel", where: "bi", x: Math.min(L, CYL_C), text: "Fim do papel: a borda traseira sai do contato blanqueta–impressão" },
+    { code: "A2", where: "pb", x: mod(-BLANKET_TRAVEL, CYL_C), text: "Início da pressão entre blanqueta e chapa (saída da boca)" },
+    { code: "E2", where: "pb", x: mod(CYL_SURF - BLANKET_TRAVEL, CYL_C), text: "Fim da pressão entre blanqueta e chapa (entrada da boca)" }
+  ];
+}
+// ponto do papel que está no contato blanqueta–impressão agora
+function sheetX() {
+  const I = R.impressao, a2 = gapAngles(I).a2 * 180 / Math.PI;
+  return mod(NIP.IB - (a2 + I.angle), 360) / 360 * CYL_C;
+}
+let manchasOn = false;
+const isOff = o => o.manchas && !manchasOn;
+const isLetter = id => /^[A-Z]$/.test(id);
+
+// Etiquetas de ajuste, presas ao par de rolos (acompanham o movimento)
+const tags = [
+  { t: "3,5", x: 606, y: 168, a: "ductor", b: "11" },
+  { t: "3,5T", x: 620.2, y: 257.1, a: "11", b: "A" },
+  { t: "5F", f: 1, x: 417.5, y: 465.3, a: "2", b: "D" },
+  { t: "5T", f: 0.25, x: 337.3, y: 483.4, a: "3", b: "D" },
+  { t: "5T", f: 0.5, x: 228.1, y: 509.1, a: "E", b: "4" },
+  { t: "4", f: 0.25, x: 352.7, y: 583.6, a: "3", b: "chapa" },
+  { t: "4", f: 0.25, x: 450.7, y: 579.7, a: "2", b: "chapa" },
+  { t: "4", f: 0.25, x: 545.3, y: 623.4, a: "1", b: "chapa" },
+  { t: "4", f: 0.25, x: 285.2, y: 623.2, a: "4", b: "chapa" },
+  { t: "5T", f: 1, x: 614.3, y: 572.9, a: "1", b: "C" },
+  { t: "5F", f: 0.5, x: 638.1, y: 661.2, a: "C", b: "14" },
+  { t: "5-6", f: 0.25, x: 556.6, y: 725.4, big: true, a: "14", b: "chapa" },
+  { t: "4", f: 0.5, x: 693.9, y: 707.8, a: "14", b: "16" },
+  { t: "8T", f: 0.5, x: 708.8, y: 746.3, a: "14", b: "17" },
+  { t: "7T", f: 0.5, x: 636.3, y: 780.3, a: "14", b: "F" }
+];
+
+/* ---------- Geometria ---------- */
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+rollers.forEach(o => { o.bx = o.x; o.by = o.y; });
+
+// Ductor afastado levemente do 11; o tomador vai do A (s=0) até o ductor (s=1)
+{
+  const t = R["11"], dc = R.ductor, L = dist(t, dc);
+  const ux = (dc.x - t.x) / L, uy = (dc.y - t.y) / L;
+  dc.bx = dc.x = t.x + ux * (t.r + dc.r + DUCTOR_GAP); dc.by = dc.y = t.y + uy * (t.r + dc.r + DUCTOR_GAP);
+  t.atA = { x: t.x, y: t.y };
+  t.atDuctor = { x: t.x + ux * DUCTOR_GAP, y: t.y + uy * DUCTOR_GAP };
+}
+
+// Rolo que gira em torno de um distribuidor fixo até ficar a PLATE_GAP do cilindro de chapa
+function makePivot(id, pivotId) {
+  const o = R[id], p = R[pivotId], cyl = R.chapa;
+  const rho = dist(o, p), phi0 = Math.atan2(o.by - p.y, o.bx - p.x);
+  const f = phi => Math.hypot(p.x + rho * Math.cos(phi) - cyl.x, p.y + rho * Math.sin(phi) - cyl.y);
+  const target = o.r + cyl.r + PLATE_GAP;
+  const sign = f(phi0 + 1e-3) > f(phi0 - 1e-3) ? 1 : -1;
+  let lo = 0, hi = 0.5;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    if (f(phi0 + sign * mid) < target) lo = mid; else hi = mid;
+  }
+  return { o, p, rho, phi0, dphi: sign * hi };
+}
+function placePivot(pv, t) {
+  const phi = pv.phi0 + pv.dphi * t;
+  pv.o.x = pv.p.x + pv.rho * Math.cos(phi);
+  pv.o.y = pv.p.y + pv.rho * Math.sin(phi);
+}
+// Centro de um rolo a uma distância exata de outros dois (encostado ou com folga ga/gb),
+// escolhendo a solução mais próxima da posição original
+function tangentTo(a, b, o, ga = 0, gb = 0) {
+  const r1 = a.r + o.r + ga, r2 = b.r + o.r + gb, d = dist(a, b);
+  const l = (r1 * r1 - r2 * r2 + d * d) / (2 * d), h = Math.sqrt(Math.max(0, r1 * r1 - l * l));
+  const mx = a.x + (b.x - a.x) * l / d, my = a.y + (b.y - a.y) * l / d;
+  const nx = -(b.y - a.y) / d, ny = (b.x - a.x) / d;
+  const c1 = { x: mx + nx * h, y: my + ny * h }, c2 = { x: mx - nx * h, y: my - ny * h };
+  const near = { x: o.bx, y: o.by };
+  const c = dist(c1, near) < dist(c2, near) ? c1 : c2;
+  o.x = c.x; o.y = c.y;
+}
+
+const GAP_16_17 = dist(R["16"], R["17"]) - R["16"].r - R["17"].r;
+const inkPivots = [makePivot("1", "C"), makePivot("2", "D"), makePivot("3", "D"), makePivot("4", "E")];
+
+// inkT: entintadores afastados da chapa · waterT: 14 afastado da chapa
+// sep61T: 6 afastado do 1 · sep14T: 14 afastado do C · tomS: 0 no A, 1 no ductor
+function layout(inkT, waterT, tomS, sep61T = 0, sep14T = 0) {
+  // Entintadores: 1–4 giram nos distribuidores; 1 e 2 empurram o 6, que empurra o 7
+  inkPivots.forEach(pv => placePivot(pv, inkT));
+  tangentTo(R["1"], R["2"], R["6"], PLATE_GAP * sep61T, 0);
+  tangentTo(R.D, R["6"], R["7"]);
+  // Molhador 14: posição definida pela distância à chapa (Molha) e ao C (Tintagem)
+  tangentTo(R.chapa, R.C, R["14"], PLATE_GAP * waterT, PLATE_GAP * sep14T);
+  // F acompanha o 14; 17 continua entre o 14 e o 15
+  const dx = R["14"].x - R["14"].bx, dy = R["14"].y - R["14"].by;
+  ["F"].forEach(id => { R[id].x = R[id].bx + dx; R[id].y = R[id].by + dy; });
+  // com a molha desligada, o 17 também se afasta do 14 (continua no 15)
+  tangentTo(R["14"], R["15"], R["17"], PLATE_GAP * waterT, 0);
+  // 16 fica encostado só no 14, mantendo a folga original até o 17
+  tangentTo(R["14"], R["17"], R["16"], 0, GAP_16_17);
+  // Tomador
+  const t = R["11"];
+  t.x = t.atA.x + (t.atDuctor.x - t.atA.x) * tomS;
+  t.y = t.atA.y + (t.atDuctor.y - t.atA.y) * tomS;
+}
+
+function contactsOf(o) {
+  return rollers.filter(q => q !== o && !q.dashed && !o.dashed && !isOff(q) && !isOff(o) && dist(o, q) <= o.r + q.r + TOUCH);
+}
+const nameOf = o => o.name || (o.kind && o.kind !== "Posição tracejada no esquema" ? `${o.id} (${o.kind.toLowerCase()})` : o.id);
+
+/* ---------- Desenho ---------- */
+function el(tag, attrs, parent) {
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+function txt(parent, str, attrs) {
+  const t = el("text", Object.assign({ "text-anchor": "middle", "dominant-baseline": "central",
+    "font-family": "Barlow, Arial, sans-serif" }, attrs), parent);
+  t.textContent = str;
+  return t;
+}
+const fmt = n => n.toLocaleString("pt-BR");
+
+const feedLine = el("polyline", { fill: "none", stroke: "#111", "stroke-width": 2.5 }, svg);
+{ // linhas de entrada tangentes ao ductor
+  const ax = 355, ay = 62, c = R.ductor;
+  const d = Math.hypot(c.x - ax, c.y - ay), base = Math.atan2(c.y - ay, c.x - ax);
+  const a = Math.asin(c.r / d), L = Math.sqrt(d * d - c.r * c.r);
+  const p = t => `${(ax + L * Math.cos(base + t)).toFixed(2)},${(ay + L * Math.sin(base + t)).toFixed(2)}`;
+  feedLine.setAttribute("points", `${p(-a)} ${ax},${ay} ${p(a)}`);
+}
+
+// Cilindro de chapa com a boca: o corpo gira junto com as marcas
+function gapAngles(o) {
+  const span = (o.gapMm / o.circMm) * Math.PI * 2;      // ≈ 85°
+  const c = o.gapAt * Math.PI / 180;
+  return { c, a1: c - span / 2, a2: c + span / 2, span };
+}
+function inGap(o, a) {
+  const { c, span } = gapAngles(o);
+  const d = Math.atan2(Math.sin(a - c), Math.cos(a - c));
+  return Math.abs(d) < span / 2 + 0.04;
+}
+function drawGapBody(o) {
+  const { c, a1, a2 } = gapAngles(o), r = o.r;
+  const pt = (rad, a) => `${(Math.cos(a) * rad).toFixed(2)},${(Math.sin(a) * rad).toFixed(2)}`;
+  // superfície: arco longo de a2 até a1; boca: paredes curtas e recuo em V
+  el("path", { d: `M${pt(r, a2)} A${r},${r} 0 1 1 ${pt(r, a1)} L${pt(r * 0.94, a1)} L${pt(r * 0.6, c)} L${pt(r * 0.94, a2)} Z`,
+    fill: o.fill, stroke: o.stroke, "stroke-width": 2.5, "stroke-linejoin": "round" }, o.rot);
+  // chapa (faixa cinza) presa sobre a superfície, interrompida na boca
+  if (o.assumed) return;
+  const rp = r - 4;
+  el("path", { d: `M${pt(rp, a2 + 0.03)} A${rp},${rp} 0 1 1 ${pt(rp, a1 - 0.03)}`,
+    fill: "none", stroke: "#A7B0B8", "stroke-width": 5 }, o.rot);
+  const lab = el("text", { class: "info", "text-anchor": "middle", "dominant-baseline": "central", fill: "#4B6177",
+    "font-family": "Barlow, Arial, sans-serif", "font-size": 13, "font-weight": 600,
+    transform: `translate(${pt(r * 0.8, c)}) rotate(${(c * 180 / Math.PI + 90).toFixed(1)})` }, o.rot);
+  lab.textContent = `Boca ${o.gapMm} mm`;
+}
+
+function drawRoller(o) {
+  if (o.base) o.baseRect = el("rect", { width: 174, height: 53, fill: "#00AEEF" }, svg);
+  const g = el("g", { class: "roller", tabindex: 0, role: "button",
+    "aria-label": (o.name || `Rolo ${o.id}`) + (o.d ? `, diâmetro ${fmt(o.d)} mm` : "") }, svg);
+  o.el = g;
+  el("circle", { class: "sel", r: o.r + 7, fill: "none", stroke: "#F2C230", "stroke-width": 5 }, g);
+  if (o.ring) {
+    el("circle", { r: o.r, fill: "#000" }, g);
+    el("circle", { r: o.r - 10, fill: o.fill }, g);
+  } else if (!o.gapMm) {
+    el("circle", { r: o.r, fill: o.dashed ? "rgba(255,255,255,0.01)" : o.fill,
+      stroke: o.dashed ? "#9a9a9a" : o.stroke, "stroke-width": o.dashed ? 3 : 2.5,
+      "stroke-dasharray": o.dashed ? "7 6" : "" }, g);
+  }
+  el("circle", { class: "hl", r: o.r, fill: "none", stroke: "#FF8A00" }, g);
+  // Marcas na borda que mostram a rotação
+  o.rot = el("g", {}, g); o.angle = 0;
+  if (o.gapMm) drawGapBody(o);
+  const n = o.r > 100 ? 24 : 8, outer = o.ring ? o.r - 2 : o.r - 3;
+  const inner = o.ring ? o.r - 8 : o.r - (o.r > 100 ? 14 : 9);
+  const light = o.fill === C.branco || o.fill === C.amarelo || o.fill === C.cinzaClaro || o.dashed;
+  const tick = o.ring ? "rgba(255,255,255,.85)" : light ? "rgba(0,0,0,.45)" : "rgba(255,255,255,.6)";
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    if (o.gapMm && inGap(o, a)) continue;
+    el("line", { x1: Math.cos(a) * inner, y1: Math.sin(a) * inner, x2: Math.cos(a) * outer, y2: Math.sin(a) * outer,
+      stroke: tick, "stroke-width": i === 0 ? 4 : 2, "stroke-linecap": "round" }, o.rot);
+  }
+  if (o.name) {
+    txt(g, o.name, { fill: o.tc, "font-weight": 600, "font-size": o.r > 100 ? 22 : 18 });
+    if (o.d) txt(g, "Ø" + o.d, { class: "info", y: o.r > 100 ? -32 : 24, fill: o.tc, opacity: .9, "font-size": o.r > 100 ? 15 : 13 });
+  } else {
+    const big = isLetter(o.id) ? o.r * 0.62 : o.r * (o.id.length > 1 ? 0.55 : 0.68);
+    txt(g, o.id, { fill: o.tc, "font-weight": 700, "font-size": big });
+    if (o.d) txt(g, "Ø" + o.d, { class: "info", y: o.diamBelow ? o.r * 0.58 : -o.r * 0.56, fill: o.tc, opacity: .9, "font-size": 12.5 });
+    if (o.sub) txt(g, o.sub, { class: "info", y: o.r * 0.58, fill: o.tc, "font-size": 11 });
+  }
+  if (o.note) o.note.forEach((s, i) => txt(g, s, { class: "info", y: 40 + i * 19, fill: "#13304D", "font-size": 13 }));
+
+  g.addEventListener("click", () => select(o));
+  g.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(o); }
+  });
+}
+rollers.forEach(drawRoller);
+function applyManchas() {
+  rollers.forEach(o => { if (o.manchas) o.el.style.display = manchasOn ? "" : "none"; });
+  svg.setAttribute("viewBox", manchasOn ? "95 25 785 1705" : "150 25 730 965");
+  document.body.classList.toggle("manchas", manchasOn);
+  document.getElementById("diag").hidden = !manchasOn;
+}
+applyManchas();
+
+function pie(cx, cy, f, parent) {
+  const r = 7.5;
+  el("circle", { cx, cy, r, fill: "#fff", stroke: "#E30613", "stroke-width": 1.8 }, parent);
+  if (f >= 1) { el("circle", { cx, cy, r, fill: "#E30613" }, parent); return; }
+  const a = f * Math.PI * 2 - Math.PI / 2;
+  el("path", { d: `M${cx},${cy} L${cx},${cy - r} A${r},${r} 0 ${f > .5 ? 1 : 0} 1 ${cx + r * Math.cos(a)},${cy + r * Math.sin(a)} Z`, fill: "#E30613" }, parent);
+}
+function contactFrame(a, b) {
+  const d = dist(a, b), ux = (b.x - a.x) / d, uy = (b.y - a.y) / d;
+  return { cx: a.x + ux * a.r, cy: a.y + uy * a.r, ux, uy, nx: -uy, ny: ux };
+}
+const tagLayer = el("g", { class: "info", "pointer-events": "none" }, svg);
+tags.forEach(t => {
+  t.A = R[t.a]; t.B = R[t.b];
+  const f = contactFrame(t.A, t.B), ox = t.x - f.cx, oy = t.y - f.cy;
+  t.ou = ox * f.ux + oy * f.uy; t.on = ox * f.nx + oy * f.ny;
+  t.g = el("g", {}, tagLayer);
+  const fs = t.big ? 22 : 16, w = t.t.length * fs * 0.56 + (t.f ? fs + 6 : 0) + 14, h = fs + 10;
+  el("rect", { x: -w / 2, y: -h / 2, width: w, height: h, fill: "#fff", stroke: t.big ? "#E30613" : "#0B2A3C", "stroke-width": 2.2 }, t.g);
+  const tx = el("text", { x: -w / 2 + 7, y: fs * 0.35, fill: "#E30613", "font-family": "Barlow, Arial, sans-serif", "font-weight": 500, "font-size": fs }, t.g);
+  tx.textContent = t.t;
+  if (t.f) pie(w / 2 - 7 - fs / 2 + 1, 0, t.f, t.g);
+});
+
+let stripeDots = [];
+function placeStripeDots() {
+  stripeDots.forEach(d => d.remove()); stripeDots = [];
+  for (let i = 0; i < rollers.length; i++) for (let j = i + 1; j < rollers.length; j++) {
+    const a = rollers[i], b = rollers[j];
+    if (a.dashed || b.dashed || isOff(a) || isOff(b) || dist(a, b) > a.r + b.r + TOUCH) continue;
+    [[a, b], [b, a]].forEach(([o, q]) => {
+      const ang = Math.atan2(q.y - o.y, q.x - o.x) - o.angle * Math.PI / 180;
+      const rr = o.ring ? o.r - 5 : o.r - 9, big = o.r > 100 ? 1.2 : 1;
+      const m = el("g", { class: "mark", transform: `translate(${(Math.cos(ang) * rr).toFixed(2)} ${(Math.sin(ang) * rr).toFixed(2)})` }, o.rot);
+      el("circle", { class: "halo", r: 10 * big, fill: "none", stroke: "#FF8A00", "stroke-width": 3 }, m);
+      el("circle", { r: 8.5 * big, fill: "none", stroke: "#fff", "stroke-width": 2 }, m);
+      el("circle", { r: 6 * big, fill: o.fill, stroke: "#111", "stroke-width": 2.5 }, m);
+      m.owner = o; m.partner = q; m.ang = ang; m.rr = rr;
+      stripeDots.push(m);
+    });
+  }
+}
+
+// Contato entre rolos selecionados: linha entre as duas marcas do par, com o nome do par
+const pairLayer = el("g", { "pointer-events": "none" }, svg);
+let pairs = [];
+function markPos(m) {
+  const a = m.ang + m.owner.angle * Math.PI / 180;
+  return { x: m.owner.x + Math.cos(a) * m.rr, y: m.owner.y + Math.sin(a) * m.rr };
+}
+// Par destacado: os dois rolos selecionados, ou um contato com o cilindro de chapa
+// em que qualquer um dos lados esteja selecionado
+function pairShown(m) {
+  const a = picked.has(m.owner), b = picked.has(m.partner);
+  const plate = m.owner.id === "chapa" || m.partner.id === "chapa";
+  return (a && b) || (plate && (a || b));
+}
+function updateStripeVisibility() {
+  stripeDots.forEach(m => {
+    const shown = picked.size > 0 && pairShown(m);
+    m.style.display = picked.size === 0 || picked.has(m.owner) || shown ? "" : "none";
+    m.classList.toggle("shared", shown);
+  });
+  pairLayer.replaceChildren(); pairs = [];
+  stripeDots.forEach(m => {
+    if (!pairShown(m) || rollers.indexOf(m.owner) > rollers.indexOf(m.partner)) return;
+    const other = stripeDots.find(n => n.owner === m.partner && n.partner === m.owner);
+    const line = el("line", { stroke: "#FF8A00", "stroke-width": 3, "stroke-dasharray": "6 4", "stroke-linecap": "round" }, pairLayer);
+    const lab = el("g", {}, pairLayer);
+    const short = o => o.id === "chapa" ? "Chapa" : (o.name || o.id);
+    const name = `${short(m.owner)}–${short(m.partner)}`;
+    const w = name.length * 8.4 + 14;
+    el("rect", { x: -w / 2, y: -12, width: w, height: 24, rx: 4, fill: "#FF8A00" }, lab);
+    const t = el("text", { "text-anchor": "middle", "dominant-baseline": "central", fill: "#1d1200",
+      "font-family": "Barlow, Arial, sans-serif", "font-weight": 700, "font-size": 14 }, lab);
+    t.textContent = name;
+    pairs.push({ a: m, b: other, line, lab });
+  });
+  renderPairs();
+}
+function renderPairs() {
+  pairs.forEach(p => {
+    const A = markPos(p.a), B = markPos(p.b);
+    p.line.setAttribute("x1", A.x); p.line.setAttribute("y1", A.y);
+    p.line.setAttribute("x2", B.x); p.line.setAttribute("y2", B.y);
+    // etiqueta afastada do ponto médio, para fora dos dois rolos
+    const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+    const cx = (p.a.owner.x + p.b.owner.x) / 2, cy = (p.a.owner.y + p.b.owner.y) / 2;
+    let dx = mx - cx, dy = my - cy, L = Math.hypot(dx, dy);
+    if (L < 1) { dx = -(p.b.owner.y - p.a.owner.y); dy = p.b.owner.x - p.a.owner.x; L = Math.hypot(dx, dy); }
+    p.lab.setAttribute("transform", `translate(${(mx + dx / L * 26).toFixed(1)} ${(my + dy / L * 26).toFixed(1)})`);
+  });
+}
+
+function render() {
+  rollers.forEach(o => {
+    o.el.setAttribute("transform", `translate(${o.x.toFixed(2)} ${o.y.toFixed(2)})`);
+    o.rot.setAttribute("transform", `rotate(${o.angle.toFixed(2)})`);
+    if (o.baseRect) { o.baseRect.setAttribute("x", (o.x - 83).toFixed(2)); o.baseRect.setAttribute("y", (o.y + o.r).toFixed(2)); }
+  });
+  renderPairs();
+  tags.forEach(t => {
+    const f = contactFrame(t.A, t.B);
+    const x = f.cx + f.ux * t.ou + f.nx * t.on, y = f.cy + f.uy * t.ou + f.ny * t.on;
+    t.g.setAttribute("transform", `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
+  });
+}
+
+/* ---------- Estado da máquina ---------- */
+let runDir = 0;          // 1 = frente (anti-horário), -1 = trás (horário)
+let jogDir = 0;          // picote: só enquanto o botão estiver pressionado
+let inkOn = true, waterOn = true;
+let inkT = 0, waterT = 0; // 0 = encostado no cilindro de chapa, 1 = afastado
+let tomOn = true, tomS = 0, tomRev0 = 0;
+let mode = "1:2", sep61T = 0, sep14T = 0;
+// Tintagem: 1º número = 6 com o 1 (1 encostado, 2 afastado); 2º = 14 com o C (1 afastado, 2 encostado)
+const MODES = { "1:1": [0, 1], "1:2": [0, 0], "2:1": [1, 1], "2:2": [1, 0] };
+let plateRevs = 0;        // voltas acumuladas do cilindro de chapa
+
+// Ciclo do tomador, em voltas do cilindro de chapa
+const AT_A = 3, TRAVEL = 0.35, AT_DUCTOR = 1;
+const CYCLE = AT_A + TRAVEL + AT_DUCTOR + TRAVEL;
+const ease = x => x * x * (3 - 2 * x);
+function tomadorPos(revs) {
+  const p = revs % CYCLE;
+  if (p < AT_A) return 0;
+  if (p < AT_A + TRAVEL) return ease((p - AT_A) / TRAVEL);
+  if (p < AT_A + TRAVEL + AT_DUCTOR) return 1;
+  return 1 - ease((p - AT_A - TRAVEL - AT_DUCTOR) / TRAVEL);
+}
+const effDir = () => jogDir || runDir;
+
+/* ---------- Painel lateral ---------- */
+const panel = document.getElementById("panel");
+let selected = null, lastContacts = "", lastDir = "";
+
+function dirText() {
+  const d = effDir();
+  if (d === 0) return "Parado";
+  const s = d === 1 ? "para frente (anti-horário)" : "para trás (horário)";
+  return (jogDir ? "Picote " : "Girando ") + s;
+}
+function kindOf(o) {
+  if (o.name) return o.id === "chapa" ? "Cilindro" : "Rolo";
+  if (o.kind) return o.kind;
+  return isLetter(o.id) ? "Distribuidor (fixo)" : "Rolo numerado";
+}
+const EMPTY = `<p class="empty">Toque em um rolo para ver o diâmetro, a cor e os contatos. Toque de novo nele, ou fora dos rolos, para desmarcar.</p>`;
+const picked = new Set();       // rolos selecionados (vários só no modo faixa)
+const stripeOn = () => stripeDots.length > 0;
+function syncPicked() { rollers.forEach(o => o.el.classList.toggle("active", picked.has(o))); }
+function deselect() {
+  picked.clear(); selected = null; syncPicked();
+  panel.innerHTML = EMPTY;
+  updateStripeVisibility();
+  if (typeof drawSheet === "function") drawSheet(null);
+}
+svg.addEventListener("click", e => { if (!e.target.closest(".roller")) deselect(); });
+function select(o) {
+  if (stripeOn()) {
+    if (picked.has(o)) {
+      picked.delete(o);
+      if (!picked.size) { deselect(); return; }
+      o = [...picked].pop();
+    } else picked.add(o);
+  } else {
+    if (selected === o) { deselect(); return; }
+    picked.clear(); picked.add(o);
+  }
+  selected = o; syncPicked();
+  const title = o.name || o.id;
+  panel.innerHTML = `
+    <p class="tag" style="${o.name ? "font-size:2rem" : ""}">${title}</p>
+    <p class="kind">${kindOf(o)}</p>
+    <dl>
+      <dt>Diâmetro</dt><dd>${o.d ? "Ø " + fmt(o.d) + " mm" : "Não informado"}</dd>
+      ${o.gapMm && !o.assumed ? `<dt>Circunferência</dt><dd>${fmt(o.circMm)} mm</dd><dt>Boca (gap)</dt><dd>${o.gapMm} mm</dd>` : ""}
+      <dt>Cor</dt><dd>${o.cor !== "Não informada" ? `<span class="swatch" style="background:${o.dashed ? "transparent" : o.fill}"></span>` : ""}${o.cor}</dd>
+      <dt>Encosta em</dt><dd id="contOut"></dd>
+      <dt>Rotação</dt><dd id="dirOut"></dd>
+    </dl>
+    ${o.note ? `<p class="note">${o.note.join(" · ")}</p>` : ""}
+    <div class="multi" id="multiOut" hidden></div>`;
+  lastContacts = lastDir = "";
+  updatePanel();
+  updateStripeVisibility();
+  if (typeof drawSheet === "function") drawSheet(o);
+}
+function updatePanel() {
+  if (!selected) return;
+  const c = contactsOf(selected).map(nameOf).join(", ") || "Nenhum";
+  if (c !== lastContacts) { document.getElementById("contOut").textContent = c; lastContacts = c; }
+  const d = dirText();
+  if (d !== lastDir) { document.getElementById("dirOut").textContent = d; lastDir = d; }
+  const box = document.getElementById("multiOut");
+  if (picked.size > 1) {
+    const list = [...picked];
+    const between = [];
+    list.forEach((a, i) => list.slice(i + 1).forEach(b => { if (contactsOf(a).includes(b)) between.push(`${nameOf(a)} com ${nameOf(b)}`); }));
+    const html = `<strong>Selecionados</strong>${list.map(nameOf).join(", ")}
+      <strong style="margin-top:8px">Contatos entre eles</strong>${between.join("; ") || "Nenhum"}`;
+    if (box.dataset.html !== html) { box.innerHTML = html; box.dataset.html = html; }
+    box.hidden = false;
+  } else box.hidden = true;
+}
+
+/* ---------- Controles ---------- */
+const $ = id => document.getElementById(id);
+const speed = $("speed");
+function syncButtons() {
+  $("fwd").setAttribute("aria-pressed", runDir === 1);
+  $("back").setAttribute("aria-pressed", runDir === -1);
+  $("jogF").setAttribute("aria-pressed", jogDir === 1);
+  $("jogB").setAttribute("aria-pressed", jogDir === -1);
+  $("ink").setAttribute("aria-pressed", inkOn);
+  $("water").setAttribute("aria-pressed", waterOn);
+  $("tom").setAttribute("aria-pressed", tomOn);
+  $("stripe").setAttribute("aria-pressed", stripeDots.length > 0);
+  $("tintOut").textContent = mode;
+  document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
+}
+$("fwd").addEventListener("click", () => { runDir = runDir === 1 ? 0 : 1; syncButtons(); });
+$("back").addEventListener("click", () => { runDir = runDir === -1 ? 0 : -1; syncButtons(); });
+$("stop").addEventListener("click", () => { runDir = 0; jogDir = 0; syncButtons(); });
+$("ink").addEventListener("click", () => { inkOn = !inkOn; syncButtons(); });
+$("water").addEventListener("click", () => { waterOn = !waterOn; syncButtons(); });
+$("tom").addEventListener("click", () => {
+  tomOn = !tomOn;
+  if (tomOn) tomRev0 = plateRevs; // recomeça o ciclo com 3 voltas no A
+  syncButtons();
+});
+$("tint").addEventListener("click", () => {
+  const open = $("modes").classList.toggle("open");
+  $("tint").setAttribute("aria-expanded", open);
+});
+function flash(ids) {
+  ids.forEach(id => {
+    const o = R[id], g = o.el;
+    clearTimeout(o.flashTimer);
+    g.classList.remove("flash");
+    g.getBoundingClientRect();          // reinicia a animação
+    g.classList.add("flash");
+    o.flashTimer = setTimeout(() => g.classList.remove("flash"), 1000);
+  });
+}
+
+// Destaca os dois rolos sempre que um contato novo acontece (tomador, molhador,
+// cromado, entintadores na chapa, 6 com o 1 etc.)
+let prevContacts = null;
+function watchContacts() {
+  const now = new Set();
+  for (let i = 0; i < rollers.length; i++) for (let j = i + 1; j < rollers.length; j++) {
+    const a = rollers[i], b = rollers[j];
+    if (!a.dashed && !b.dashed && !isOff(a) && !isOff(b) && dist(a, b) <= a.r + b.r + TOUCH) now.add(a.id + "|" + b.id);
+  }
+  if (prevContacts) now.forEach(k => { if (!prevContacts.has(k)) flash(k.split("|")); });
+  prevContacts = now;
+}
+document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => {
+  const before = MODES[mode], after = MODES[b.dataset.mode], moved = [];
+  if (before[0] !== after[0]) moved.push("6", "7");               // 6 com o 1
+  if (before[1] !== after[1]) moved.push("14", "16", "17", "F");  // 14 com o C
+  mode = b.dataset.mode;
+  syncButtons();
+  flash(moved);
+}));
+$("manchas").addEventListener("click", () => {
+  manchasOn = !manchasOn;
+  if (!manchasOn && selected && selected.manchas) deselect();
+  applyManchas();
+  if (manchasOn) drawSheet(selected); else clearImpacts();
+  if (stripeDots.length) { placeStripeDots(); updateStripeVisibility(); }
+  $("manchas").setAttribute("aria-pressed", manchasOn);
+});
+$("stripe").addEventListener("click", () => {
+  if (stripeDots.length) {
+    stripeDots.forEach(d => d.remove()); stripeDots = [];
+    // fora do modo faixa, fica só um rolo selecionado
+    picked.clear(); if (selected) picked.add(selected); syncPicked();
+  } else placeStripeDots();
+  updateStripeVisibility();
+  syncButtons();
+});
+
+// Picote: gira só enquanto o botão estiver pressionado (mouse, toque ou teclado)
+function holdButton(btn, d) {
+  const start = e => { e.preventDefault(); jogDir = d; if (e.pointerId !== undefined) btn.setPointerCapture(e.pointerId); syncButtons(); };
+  const end = () => { if (jogDir === d) { jogDir = 0; syncButtons(); } };
+  btn.addEventListener("pointerdown", start);
+  ["pointerup", "pointercancel", "lostpointercapture", "blur"].forEach(ev => btn.addEventListener(ev, end));
+  btn.addEventListener("contextmenu", e => e.preventDefault());
+  btn.addEventListener("keydown", e => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); jogDir = d; syncButtons(); } });
+  btn.addEventListener("keyup", e => { if (e.key === " " || e.key === "Enter") end(); });
+}
+holdButton($("jogF"), 1);
+holdButton($("jogB"), -1);
+
+$("info").addEventListener("click", () => {
+  const hide = svg.classList.toggle("hide-info");
+  $("info").setAttribute("aria-pressed", hide);
+  $("info").textContent = hide ? "Mostrar informações" : "Ocultar informações";
+});
+
+/* ---------- Animação ---------- */
+const approach = (v, target, step) => v < target ? Math.min(target, v + step) : Math.max(target, v - step);
+let last = performance.now();
+function tick(now) {
+  const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
+  last = now;
+  // encostar/desencostar leva cerca de 0,4 s
+  inkT = approach(inkT, inkOn ? 0 : 1, dt / 0.4);
+  waterT = approach(waterT, waterOn ? 0 : 1, dt / 0.4);
+  sep61T = approach(sep61T, MODES[mode][0], dt / 0.4);
+  sep14T = approach(sep14T, MODES[mode][1], dt / 0.4);
+
+  const d = effDir();
+  if (d !== 0) {
+    const base = Number(speed.value); // graus/s de um rolo de raio 50
+    rollers.forEach(o => {
+      // mesma velocidade de superfície: rolos menores giram mais rápido
+      if (!o.follow) o.angle = (o.angle - d * base * (50 / o.r) * dt) % 360;
+    });
+    rollers.forEach(o => { if (o.follow) o.angle = o.follow * R.chapa.angle; });
+    plateRevs += base * (50 / R.chapa.r) * dt / 360;
+  }
+  tomS = approach(tomS, tomOn ? tomadorPos(plateRevs - tomRev0) : 0, dt / 0.25);
+  layout(inkT, waterT, tomS, sep61T, sep14T);
+  watchContacts();
+  trackImpacts();
+  render();
+  updatePanel();
+  requestAnimationFrame(tick);
+}
+/* ---------- Análise de manchas ---------- */
+const PLATE_CIRC = 973.4;   // circunferência da chapa XL 106 (mm)
+const TOL = 5;              // variação de leitura considerada (mm)
+// Listras de boca (gap streaks) da tabela Heidelberg XL 106, a partir da borda frontal
+const GAP_STREAKS = [
+  { code: "E2", mm: 165, text: "Fim da pressão entre blanqueta e chapa (E2)" },
+  { code: "E1", mm: 361, text: "Fim da pressão entre impressão e blanqueta (E1)" },
+  { code: "A2", mm: 400, text: "Início da pressão entre blanqueta e chapa (A2)" },
+  { code: "A1", mm: 594, text: "Início da pressão entre impressão e blanqueta (A1)" }
+];
+const num = id => {
+  const v = document.getElementById(id).value.trim().replace(",", ".");
+  return v === "" ? NaN : Number(v);
+};
+const mm = v => v.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const ord = k => k + "º giro";
+function roleName(o) {
+  if (o.id === "14") return "Rolo 14 (molhador)";
+  if (o.id === "17") return "Rolo 17 (cromado)";
+  if (o.id === "11") return "Rolo 11 (tomador)";
+  if (["1", "2", "3", "4"].includes(o.id)) return `Rolo ${o.id} (entintador)`;
+  if (isLetter(o.id)) return `Distribuidor ${o.id}`;
+  return `Rolo ${o.id}`;
+}
+
+// Só marcam o impresso os rolos que tocam a chapa (entintadores e molhador)
+// e os contatos entre cilindros (listras de boca). Os demais só transferem tinta/água.
+const FORM_ROLLERS = ["1", "2", "3", "4", "14"];
+const GAP_BY_CYL = { chapa: ["E2", "A2"], blanqueta: ["E2", "E1", "A2", "A1"], impressao: ["E1", "A1"] };
+
+function readParams() {
+  const L = num("fLen"), vario = num("fVario") || 0;
+  const c1 = num("fC1"), imgF = num("fImgF"), c4 = num("fC4");
+  let imgR = num("fImgR");
+  const Ls = L > 0 ? L : 750;
+  if (isNaN(imgR)) imgR = Math.min(Ls, isNaN(c4) ? Ls : c4) - 5;
+  return { L, Ls, pos: num("fPos"), vario, c1, imgF, imgR, c4 };
+}
+
+// Posições (mm a partir da borda frontal) onde um rolo de forma marca a folha
+function streaksFor(o, P, limit = 0) {
+  const isDamp = o.id === "14";
+  const circ = Math.PI * o.d * (isDamp ? 1 + P.vario / 100 : 1);
+  const circTxt = isDamp && P.vario ? `π × ${fmt(o.d)} × ${fmt(1 + P.vario / 100)} = ${mm(circ)} mm` : `π × ${fmt(o.d)} = ${mm(circ)} mm`;
+  const front = [], rear = [];
+  if (!isNaN(P.c1)) front.push({ at: P.c1, text: "Início do contato com a chapa, na saída da boca (causa 1)", short: "saída da boca" });
+  if (!isNaN(P.imgF)) front.push({ at: P.imgF, text: "Borda frontal da imagem (causa 2)", short: "borda frontal da imagem" });
+  if (!isNaN(P.imgR)) rear.push({ at: P.imgR, text: "Borda traseira da imagem (causa 3)", short: "borda traseira da imagem" });
+  if (!isNaN(P.c4)) rear.push({ at: P.c4, text: "Fim do contato com a chapa, na entrada da boca (causa 4)", short: "entrada da boca" });
+  const merge = list => list.reduce((acc, e) => {
+    const same = acc.find(x => Math.abs(x.at - e.at) < 0.05);
+    if (same) { same.text += " e " + e.text.charAt(0).toLowerCase() + e.text.slice(1); same.short += " e " + e.short; }
+    else acc.push({ ...e });
+    return acc;
+  }, []);
+  const out = [];
+  merge(front).forEach(e => {
+    for (let k = 1; ; k++) {
+      const v = e.at + k * circ;
+      if (v > P.Ls + limit) break;
+      out.push({ v, k, next: false, why: e.text, short: e.short,
+        calc: `${mm(e.at)} + ${k} × ${mm(circ)} = ${mm(v)} mm (circunferência ${circTxt})` });
+    }
+  });
+  merge(rear).forEach(e => {
+    for (let k = 1; k < 40; k++) {
+      const v = e.at + k * circ - PLATE_CIRC;
+      if (v > P.Ls + limit) break;
+      if (v < -limit) continue;
+      out.push({ v, k, next: true, why: e.text, short: e.short,
+        calc: `${mm(e.at)} + ${k} × ${mm(circ)} − ${mm(PLATE_CIRC)} = ${mm(v)} mm (circunferência ${circTxt})` });
+    }
+  });
+  return out.sort((x, y) => x.v - y.v);
+}
+
+function diagnose() {
+  const box = document.getElementById("diagOut");
+  const P = readParams(), L = P.L, pos = P.pos;
+  if (!(L > 0) || !(pos >= 0)) {
+    box.innerHTML = `<p class="err">Informe o comprimento da folha e a altura da mancha em mm.</p>`;
+    return;
+  }
+  if (pos > L) {
+    box.innerHTML = `<p class="err">A altura da mancha (${mm(pos)} mm) passa do comprimento da folha (${mm(L)} mm).</p>`;
+    return;
+  }
+  const found = [];
+  const off = [];
+  FORM_ROLLERS.forEach(id => {
+    const o = R[id];
+    if (!contactsOf(R.chapa).includes(o)) { off.push(roleName(o)); return; }
+    streaksFor(o, P, TOL).forEach(m => found.push({ o, v: m.v,
+      title: `${roleName(o)}: ${ord(m.k)}${m.next ? ", na folha seguinte" : ""}`, why: m.why, calc: m.calc,
+      kind: id === "14" ? "Molhador na chapa" : "Entintador na chapa", hop: 1 }));
+  });
+  GAP_STREAKS.forEach(g => found.push({ o: null, gap: g.code, v: g.mm, title: `Listra de boca ${g.code}`, why: g.text,
+    calc: `Valor fixo da XL 106: ${g.mm} mm`, kind: "Boca dos cilindros", hop: 0 }));
+
+  const hits = found.map(f => ({ ...f, d: f.v - pos }))
+    .filter(f => Math.abs(f.d) <= TOL + 1e-9)
+    .sort((a, b) => Math.abs(a.d) - Math.abs(b.d) || a.hop - b.hop);
+  const exact = hits.filter(h => Math.abs(h.d) <= 0.5), near = hits.filter(h => Math.abs(h.d) > 0.5);
+
+  const item = h => {
+    const ex = Math.abs(h.d) <= 0.5;
+    const diff = ex ? "exato" : (h.d > 0 ? "+" : "−") + mm(Math.abs(h.d)) + " mm";
+    return `<li><button class="cause${ex ? " exact" : ""}" ${h.o ? `data-roller="${h.o.id}"` : `data-gap="${h.gap}"`}>
+      <span class="val">${mm(h.v)}<small>mm</small></span>
+      <span><strong>${h.title}</strong><span class="why">${h.why}</span>
+        <span class="calc">${h.calc}</span><span class="kind">${h.kind}</span></span>
+      <span class="diff">${diff}</span></button></li>`;
+  };
+  const rollersHit = [...new Set(hits.filter(h => h.o).map(h => h.o))];
+  let html = `<p class="summary">Mancha a <strong>${mm(pos)} mm</strong> da borda frontal, numa folha de ${mm(L)} mm. Faixa analisada: ${mm(pos - TOL)} a ${mm(pos + TOL)} mm. `;
+  html += hits.length ? `${hits.length} ${hits.length === 1 ? "causa possível" : "causas possíveis"}${rollersHit.length ? `, envolvendo ${rollersHit.length} ${rollersHit.length === 1 ? "rolo" : "rolos"} (destacados no esquema)` : ""}. Toque numa causa para ver o rolo.</p>`
+    : `Nenhuma causa calculada nessa faixa.</p><p class="hint">Confira a medida a partir da borda frontal, o comprimento da folha e as posições de Entintadores, Molha e Tintagem. Também vale conferir o Vario do molhador e as bordas da imagem.</p>`;
+  if (off.length) html += `<p class="hint">Fora da análise por estarem afastados da chapa agora: ${off.join(", ")}.</p>`;
+  if (exact.length) html += `<h3>Valor exato</h3><ol class="causes">${exact.map(item).join("")}</ol>`;
+  if (near.length) html += `<h3>Até ${TOL} mm de diferença</h3><ol class="causes">${near.map(item).join("")}</ol>`;
+  box.innerHTML = html;
+
+  box.querySelectorAll("[data-roller]").forEach(b => b.addEventListener("click", () => {
+    const o = R[b.dataset.roller];
+    if (selected !== o) select(o); else drawSheet(o);
+    flash([o.id]);
+  }));
+  box.querySelectorAll("[data-gap]").forEach(b => b.addEventListener("click", () => {
+    flash(["chapa", "blanqueta", "impressao"]);
+    drawSheet(null, b.dataset.gap);
+  }));
+  flash(rollersHit.map(o => o.id));
+  drawSheet(selected);
+}
+/* Folha com as marcas do rolo selecionado */
+function drawSheet(o, onlyGap) {
+  const box = document.getElementById("sheetMap");
+  if (!box || !manchasOn) return;
+  const P = readParams(), L = P.Ls;
+  let marks = [], title, note = "";
+  if (o && FORM_ROLLERS.includes(o.id)) {
+    title = `Onde o ${roleName(o).replace("Rolo", "rolo")} marca a folha`;
+    marks = streaksFor(o, P).filter(m => m.v >= 0 && m.v <= L)
+      .map(m => ({ v: m.v, label: `${mm(m.v)} mm`, sub: `${ord(m.k)}${m.next ? " (folha seguinte)" : ""}, ${m.short}` }));
+    if (!contactsOf(R.chapa).includes(o)) note = "Este rolo está afastado da chapa agora. As marcas mostram onde ele marcaria quando encostado.";
+  } else if (onlyGap || (o && GAP_BY_CYL[o.id])) {
+    const codes = onlyGap ? [onlyGap] : GAP_BY_CYL[o.id];
+    title = onlyGap ? `Listra de boca ${onlyGap}` : `Listras de boca ligadas ao ${o.name.toLowerCase()}`;
+    marks = GAP_STREAKS.filter(g => codes.includes(g.code) && g.mm <= L)
+      .map(g => ({ v: g.mm, label: `${mm(g.mm)} mm`, sub: `${g.code}, ${g.text.replace(/ \(.*\)/, "").toLowerCase()}` }));
+  } else {
+    box.innerHTML = o
+      ? `<p class="hint"><strong>${o.name || roleName(o)}</strong> não toca a chapa nem os cilindros, então não marca o impresso diretamente: só transfere tinta ou água para os outros rolos. Toque num entintador (1 a 4), no molhador 14 ou num cilindro.</p>`
+      : `<p class="hint">Toque num entintador (1 a 4), no molhador 14 ou num cilindro para ver onde ele marca a folha.</p>`;
+    return;
+  }
+
+  paintSheet(box, P, title, marks, note);
+}
+function paintSheet(box, P, title, marks, note = "") {
+  const L = P.Ls;
+  // desenho em mm: largura ilustrativa de 1060 mm (formato máximo da XL 106)
+  const W = 1060, ML = 30, MR = 30, MT = 70, MB = 70, fs = 26;
+  const y = v => MT + (L - v);   // borda frontal embaixo, como nos slides
+  let svgs = `<svg viewBox="0 0 ${W + ML + MR} ${L + MT + MB}" role="img" aria-label="${title}" style="width:100%;height:auto;display:block">`;
+  svgs += `<rect x="${ML}" y="${MT}" width="${W}" height="${L}" fill="#F2F4F5" stroke="#13304D" stroke-width="3"/>`;
+  // área da imagem
+  if (!isNaN(P.imgF) && !isNaN(P.imgR) && P.imgR > P.imgF)
+    svgs += `<rect x="${ML + 120}" y="${y(Math.min(P.imgR, L))}" width="${W - 240}" height="${Math.min(P.imgR, L) - P.imgF}" fill="#F7D4D6"/>`;
+  // pinça
+  if (!isNaN(P.c1) && P.c1 > 0) svgs += `<rect x="${ML}" y="${y(P.c1)}" width="${W}" height="${P.c1}" fill="#D5DBE0"/>`;
+  svgs += `<text x="${ML + W / 2}" y="${MT + L + 44}" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-size="${fs}" fill="#4B6177">Borda frontal (0 mm)</text>`;
+  svgs += `<text x="${ML + W / 2}" y="${MT - 22}" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-size="${fs}" fill="#4B6177">Borda traseira (${mm(L)} mm)</text>`;
+  // mancha informada
+  if (P.pos >= 0 && P.pos <= L) {
+    svgs += `<line x1="${ML}" x2="${ML + W}" y1="${y(P.pos)}" y2="${y(P.pos)}" stroke="#13304D" stroke-width="3" stroke-dasharray="14 8"/>`;
+    svgs += `<text x="${ML + W - 12}" y="${y(P.pos) + fs + 6}" text-anchor="end" font-family="Barlow, Arial, sans-serif" font-size="${fs - 4}" fill="#13304D">mancha informada ${mm(P.pos)} mm</text>`;
+  }
+  // barras vermelhas; rótulo acima da barra, ou abaixo se colidir com o anterior
+  // de cima para baixo: rótulo acima da barra; se não couber, abaixo; se ainda colidir, empurra para baixo
+  let prev = -Infinity;
+  const sorted = marks.sort((a, b) => b.v - a.v);
+  sorted.forEach(m => svgs += `<rect x="${ML}" y="${y(m.v) - 4}" width="${W}" height="8" fill="#E30613"/>`);
+  sorted.forEach(m => {
+    const yy = y(m.v);
+    let ly = yy - 12;
+    if (ly - fs < prev + 6) ly = yy + fs + 10;
+    if (ly - fs < prev + 6) ly = prev + fs + 10;
+    prev = ly;
+    svgs += `<text x="${ML + 14}" y="${ly}" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="${fs + 4}" fill="#B00010" paint-order="stroke" stroke="#F2F4F5" stroke-width="6">${m.label}</text>`;
+    svgs += `<text x="${ML + 190}" y="${ly}" font-family="Barlow, Arial, sans-serif" font-size="${fs - 3}" fill="#13304D" paint-order="stroke" stroke="#F2F4F5" stroke-width="6">${m.sub}</text>`;
+  });
+  svgs += `</svg>`;
+  box.innerHTML = `<h3>${title}</h3>${note ? `<p class="hint">${note}</p>` : ""}
+    ${marks.length ? "" : `<p class="hint">Nenhuma marca cai dentro de uma folha de ${mm(L)} mm.</p>`}${svgs}
+    <p class="hint">Faixa cinza: pinça. Área rosada: imagem. Largura da folha apenas ilustrativa.</p>`;
+}
+
+/* Pontos vermelhos de impacto: presos à chapa (no contato chapa–blanqueta) e ao papel
+   (no contato blanqueta–impressão) no momento de cada evento */
+const impactMarks = {};
+const pulseLayer = el("g", { "pointer-events": "none" }, svg);
+let prevX = null;
+function markOn(o, worldDeg, radius, label, list) {
+  const a = (worldDeg - o.angle) * Math.PI / 180;
+  const g = el("g", { transform: `translate(${(Math.cos(a) * radius).toFixed(2)} ${(Math.sin(a) * radius).toFixed(2)})` }, o.rot);
+  el("circle", { r: 9, fill: "#E30613", stroke: "#fff", "stroke-width": 2.5 }, g);
+  const t = el("text", { x: 13, y: -11, fill: "#E30613", "font-family": "Barlow, Arial, sans-serif", "font-weight": 700,
+    "font-size": 15, "paint-order": "stroke", stroke: "#fff", "stroke-width": 4 }, g);
+  t.textContent = label;
+  list.push(g);
+}
+function pulseAt(o, worldDeg) {
+  const a = worldDeg * Math.PI / 180;
+  const c = el("circle", { class: "impact-pulse", cx: o.x + Math.cos(a) * o.r, cy: o.y + Math.sin(a) * o.r, r: 14,
+    fill: "none", stroke: "#E30613", "stroke-width": 4 }, pulseLayer);
+  setTimeout(() => c.remove(), 1300);
+}
+function fireImpact(ev) {
+  (impactMarks[ev.code] || []).forEach(n => n.remove());
+  const list = impactMarks[ev.code] = [];
+  const L = readParams().Ls;
+  const label = ev.code === "Papel" ? "Fim do papel" : ev.code;
+  markOn(R.chapa, NIP.PB, R.chapa.r - 10, label, list);                 // chapa no contato com a blanqueta
+  if (ev.x >= 0 && ev.x <= L) markOn(R.impressao, NIP.IB, R.impressao.r + 4, label, list);  // papel no contato
+  pulseAt(ev.where === "pb" ? R.chapa : R.impressao, ev.where === "pb" ? NIP.PB : NIP.IB);
+}
+function clearImpacts() { Object.values(impactMarks).forEach(l => l.forEach(n => n.remove())); prevX = null; }
+function trackImpacts() {
+  if (!manchasOn) { prevX = null; return; }
+  const x = sheetX();
+  if (prevX !== null && x !== prevX) {
+    const fwd = mod(x - prevX, CYL_C), back = mod(prevX - x, CYL_C);
+    impactEvents(readParams().Ls).forEach(ev => {
+      if (fwd < CYL_C / 2) { const d = mod(ev.x - prevX, CYL_C); if (d > 0 && d <= fwd) fireImpact(ev); }
+      else { const d = mod(prevX - ev.x, CYL_C); if (d >= 0 && d < back) fireImpact(ev); }
+    });
+  }
+  prevX = x;
+}
+
+/* Tabela dos momentos de impacto */
+const HEIDELBERG_REF = { E2: 165, E1: 361, A2: 400, A1: 594 };
+function buildTable() {
+  const P = readParams(), L = P.Ls;
+  const rows = impactEvents(L).sort((a, b) => a.x - b.x).map(ev => {
+    const onPaper = ev.x >= 0 && ev.x <= L;
+    const plate = mod(ev.x + BLANKET_TRAVEL, CYL_C);     // ponto da chapa no contato, em mm equivalentes da folha
+    const plateOk = plate <= CYL_SURF;
+    const marks = [];
+    if (onPaper) marks.push({ v: ev.x, label: `${mm(ev.x)} mm`, sub: `${ev.code === "Papel" ? "fim do papel" : ev.code}, direto no contato blanqueta–impressão` });
+    if (plateOk && plate <= L && Math.abs(plate - ev.x) > 0.5)
+      marks.push({ v: plate, label: `${mm(plate)} mm`, sub: `${ev.code === "Papel" ? "fim do papel" : ev.code}, pelo ponto da chapa que sofreu o impacto` });
+    ev.marks = marks;
+    const ref = HEIDELBERG_REF[ev.code];
+    return `<tr>
+      <td><strong>${ev.code === "Papel" ? "Fim do papel" : ev.code}</strong><small>${ev.text}</small></td>
+      <td>${ev.where === "pb" ? "Chapa–blanqueta" : "Blanqueta–impressão"}</td>
+      <td>${onPaper ? `<span class="hit">${mm(ev.x)} mm</span>` : "Sem papel (boca)"}</td>
+      <td>${plateOk ? `${mm(plate)} mm` : "Na boca da chapa"}</td>
+      <td>${marks.length ? marks.map(m => `<span class="hit">${m.label}</span>`).join("<br>") : "Nenhuma"}</td>
+      <td>${ref ? ref + " mm" : "—"}</td>
+      <td>${marks.length ? `<button data-ev="${ev.code}">Ver na folha</button>` : ""}</td></tr>`;
+  });
+  const box = document.getElementById("gapTable");
+  box.innerHTML = `<h3>Momentos de impacto numa folha de ${mm(L)} mm</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Momento</th><th>Onde acontece</th><th>Papel no contato blanqueta–impressão</th>
+      <th>Chapa no contato chapa–blanqueta</th><th>Marca possível no papel</th><th>Referência Heidelberg</th><th></th></tr></thead>
+      <tbody>${rows.join("")}</tbody></table></div>
+    <p class="hint">Medidas a partir da borda frontal da folha. A posição da chapa está em mm equivalentes da folha (0 = início da chapa, após a boca). No esquema, a blanqueta leva ${mm(BLANKET_TRAVEL)} mm para levar um ponto do contato com a chapa ao contato com a impressão. Os valores calculados dependem dos diâmetros e da posição dos cilindros no esquema, que é aproximada; por isso podem diferir da referência Heidelberg, medida na máquina real.</p>`;
+  const evs = impactEvents(L);
+  box.querySelectorAll("[data-ev]").forEach(b => b.addEventListener("click", () => {
+    const ev = evs.find(e => e.code === b.dataset.ev);
+    const onPaper = ev.x >= 0 && ev.x <= L, plate = mod(ev.x + BLANKET_TRAVEL, CYL_C), marks = [];
+    const name = ev.code === "Papel" ? "fim do papel" : ev.code;
+    if (onPaper) marks.push({ v: ev.x, label: `${mm(ev.x)} mm`, sub: `${name}, direto no contato blanqueta–impressão` });
+    if (plate <= CYL_SURF && plate <= L && Math.abs(plate - ev.x) > 0.5) marks.push({ v: plate, label: `${mm(plate)} mm`, sub: `${name}, pelo ponto da chapa` });
+    paintSheet(document.getElementById("sheetMap"), P, `Impacto ${ev.code === "Papel" ? "no fim do papel" : ev.code} na folha`, marks);
+    document.getElementById("sheetMap").scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+}
+$("tableBtn").addEventListener("click", () => {
+  const t = $("gapTable"), open = t.hidden;
+  t.hidden = !open;
+  $("tableBtn").setAttribute("aria-expanded", open);
+  if (open) buildTable();
+});
+$("fLen").addEventListener("input", () => { if (!$("gapTable").hidden) buildTable(); });
+
+/* Papel no cilindro de impressão: preso na pinça (borda da boca que vem logo atrás dela
+   no sentido de giro) e enrolado na superfície pelo comprimento digitado */
+function drawPaper() {
+  const o = R.impressao;
+  let g = o.paper;
+  if (!g) { g = o.paper = el("g", { "pointer-events": "none" }, o.rot); }
+  g.replaceChildren();
+  const L = num("fLen");
+  if (!(L > 0)) return;
+  const { a2 } = gapAngles(o);
+  const theta = Math.min(L / o.circMm, 0.985) * Math.PI * 2;  // ângulo coberto pelo papel
+  const rp = o.r + 4;
+  const pt = (rad, a) => `${(Math.cos(a) * rad).toFixed(2)},${(Math.sin(a) * rad).toFixed(2)}`;
+  const end = a2 + theta;
+  el("path", { d: `M${pt(rp, a2)} A${rp},${rp} 0 ${theta > Math.PI ? 1 : 0} 1 ${pt(rp, end)}`,
+    fill: "none", stroke: "#1E7FE0", "stroke-width": 7, "stroke-linecap": "round" }, g);
+  // pinça segurando a borda frontal da folha
+  el("line", { x1: Math.cos(a2) * (o.r - 8), y1: Math.sin(a2) * (o.r - 8), x2: Math.cos(a2) * (o.r + 14), y2: Math.sin(a2) * (o.r + 14),
+    stroke: "#F2C230", "stroke-width": 8, "stroke-linecap": "round" }, g);
+  const mid = a2 + theta / 2;
+  const t = el("text", { class: "info", "text-anchor": "middle", "dominant-baseline": "central", fill: "#FFFFFF",
+    "font-family": "Barlow, Arial, sans-serif", "font-size": 14, "font-weight": 600,
+    transform: `translate(${pt(o.r - 22, mid)}) rotate(${(mid * 180 / Math.PI + 90).toFixed(1)})` }, g);
+  t.textContent = `Papel ${fmt(L)} mm`;
+  const tg = el("text", { class: "info", "text-anchor": "middle", "dominant-baseline": "central", fill: "#FFFFFF",
+    "font-family": "Barlow, Arial, sans-serif", "font-size": 13, "font-weight": 600,
+    transform: `translate(${pt(o.r - 30, a2)}) rotate(${(a2 * 180 / Math.PI + 90).toFixed(1)})` }, g);
+  tg.textContent = "pinça";
+}
+drawPaper();
+$("fLen").addEventListener("input", drawPaper);
+
+$("diagBtn").addEventListener("click", diagnose);
+document.querySelectorAll("#diag input").forEach(i => i.addEventListener("change", () => drawSheet(selected)));
+document.querySelectorAll("#diag input").forEach(i => i.addEventListener("keydown", e => { if (e.key === "Enter") diagnose(); }));
+
+syncButtons();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
