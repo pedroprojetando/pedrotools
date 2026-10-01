@@ -4,132 +4,127 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BraghinApps</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="[https://fonts.googleapis.com](https://fonts.googleapis.com)">
+<link rel="preconnect" href="[https://fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
+<link href="[https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&display=swap](https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&display=swap)" rel="stylesheet">
 <style>
-  :root{
-    --bg:#16181c;
-    --bg2:#1d2128;
-    --tile:#1c3257;
-    --tile2:#122240;
-    --line:#26406b;
-    --line-hover:#6f9fd8;
-    --text:#ffffff;
-    --muted:#8b95a7;
-    --blue:#6f9fd8;
-    --blue-soft:#a9c3e6;
-    box-sizing:border-box;
-    padding-top:env(safe-area-inset-top,0px);
-    padding-bottom:env(safe-area-inset-bottom,0px);
-  }
-  *,*::before,*::after{box-sizing:inherit}
-  html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
-  body{
-    margin:0;min-height:100vh;
-    background:radial-gradient(120% 60% at 50% 0%, var(--bg2) 0%, var(--bg) 70%);
-    color:var(--text);
-    font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:640px;margin:0 auto;padding:28px 18px 40px}
-
-  header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-  .mark{width:34px;height:34px;flex:none}
-  h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:-.02em;line-height:1}
-  h1 b{color:var(--blue);font-weight:800}
-  .rule{position:relative;height:1px;background:linear-gradient(90deg,var(--line-hover),var(--line) 60%,transparent);margin:0 0 26px}
-
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .tile{
-    position:relative;aspect-ratio:1/1;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-    padding:8px 6px;border-radius:14px;text-align:center;
-    background:linear-gradient(155deg,var(--tile) 0%,var(--tile2) 100%);
-    border:1px solid var(--line);
-    color:var(--text);text-decoration:none;
-    overflow:hidden;
-    box-shadow:0 4px 12px rgba(0,0,0,.35);
-    transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
-  }
-  .tile .ico{
-    width:40%;aspect-ratio:1/1;border-radius:10px;
-    display:grid;place-items:center;
-    background:rgba(111,159,216,.12);
-    border:1px solid rgba(111,159,216,.22);
-  }
-  .tile svg{width:70%;height:70%;stroke:var(--blue-soft);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .tile svg .acc{stroke:var(--accent);fill:var(--accent)}
-  .tile svg .acc-s{stroke:var(--accent)}
-  .tile .name{font-size:.8rem;font-weight:700;line-height:1.15}
-  .tile:hover{border-color:var(--line-hover);transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.45)}
-  .tile:active{transform:scale(.98)}
-  .tile:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
-
-  .m,.y{--accent:var(--blue-soft)}
-
-  @media (min-width:520px){ .grid{gap:14px} .tile{gap:10px;border-radius:16px} .tile .name{font-size:.9rem} }
-  @media (prefers-reduced-motion:reduce){ .tile{transition:none} .tile:hover{transform:none} }
+:root{
+--bg:#16181c;
+--bg2:#1d2128;
+--tile:#1c3257;
+--tile2:#122240;
+--line:#26406b;
+--line-hover:#6f9fd8;
+--text:#ffffff;
+--muted:#8b95a7;
+--blue:#6f9fd8;
+--blue-soft:#a9c3e6;
+box-sizing:border-box;
+padding-top:env(safe-area-inset-top,0px);
+padding-bottom:env(safe-area-inset-bottom,0px);
+}
+,::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{
+margin:0;min-height:100vh;
+background:radial-gradient(120% 60% at 50% 0%, var(--bg2) 0%, var(--bg) 70%);
+color:var(--text);
+font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:640px;margin:0 auto;padding:28px 18px 40px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.mark{width:34px;height:34px;flex:none}
+h1{margin:0;font-size:1.75rem;font-weight:800;letter-spacing:-.02em;line-height:1}
+h1 b{color:var(--blue);font-weight:800}
+.rule{position:relative;height:1px;background:linear-gradient(90deg,var(--line-hover),var(--line) 60%,transparent);margin:0 0 26px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{
+position:relative;aspect-ratio:1/1;
+display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+padding:8px 6px;border-radius:14px;text-align:center;
+background:linear-gradient(155deg,var(--tile) 0%,var(--tile2) 100%);
+border:1px solid var(--line);
+color:var(--text);text-decoration:none;
+overflow:hidden;
+box-shadow:0 4px 12px rgba(0,0,0,.35);
+transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.tile .ico{
+width:40%;aspect-ratio:1/1;border-radius:10px;
+display:grid;place-items:center;
+background:rgba(111,159,216,.12);
+border:1px solid rgba(111,159,216,.22);
+}
+.tile svg{width:70%;height:70%;stroke:var(--blue-soft);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tile svg .acc{stroke:var(--accent);fill:var(--accent)}
+.tile svg .acc-s{stroke:var(--accent)}
+.tile .name{font-size:.8rem;font-weight:700;line-height:1.15}
+.tile:hover{border-color:var(--line-hover);transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.45)}
+.tile:active{transform:scale(.98)}
+.tile:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+.m,.y{--accent:var(--blue-soft)}
+@media (min-width:520px){ .grid{gap:14px} .tile{gap:10px;border-radius:16px} .tile .name{font-size:.9rem} }
+@media (prefers-reduced-motion:reduce){ .tile{transition:none} .tile:hover{transform:none} }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <svg class="mark" viewBox="0 0 34 34" aria-hidden="true">
-      <circle cx="17" cy="17" r="10" fill="none" stroke="#6f9fd8" stroke-width="2"/>
-      <line x1="17" y1="1" x2="17" y2="33" stroke="#a9c3e6" stroke-width="2"/>
-      <line x1="1" y1="17" x2="33" y2="17" stroke="#a9c3e6" stroke-width="2"/>
-    </svg>
-    <h1>Braghin<b>Apps</b></h1>
-  </header>
-  <div class="rule" aria-hidden="true"></div>
-
-  <nav class="grid">
-    <a class="tile m" href="https://pbraghin.com.br/IPA" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><path d="M24 5C24 5 11 20 11 30a13 13 0 0 0 26 0C37 20 24 5 24 5z"/><line x1="19" y1="35" x2="29" y2="25"/><circle class="acc" cx="19.5" cy="26" r="1.6"/><circle class="acc" cx="28.5" cy="34" r="1.6"/></svg></span>
-      <span class="name">Compensação IPA</span>
-    </a>
-    <a class="tile y" href="https://pbraghin.com.br/ProblemasFind" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><path d="M24 6 44 40H4z"/><line x1="24" y1="18" x2="24" y2="29"/><circle class="acc" cx="24" cy="34.5" r="1.2"/></svg></span>
-      <span class="name">Problemas</span>
-    </a>
-    <a class="tile m" href="https://pbraghin.com.br/ConsumoSolvente" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><path d="M14 14h20l2 6v20a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V20z"/><path d="M19 14V8h10v6"/><path d="M12 22h24"/><path d="M24 27c0 0-4 4.5-4 7a4 4 0 0 0 8 0c0-2.5-4-7-4-7z"/></svg></span>
-      <span class="name">Consumo Solvente</span>
-    </a>
-    <a class="tile m" href="https://pbraghin.com.br/ConsumoTinta" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><path d="M10 16h28v22a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4z"/><ellipse cx="24" cy="16" rx="14" ry="4"/><path d="M18 16c0 5 6 5 6 10s6 4 6 0"/></svg></span>
-      <span class="name">Consumo Tinta</span>
-    </a>
-    <a class="tile y" href="https://pbraghin.com.br/ConsumoVerniz" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><path d="M6 30 24 40l18-10"/><path d="M6 22 24 32l18-10L24 12z"/><path d="M29 19l4-2"/><path d="M33 22l3-1.5"/></svg></span>
-      <span class="name">Consumo Verniz</span>
-    </a>
-    <a class="tile y" href="https://estacao.pbraghin.com.br/" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><circle cx="21" cy="21" r="12"/><line x1="30" y1="30" x2="42" y2="42"/><polyline class="acc-s" points="14,24 18,19 22,23 27,16"/></svg></span>
-      <span class="name">Estação de Análise</span>
-    </a>
-    <a class="tile m" href="https://pbraghin.com.br/sth/" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><rect x="6" y="6" width="15" height="15" rx="2"/><rect x="27" y="6" width="15" height="15" rx="2"/><rect x="6" y="27" width="15" height="15" rx="2"/><rect x="27" y="27" width="15" height="15" rx="2"/></svg></span>
-      <span class="name">STH</span>
-    </a>
-    <a class="tile m" href="https://pbraghin.com.br/oee" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><path d="M8 34a16 16 0 1 1 32 0"/><line x1="24" y1="34" x2="32" y2="22"/><circle cx="24" cy="34" r="2"/><line x1="8" y1="40" x2="40" y2="40"/></svg></span>
-      <span class="name">OEE</span>
-    </a>
-    <a class="tile y" href="https://pbraghin.com.br/CurvaMolha" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><polyline points="8,8 8,40 40,40"/><path d="M8 36C16 36 18 14 26 14S36 26 40 22"/><path d="M34 6c0 0-3 3.5-3 5.5a3 3 0 0 0 6 0C37 9.5 34 6 34 6z"/></svg></span>
-      <span class="name">Curvas de Molha</span>
-    </a>
-    <a class="tile m" href="https://roll5.pbraghin.com.br" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><circle cx="15" cy="17" r="9"/><circle cx="33" cy="17" r="9"/><circle cx="24" cy="33" r="9"/><circle cx="15" cy="17" r="1.5"/><circle cx="33" cy="17" r="1.5"/><circle cx="24" cy="33" r="1.5"/></svg></span>
-      <span class="name">Rolarias</span>
-    </a>
-    <a class="tile y" href="https://pbraghin.com.br/manutencao" target="_blank" rel="noopener">
-      <span class="ico"><svg viewBox="0 0 48 48"><path d="M30 6a9 9 0 0 0-8.5 12L7 32.5a3.5 3.5 0 0 0 5 5L26.5 23A9 9 0 0 0 39 14l-5.5 5.5-5-1-1-5L33 8a9 9 0 0 0-3-2z"/><circle cx="10" cy="35" r="1"/></svg></span>
-      <span class="name">Manutenção</span>
-    </a>
-  </nav>
+<header>
+<svg class="mark" viewBox="0 0 34 34" aria-hidden="true">
+<circle cx="17" cy="17" r="10" fill="none" stroke="#6f9fd8" stroke-width="2"/>
+<line x1="17" y1="1" x2="17" y2="33" stroke="#a9c3e6" stroke-width="2"/>
+<line x1="1" y1="17" x2="33" y2="17" stroke="#a9c3e6" stroke-width="2"/>
+</svg>
+<h1>Braghin<b>Apps</b></h1>
+</header>
+<div class="rule" aria-hidden="true"></div>
+<nav class="grid">
+<a class="tile m" href="[https://pbraghin.com.br/IPA](https://pbraghin.com.br/IPA)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><path d="M24 5C24 5 11 20 11 30a13 13 0 0 0 26 0C37 20 24 5 24 5z"/><line x1="19" y1="35" x2="29" y2="25"/><circle class="acc" cx="19.5" cy="26" r="1.6"/><circle class="acc" cx="28.5" cy="34" r="1.6"/></svg></span>
+<span class="name">Compensação IPA</span>
+</a>
+<a class="tile y" href="[https://pbraghin.com.br/ProblemasFind](https://pbraghin.com.br/ProblemasFind)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><path d="M24 6 44 40H4z"/><line x1="24" y1="18" x2="24" y2="29"/><circle class="acc" cx="24" cy="34.5" r="1.2"/></svg></span>
+<span class="name">Problemas</span>
+</a>
+<a class="tile m" href="[https://pbraghin.com.br/ConsumoSolvente](https://pbraghin.com.br/ConsumoSolvente)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><path d="M14 14h20l2 6v20a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V20z"/><path d="M19 14V8h10v6"/><path d="M12 22h24"/><path d="M24 27c0 0-4 4.5-4 7a4 4 0 0 0 8 0c0-2.5-4-7-4-7z"/></svg></span>
+<span class="name">Consumo Solvente</span>
+</a>
+<a class="tile m" href="[https://pbraghin.com.br/ConsumoTinta](https://pbraghin.com.br/ConsumoTinta)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><path d="M10 16h28v22a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4z"/><ellipse cx="24" cy="16" rx="14" ry="4"/><path d="M18 16c0 5 6 5 6 10s6 4 6 0"/></svg></span>
+<span class="name">Consumo Tinta</span>
+</a>
+<a class="tile y" href="[https://pbraghin.com.br/ConsumoVerniz](https://pbraghin.com.br/ConsumoVerniz)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><path d="M6 30 24 40l18-10"/><path d="M6 22 24 32l18-10L24 12z"/><path d="M29 19l4-2"/><path d="M33 22l3-1.5"/></svg></span>
+<span class="name">Consumo Verniz</span>
+</a>
+<a class="tile y" href="[https://estacao.pbraghin.com.br/](https://estacao.pbraghin.com.br/)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><circle cx="21" cy="21" r="12"/><line x1="30" y1="30" x2="42" y2="42"/><polyline class="acc-s" points="14,24 18,19 22,23 27,16"/></svg></span>
+<span class="name">Estação de Análise</span>
+</a>
+<a class="tile m" href="[https://pbraghin.com.br/sth/](https://pbraghin.com.br/sth/)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><rect x="6" y="6" width="15" height="15" rx="2"/><rect x="27" y="6" width="15" height="15" rx="2"/><rect x="6" y="27" width="15" height="15" rx="2"/><rect x="27" y="27" width="15" height="15" rx="2"/></svg></span>
+<span class="name">STH</span>
+</a>
+<a class="tile m" href="[https://pbraghin.com.br/oee](https://pbraghin.com.br/oee)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><path d="M8 34a16 16 0 1 1 32 0"/><line x1="24" y1="34" x2="32" y2="22"/><circle cx="24" cy="34" r="2"/><line x1="8" y1="40" x2="40" y2="40"/></svg></span>
+<span class="name">OEE</span>
+</a>
+<a class="tile y" href="[https://pbraghin.com.br/CurvaMolha](https://pbraghin.com.br/CurvaMolha)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><polyline points="8,8 8,40 40,40"/><path d="M8 36C16 36 18 14 26 14S36 26 40 22"/><path d="M34 6c0 0-3 3.5-3 5.5a3 3 0 0 0 6 0C37 9.5 34 6 34 6z"/></svg></span>
+<span class="name">Curvas de Molha</span>
+</a>
+<a class="tile m" href="[https://roll5.pbraghin.com.br](https://roll5.pbraghin.com.br)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><circle cx="15" cy="17" r="9"/><circle cx="33" cy="17" r="9"/><circle cx="24" cy="33" r="9"/><circle cx="15" cy="17" r="1.5"/><circle cx="33" cy="17" r="1.5"/><circle cx="24" cy="33" r="1.5"/></svg></span>
+<span class="name">Rolarias</span>
+</a>
+<a class="tile y" href="[https://manu1.pbraghin.com.br](https://manu1.pbraghin.com.br)" target="_blank" rel="noopener">
+<span class="ico"><svg viewBox="0 0 48 48"><path d="M30 6a9 9 0 0 0-8.5 12L7 32.5a3.5 3.5 0 0 0 5 5L26.5 23A9 9 0 0 0 39 14l-5.5 5.5-5-1-1-5L33 8a9 9 0 0 0-3-2z"/><circle cx="10" cy="35" r="1"/></svg></span>
+<span class="name">Manutenção</span>
+</a>
+</nav>
 </div>
 </body>
 </html>
